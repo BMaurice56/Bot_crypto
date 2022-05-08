@@ -56,13 +56,3 @@ plt.scatter(indice_max, maximum)
 plt.show()
 
 """
-from main import *
-
-
-t1 = perf_counter()
-
-insert_data_historique_bdd('BTCEUR')
-
-t2 = perf_counter()
-
-print(t2 - t1)

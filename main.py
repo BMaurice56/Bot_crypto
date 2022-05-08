@@ -11,6 +11,7 @@ import locale
 import pandas
 import talib
 import numpy
+import copy
 import math
 import ast
 import os
@@ -468,7 +469,7 @@ def insert_bdd(table: str, symbol: str, data: pandas.DataFrame or list, empty_li
         ls_requete_data.append(ls)
 
         if insert_commit == True:
-            liste = ls_requete_data.copy()
+            liste = copy.deepcopy(ls_requete_data)
             for rq in liste:
                 rq[0] = str(rq[0])
                 rq[1] = str(rq[1])
@@ -522,7 +523,7 @@ def insert_bdd(table: str, symbol: str, data: pandas.DataFrame or list, empty_li
                 data_serveur.close.values[-1])
 
             cur.executemany(
-                "insert into prédiction_data (prix_prédiction, prix_fermeture) values (?,?)", ls_requete_predic_data)
+                "insert into predic_data (prix_prédiction, prix_fermeture) values (?,?)", ls_requete_predic_data)
 
             con.commit()
 
@@ -564,7 +565,7 @@ def insert_bdd(table: str, symbol: str, data: pandas.DataFrame or list, empty_li
             ls_requete_predic_rsi[-1][1] = float(data_serveur.close.values[-1])
 
             cur.executemany(
-                "insert into prédiction_rsi (prix_prédiction, prix_fermeture) values (?,?)", ls_requete_predic_rsi)
+                "insert into predic_rsi (prix_prédiction, prix_fermeture) values (?,?)", ls_requete_predic_rsi)
 
             con.commit()
 
@@ -697,7 +698,7 @@ def select_rsi_vwap_cmf_bdd() -> pandas.DataFrame:
     """
     Fonction qui récupère toutes les données de la bdd de la table rsi_vwap_cmf
     """
-    donnée_bdd = cur2.execute("SELECT * FROM rsi_vwap_cmf")
+    donnée_bdd = cur.execute("SELECT * FROM rsi_vwap_cmf")
 
     # On vient retransformer les données dans leut état d'origine
     # Et on remet le tout dans une dataframe
@@ -728,23 +729,16 @@ def select_prediction_hist_all() -> pandas.DataFrame:
     Et dans la table rsi_etc..., c'est la moyenne des trois valeurs de la fonction prediction
     Et renvoie le tout sous forme d'une dataframe pandas
     """
-    predic_data = cur.execute(
-        "select prix_prédiction, prix_fermeture from prédiction")
-    predic_rsi_vwap_cmf = cur2.execute(
-        "select prix_prédiction from prédiction")
-
-    prix = []
-    prediction_data = []
-    for row in predic_data:
-        prediction_data.append(row[0])
-        prix.append(row[1])
-
-    predic_rsi_vwap_cmf = [x[0] for x in predic_rsi_vwap_cmf]
+    predic = cur.execute(
+        """SELECT predic_data.prix_prédiction, predic_rsi.prix_prédiction, predic_data.prix_fermeture
+    FROM predic_data
+    INNER JOIN predic_rsi ON predic_data.id = predic_rsi.id
+    """)
 
     ls = []
 
-    for i in range(len(prediction_data)):
-        ls.append([prediction_data[i], predic_rsi_vwap_cmf[i], prix[i]])
+    for row in predic:
+        ls.append([row[0], row[1], row[2]])
 
     df = pandas.DataFrame(ls)
     df.columns = ['PRIX_DATA', 'PRIX_RSI', 'PRIX_F']

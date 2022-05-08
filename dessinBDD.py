@@ -21,9 +21,9 @@ def bdd_data():
     )
     """)
 
-    curseur.execute("DROP TABLE IF EXISTS prédiction_data")
+    curseur.execute("DROP TABLE IF EXISTS predic_data")
     curseur.execute("""
-    CREATE TABLE prédiction_data 
+    CREATE TABLE predic_data
     (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     prix_prédiction REAL, 
@@ -47,9 +47,9 @@ def bdd_rsi_vwap_cmf():
     )
     """)
 
-    curseur.execute("DROP TABLE IF EXISTS prédiction_rsi")
+    curseur.execute("DROP TABLE IF EXISTS predic_rsi")
     curseur.execute("""
-    CREATE TABLE prédiction_rsi 
+    CREATE TABLE predic_rsi 
     (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     prix_prédiction REAL, 
