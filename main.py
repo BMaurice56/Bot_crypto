@@ -431,41 +431,67 @@ def bandes_bollinger(donnée_bandes: pandas.DataFrame) -> list:
 
 # Connexion à la bdd et créaton du curseur pour interagire avec
 con = sqlite3.connect('data_base.db')
-con2 = sqlite3.connect('rsi_vwap_cmf.db')
 
 cur = con.cursor()
-cur2 = con2.cursor()
 
-global_requete_data = []
-global_requete_rsi = []
+ls_requete_data = []
+ls_requete_rsi = []
+
+ls_requete_predic_data = []
+ls_requete_predic_rsi = []
 
 
-def insert_bdd(table: str, symbol: str, data: pandas.DataFrame or list, insert_commit=True) -> None:
+def insert_bdd(table: str, symbol: str, data: pandas.DataFrame or list, empty_list=True, insert_commit=True) -> None:
     """
     Fonction qui prend en argument la table et les données à inserer
     Et insert les données dans la bdd
     Ex param :
     table : data
+    symbol : 'BTCEUR' ....
     data : dataframe des données du serveur ou une liste
-    commit : True ou false (par défaut, conN.commit() est executé)
+    empty_list : vide les listes (par défaut activer, désactiver si insertion de nombreuses données comme au lancement par ex)
+    insert_commit : True ou false (par défaut, con.commit() est executé)
     """
+    # Vidage des listes avant l'execution des autres parties de la fonction
+    if empty_list == True:
+        ls_requete_data.clear()
+        ls_requete_rsi.clear()
+
+        ls_requete_predic_data.clear()
+        ls_requete_predic_rsi.clear()
+
     # Insertion normale des valeurs dans la table data
     if table == "data":
-        ls = [str(SMA(data)), str(EMA(data)), str(MACD(data)), str(stochRSI(data)), str(bandes_bollinger(
-            data)), float(data.close.values[-1])]
+        ls = [SMA(data), EMA(data), MACD(data), stochRSI(data), bandes_bollinger(
+            data), float(data.close.values[-1])]
 
-        cur.execute(
-            "insert into data (sma, ema, macd, stochrsi, bande_bollinger, prix_fermeture) values (?,?,?,?,?,?)", ls)
+        ls_requete_data.append(ls)
+
+        if insert_commit == True:
+            liste = ls_requete_data.copy()
+            for rq in liste:
+                rq[0] = str(rq[0])
+                rq[1] = str(rq[1])
+                rq[2] = str(rq[2])
+                rq[3] = str(rq[3])
+                rq[4] = str(rq[4])
+                cur.execute(
+                    "insert into data (sma, ema, macd, stochrsi, bande_bollinger, prix_fermeture) values (?,?,?,?,?,?)", rq)
+
+            con.commit()
 
     # Calcul des prédictions qui peuvent etre fait sur la table data
     # On fait la moyenne et on l'insert dans la bdd
     elif table == "prédiction_data":
-        donnée_bdd_data = select_data_bdd()
+        dataframe_temp = pandas.DataFrame(ls_requete_data)
 
-        predic2 = prediction_liste_sma_ema(donnée_bdd_data, data)
-        predic3 = prediction_liste_macd(donnée_bdd_data, data)
-        predic4 = prediction_liste_stochrsi(donnée_bdd_data, data)
-        predic5 = prediction_liste_bandes_b(donnée_bdd_data, data)
+        dataframe_temp.columns = ['SMA', 'EMA', 'MACD', 'STOCHRSI',
+                                  'BB', 'PRIX_FERMETURE']
+
+        predic2 = prediction_liste_sma_ema(dataframe_temp, data)
+        predic3 = prediction_liste_macd(dataframe_temp, data)
+        predic4 = prediction_liste_stochrsi(dataframe_temp, data)
+        predic5 = prediction_liste_bandes_b(dataframe_temp, data)
 
         ls = []
 
@@ -480,58 +506,69 @@ def insert_bdd(table: str, symbol: str, data: pandas.DataFrame or list, insert_c
 
         my_liste = moyenne(ls)
 
-        if global_requete_data == []:
-            global_requete_data.append([my_liste, None])
+        if ls_requete_predic_data == []:
+            ls_requete_predic_data.append([my_liste, None])
         else:
-            global_requete_data[len(global_requete_data) -
-                                1][1] = float(data.close.values[-1])
-            global_requete_data.append([my_liste, None])
+            ls_requete_predic_data[len(ls_requete_predic_data) -
+                                   1][1] = float(data.close.values[-1])
+            ls_requete_predic_data.append([my_liste, None])
 
-        if len(global_requete_data) == 80:
+        if insert_commit == True:
+
             data_serveur = donnée_bis(
                 symbol, "600 min ago UTC", "0 min ago UTC", 40, client2)
-            global_requete_data[-1][1] = float(data_serveur.close.values[-1])
 
-            for element in global_requete_data:
-                cur.execute("insert into prédiction (prix_prédiction, prix_fermeture) values (?,?)", [
-                    element[0], element[1]])
+            ls_requete_predic_data[-1][1] = float(
+                data_serveur.close.values[-1])
+
+            cur.executemany(
+                "insert into prédiction_data (prix_prédiction, prix_fermeture) values (?,?)", ls_requete_predic_data)
+
+            con.commit()
 
     # Insertion normale des valeurs dans la table rsi____
     elif table == "rsi_vwap_cmf":
         ls = [RSI(data), VWAP(data), chaikin_money_flow(
             data), float(data.close.values[-1])]
 
-        cur2.execute(
-            "insert into rsi_vwap_cmf (rsi, vwap, cmf, prix_fermeture) values (?,?,?,?)", ls)
+        ls_requete_rsi.append(ls)
+
+        if insert_commit == True:
+            cur.executemany(
+                "insert into rsi_vwap_cmf (rsi, vwap, cmf, prix_fermeture) values (?,?,?,?)", ls_requete_rsi)
+
+            con.commit()
 
     # Calcul des prédictions qui peuvent etre fait sur la table rsi______
     # On fait la moyenne des trois valeurs de la fonction de prédiction et on l'insert dans la bdd
     elif table == "prédiction_rsi_vwap_cmf":
 
-        donnée_bdd_rsi = select_rsi_vwap_cmf_bdd()
+        dataframe_temp = pandas.DataFrame(ls_requete_rsi)
+        dataframe_temp.columns = ['RSI', 'VWAP', 'CMF', 'PRIX_FERMETURE']
 
-        predic1 = prediction_rsi_wvap_cmf(donnée_bdd_rsi, data)
+        predic1 = prediction_rsi_wvap_cmf(dataframe_temp, data)
 
         my_liste = moyenne(predic1)
 
-        if global_requete_rsi == []:
-            global_requete_rsi.append([my_liste, None])
+        if ls_requete_predic_rsi == []:
+            ls_requete_predic_rsi.append([my_liste, None])
         else:
-            global_requete_rsi[len(global_requete_rsi) -
-                               1][1] = float(data.close.values[-1])
-            global_requete_rsi.append([my_liste, None])
+            ls_requete_predic_rsi[len(ls_requete_predic_rsi) -
+                                  1][1] = float(data.close.values[-1])
+            ls_requete_predic_rsi.append([my_liste, None])
 
         if insert_commit == True:
             data_serveur = donnée_bis(
                 symbol, "225 min ago UTC", "0 min ago UTC", 15, client3)
-            global_requete_rsi[-1][1] = float(data_serveur.close.values[-1])
 
-            for element in global_requete_rsi:
-                cur2.execute("insert into prédiction (prix_prédiction, prix_fermeture) values (?,?)", [
-                    element[0], element[1]])
-                
-            con2.commit()
+            ls_requete_predic_rsi[-1][1] = float(data_serveur.close.values[-1])
 
+            cur.executemany(
+                "insert into prédiction_rsi (prix_prédiction, prix_fermeture) values (?,?)", ls_requete_predic_rsi)
+
+            con.commit()
+
+    # Insertion de tous les résultats dans la bdd
     elif table == "résultat":
         requete = "insert into résultat (moyenne_prédiction, prédiction_rsi, prédiction_vwap, prédiction_cmf," + \
             " prédiction_sma, prédiction_ema, prédiction_macd1, prédiction_macd2," + \
@@ -539,20 +576,20 @@ def insert_bdd(table: str, symbol: str, data: pandas.DataFrame or list, insert_c
             " values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
         cur.execute(requete, data)
 
+        con.commit()
+
+    # Insertion des prédictions déja faite dans les tables prédiction_etc...
     elif table == "simple_insert_predic_data":
         cur.execute(
             "insert into prédiction (prix_prédiction, prix_fermeture) values (?,?)", data)
-    elif table == "simple_insert_predic_rsi":
-        cur2.execute(
-            "insert into prédiction (prix_prédiction, prix_fermeture) values (?,?)", data)
 
-    # Commit ou non pour éviter le ralentissement des insertions
-    # Très peu de ralentissement sur les ssd car écriture instantané
-    if insert_commit == True:
-        if table == "data" or table == "prédiction_data" or table == "résultat" or table == "simple_insert_predic_data":
-            con.commit()
-        elif table == "rsi_vwap_cmf" or table == "prédiction_rsi_vwap_cmf" or table == "simple_insert_predic_rsi":
-            con2.commit()
+        con.commit()
+
+    elif table == "simple_insert_predic_rsi":
+        cur.execute(
+            "insert into prédiction (prix_prédiction, prix_fermeture) values (?,?)", data)
+        con.commit()
+    #########################################################
 
 
 def insert_data_historique_bdd(symbol: str) -> None:
@@ -575,15 +612,19 @@ def insert_data_historique_bdd(symbol: str) -> None:
             data = donnée_bis(symbol, f"{i} min ago UTC",
                               f"{i - 40*15} min ago UTC", 40, client2)
 
-            insert_bdd("data", symbol, data)
+            if i == 615:
+                insert_bdd("data", symbol, data, False)
+            else:
+                insert_bdd("data", symbol, data, False, False)
 
             # Calcul des prédictions
             if cpt >= 20:
-                insert_bdd("prédiction_data", symbol, data, False)
+                if i == 615:
+                    insert_bdd("prédiction_data", symbol, data, False)
+                else:
+                    insert_bdd("prédiction_data", symbol, data, False, False)
 
             cpt += 1
-
-        con.commit()
 
     def data2(symbol: str) -> None:
         cpt = 0
@@ -592,16 +633,20 @@ def insert_data_historique_bdd(symbol: str) -> None:
             data = donnée_bis(symbol, f"{i} min ago UTC",
                               f"{i - 15*15} min ago UTC", 15, client3)
 
-            insert_bdd("rsi_vwap_cmf", symbol, data)
+            if i == 240:
+                insert_bdd("rsi_vwap_cmf", symbol, data, False)
+            else:
+                insert_bdd("rsi_vwap_cmf", symbol, data, False, False)
 
             # Calcul des prédictions
             if cpt >= 20:
-                insert_bdd("prédiction_rsi_vwap_cmf", symbol,
-                           data, False)
+                if i == 240:
+                    insert_bdd("prédiction_rsi_vwap_cmf", symbol, data, False)
+                else:
+                    insert_bdd("prédiction_rsi_vwap_cmf",
+                               symbol, data, False, False)
 
             cpt += 1
-
-        con2.commit()
 
     p1 = Process(target=data, args=(symbol,))
     p2 = Process(target=data2, args=(symbol, ))
