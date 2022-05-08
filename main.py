@@ -462,6 +462,8 @@ def insert_bdd(table: str, symbol: str, data: pandas.DataFrame or list, empty_li
         ls_requete_predic_rsi.clear()
 
     # Insertion normale des valeurs dans la table data
+    # On transforme en str qu'au dernier moment car la liste
+    # Est utilisé lors de l'insertion des données dans la bdd au lancement
     if table == "data":
         ls = [SMA(data), EMA(data), MACD(data), stochRSI(data), bandes_bollinger(
             data), float(data.close.values[-1])]
@@ -484,6 +486,7 @@ def insert_bdd(table: str, symbol: str, data: pandas.DataFrame or list, empty_li
     # Calcul des prédictions qui peuvent etre fait sur la table data
     # On fait la moyenne et on l'insert dans la bdd
     elif table == "prédiction_data":
+        # On transforme en dataframe car c'est ce que prend les fonctions de prédiction
         dataframe_temp = pandas.DataFrame(ls_requete_data)
 
         dataframe_temp.columns = ['SMA', 'EMA', 'MACD', 'STOCHRSI',
@@ -507,6 +510,8 @@ def insert_bdd(table: str, symbol: str, data: pandas.DataFrame or list, empty_li
 
         my_liste = moyenne(ls)
 
+        # On enregistre en décalé car d'abord on enregistre la moyenne des prédictions
+        # Puis on enregistre le prix réel passé les 15 minutes
         if ls_requete_predic_data == []:
             ls_requete_predic_data.append([my_liste, None])
         else:
@@ -514,6 +519,8 @@ def insert_bdd(table: str, symbol: str, data: pandas.DataFrame or list, empty_li
                                    1][1] = float(data.close.values[-1])
             ls_requete_predic_data.append([my_liste, None])
 
+        # A la fin, on récupère le prix réel final, on le met dans la liste
+        # Et on insert le tout dans la bdd
         if insert_commit == True:
 
             data_serveur = donnée_bis(
@@ -540,10 +547,10 @@ def insert_bdd(table: str, symbol: str, data: pandas.DataFrame or list, empty_li
 
             con.commit()
 
-    # Calcul des prédictions qui peuvent etre fait sur la table rsi______
+    # Calcul des prédictions qui peuvent être fait sur la table rsi______
     # On fait la moyenne des trois valeurs de la fonction de prédiction et on l'insert dans la bdd
     elif table == "prédiction_rsi_vwap_cmf":
-
+        # On transforme en dataframe car c'est ce que prend les fonctions de prédiction
         dataframe_temp = pandas.DataFrame(ls_requete_rsi)
         dataframe_temp.columns = ['RSI', 'VWAP', 'CMF', 'PRIX_FERMETURE']
 
@@ -551,6 +558,8 @@ def insert_bdd(table: str, symbol: str, data: pandas.DataFrame or list, empty_li
 
         my_liste = moyenne(predic1)
 
+        # On enregistre en décalé car d'abord on enregistre la moyenne des prédictions
+        # Puis on enregistre le prix réel passé les 15 minutes
         if ls_requete_predic_rsi == []:
             ls_requete_predic_rsi.append([my_liste, None])
         else:
@@ -558,6 +567,8 @@ def insert_bdd(table: str, symbol: str, data: pandas.DataFrame or list, empty_li
                                   1][1] = float(data.close.values[-1])
             ls_requete_predic_rsi.append([my_liste, None])
 
+        # A la fin, on récupère le prix réel final, on le met dans la liste
+        # Et on insert le tout dans la bdd
         if insert_commit == True:
             data_serveur = donnée_bis(
                 symbol, "225 min ago UTC", "0 min ago UTC", 15, client3)
@@ -582,13 +593,14 @@ def insert_bdd(table: str, symbol: str, data: pandas.DataFrame or list, empty_li
     # Insertion des prédictions déja faite dans les tables prédiction_etc...
     elif table == "simple_insert_predic_data":
         cur.execute(
-            "insert into prédiction (prix_prédiction, prix_fermeture) values (?,?)", data)
+            "insert into predic_data (prix_prédiction, prix_fermeture) values (?,?)", data)
 
         con.commit()
 
     elif table == "simple_insert_predic_rsi":
         cur.execute(
-            "insert into prédiction (prix_prédiction, prix_fermeture) values (?,?)", data)
+            "insert into predic_rsi (prix_prédiction, prix_fermeture) values (?,?)", data)
+
         con.commit()
     #########################################################
 
@@ -729,6 +741,9 @@ def select_prediction_hist_all() -> pandas.DataFrame:
     Et dans la table rsi_etc..., c'est la moyenne des trois valeurs de la fonction prediction
     Et renvoie le tout sous forme d'une dataframe pandas
     """
+    # Liaison par un inner join obligatoire car cela créait des couples de valeurs*
+    # Chaque valeur dans la première table était couplé avec chacune des autres valeurs de l'autre table
+    # Lors d'un select, au départ il y a 80 données dans chacune des deux tables et donc cela donnait 80x80 = 6400 couples
     predic = cur.execute(
         """SELECT predic_data.prix_prédiction, predic_rsi.prix_prédiction, predic_data.prix_fermeture
     FROM predic_data

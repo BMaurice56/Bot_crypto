@@ -44,7 +44,7 @@ class Botcrypto(commands.Bot):
 
             del n : supprime les n derniers messages de la conversation
 
-            launch : lance le bot
+            start : lance le bot
 
             stop : arrête le bot
 
@@ -61,8 +61,8 @@ class Botcrypto(commands.Bot):
             """
             await ctx.channel.send(f"Le prix de la crypto est de : {prix_temps_reel('BTCEUR')}")
 
-        @self.command(name="launch")
-        async def launch(ctx):
+        @self.command(name="start")
+        async def start(ctx):
             """
             Fonction qui lance en processus le bot de crypto
             Permet de ne pas bloquer le bot discord et donc d'executre d'autre commandes à coté

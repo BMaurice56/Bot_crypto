@@ -95,11 +95,9 @@ while True:
         else:
             sleep(dodo)
 
-    liste_bdd = [moyenne_liste] + liste_all
-
     prix_temps_r = prix_temps_reel(symbol)
 
-    liste_bdd.append(prix_temps_r)
+    liste_bdd = [moyenne_liste] + liste_all + [prix_temps_r]
 
     insert_bdd("résultat", symbol, liste_bdd)
     insert_bdd("simple_insert_predic_data", symbol, [
