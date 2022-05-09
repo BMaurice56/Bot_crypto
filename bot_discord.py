@@ -29,11 +29,11 @@ class Botcrypto(commands.Bot):
                 message_status_général("Le bot s'est arrêté")
 
         @self.command(name="del")
-        async def delete(ctx, nb_messages: int):
+        async def delete(ctx):
             """
-            Fonction qui supprime les n derniers messages de la conversation
+            Fonction qui supprime tous les messages de la conversation
             """
-            messages = await ctx.channel.history(limit=nb_messages + 1).flatten()
+            messages = await ctx.channel.history().flatten()
 
             for each_message in messages:
                 await each_message.delete()
@@ -48,32 +48,40 @@ class Botcrypto(commands.Bot):
 
             aide / help : affiche l'aide soit de la commande aide du bot/soit de discord
 
-            del n : supprime les n derniers messages de la conversation
+            del : supprime tous les messages de la conversation
 
-            start : lance le bot
+            start : lance le bot sur la crypto voulus
 
             stop : arrête le bot
 
-            prix : donne le prix actuel de la cryptomonnaie
+            prix : donne le prix actuel de la cryptomonnaie voulus
+
+            liste : liste les pairs de cryptomonnais possible
 
             """
 
-            await ctx.channel.send(commandes)
+            await ctx.send(commandes)
 
         @self.command(name="prix")
         async def prix(ctx):
             """
             Fonction qui affiche le prix en temps réel de la crypto
             """
-            await ctx.channel.send("Quelles crypto ? BTCEUR ? ETHEUR ? BATBUSD ?")
+            await ctx.send("Quelles crypto ? BTCEUR ? ETHEUR ? BATBUSD ?")
+
+            # Vérifie que le message n'est pas celui envoyé par le bot
+            def check(m):
+                return m.content != "Quelles crypto ? BTCEUR ? ETHEUR ? BATBUSD ?"
+
             # On attend la réponse
-            msg = await self.wait_for("message")
+            msg = await self.wait_for("message", check=check)
+
             # Puis on vérifie que la cryptomonnaie existe bien
             crypto = msg.content
             if crypto in listes_crypto:
-                await ctx.channel.send(f"Le prix de la crypto est de : {prix_temps_reel(crypto)}")
+                await ctx.send(f"Le prix de la crypto est de : {prix_temps_reel(crypto)}")
             else:
-                await ctx.channel.send("La cryptomonnaie n'existe pas")
+                await ctx.send("La cryptomonnaie n'existe pas")
 
         @self.command(name="start")
         async def start(ctx):
@@ -82,16 +90,22 @@ class Botcrypto(commands.Bot):
             Permet de ne pas bloquer le bot discord et donc d'executre d'autre commandes à coté
             Comme l'arrêt du bot ou le relancer, le prix à l'instant T, etc...
             """
-            await ctx.channel.send("Sur quelles crypto trader ? BTCEUR ? ETHEUR ? BATBUSD ?")
+            await ctx.send("Sur quelles crypto trader ? BTCEUR ? ETHEUR ? BATBUSD ?")
+
+            # Vérifie que le message n'est pas celui envoyé par le bot
+            def check(m):
+                return m.content != "Sur quelles crypto trader ? BTCEUR ? ETHEUR ? BATBUSD ?"
+
             # On attend la réponse
-            msg = await self.wait_for("message")
+            msg = await bot.wait_for("message", check=check)
+
             # Puis on vérifie que la cryptomonnaie existe bien
             crypto = msg.content
             if crypto in listes_crypto:
                 process = Process(target=lancement_bot, args=(crypto,))
                 process.start()
             else:
-                await ctx.channel.send("La cryptomonnaie n'existe pas")
+                await ctx.send("La cryptomonnaie n'existe pas")
 
         @self.command(name="stop")
         async def stop(ctx):
@@ -109,7 +123,47 @@ class Botcrypto(commands.Bot):
             for elt in processus:
                 os.system(f"kill -9 {elt}")
 
-            await ctx.channel.send("Bot arrêté")
+            await ctx.send("Bot arrêté")
+
+        @self.command(name="liste")
+        async def crypto(ctx):
+            """
+            Fonction qui permet de lister les cryptos voulus
+            """
+            await ctx.send("Quelles pair de crypto voulus ? BTC ? ETH ? BAT ? LUNA ? EUR ?")
+
+            # Vérifie que le message n'est pas celui envoyé par le bot
+            def check(m):
+                return m.content != "Quelles pair de crypto voulus ? BTC ? ETH ? BAT ? LUNA ? EUR ?"
+
+            # On attend la réponse
+            msg = await bot.wait_for("message", check=check)
+
+            # Puis on vérifie que la cryptomonnaie existe bien
+            crypto = msg.content
+
+            crypto_voulu = ""
+            for cr in listes_crypto:
+                if crypto in cr:
+                    crypto_voulu += cr + ", "
+
+            if crypto_voulu == "":
+                await ctx.send("Aucune crypto de ce type")
+            else:
+                crypto_voulu = crypto_voulu[:-2]
+                await ctx.send("Voici les cryptomonnais disponibles : ")
+                if len(crypto_voulu) < 2000:
+                    await ctx.send(crypto_voulu)
+                else:
+                    liste_crypto_voulu = []
+
+                    while len(crypto_voulu) >= 2000:
+                        liste_crypto_voulu.append(crypto_voulu[:2000])
+                        crypto_voulu = crypto_voulu[2000:]
+
+                    liste_crypto_voulu.append(crypto_voulu)
+                    for elt in liste_crypto_voulu:
+                        await ctx.send(elt)
 
     async def on_ready(self):
         """
