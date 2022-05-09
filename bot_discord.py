@@ -4,19 +4,25 @@ import traceback
 import runpy
 
 
+fichier = open("crypto.txt", "r")
+text = fichier.read()
+listes_crypto = text.split(";")
+
+
 class Botcrypto(commands.Bot):
 
     def __init__(self):
         super().__init__(command_prefix="!")
 
-        def lancement_bot():
+        def lancement_bot(symbol):
             """
             Fonction qui permet de lancer le bot
             Et de renvoyer l'erreur sur le serveur s'il y en a une qui apparait
             """
             try:
                 message_status_général("Le bot est lancé !")
-                runpy.run_path(path_name="app.py")
+                sys.argv = ['', symbol]
+                runpy.run_path("app.py")
             except:
                 erreur = traceback.format_exc()
                 message_status_général(erreur)
@@ -59,7 +65,15 @@ class Botcrypto(commands.Bot):
             """
             Fonction qui affiche le prix en temps réel de la crypto
             """
-            await ctx.channel.send(f"Le prix de la crypto est de : {prix_temps_reel('BTCEUR')}")
+            await ctx.channel.send("Quelles crypto ? BTCEUR ? ETHEUR ? BATBUSD ?")
+            # On attend la réponse
+            msg = await self.wait_for("message")
+            # Puis on vérifie que la cryptomonnaie existe bien
+            crypto = msg.content
+            if crypto in listes_crypto:
+                await ctx.channel.send(f"Le prix de la crypto est de : {prix_temps_reel(crypto)}")
+            else:
+                await ctx.channel.send("La cryptomonnaie n'existe pas")
 
         @self.command(name="start")
         async def start(ctx):
@@ -68,8 +82,16 @@ class Botcrypto(commands.Bot):
             Permet de ne pas bloquer le bot discord et donc d'executre d'autre commandes à coté
             Comme l'arrêt du bot ou le relancer, le prix à l'instant T, etc...
             """
-            process = Process(target=lancement_bot)
-            process.start()
+            await ctx.channel.send("Sur quelles crypto trader ? BTCEUR ? ETHEUR ? BATBUSD ?")
+            # On attend la réponse
+            msg = await self.wait_for("message")
+            # Puis on vérifie que la cryptomonnaie existe bien
+            crypto = msg.content
+            if crypto in listes_crypto:
+                process = Process(target=lancement_bot, args=(crypto,))
+                process.start()
+            else:
+                await ctx.channel.send("La cryptomonnaie n'existe pas")
 
         @self.command(name="stop")
         async def stop(ctx):

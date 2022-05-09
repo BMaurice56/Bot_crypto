@@ -14,6 +14,7 @@ import numpy
 import copy
 import math
 import ast
+import sys
 import os
 
 
@@ -620,7 +621,7 @@ def insert_data_historique_bdd(symbol: str) -> None:
     # Et on vient appliquer toutes les fonctions dessus pour ensuite rentrer les données dans la bdd
     def data(symbol: str) -> None:
         cpt = 0
-        for i in range(2100, 40*15, -15):
+        for i in range(3600, 40*15, -15):
 
             data = donnée_bis(symbol, f"{i} min ago UTC",
                               f"{i - 40*15} min ago UTC", 40, client2)
@@ -641,7 +642,7 @@ def insert_data_historique_bdd(symbol: str) -> None:
 
     def data2(symbol: str) -> None:
         cpt = 0
-        for i in range(1725, 15*15, -15):
+        for i in range(3225, 15*15, -15):
 
             data = donnée_bis(symbol, f"{i} min ago UTC",
                               f"{i - 15*15} min ago UTC", 15, client3)
@@ -1075,7 +1076,7 @@ def surveillance(symbol: str, argent: int, position: dict, temps_execution: int,
                 gain = ((prix * argent_pos) / prix_pos) - argent_pos
                 argent += argent_pos / effet_levier + gain
                 msg = f"Vente de position au prix de {prix}€, prix avant : {prix_pos}€, gain de {gain}, il reste {argent}€"
-                message_webhook_général(msg, False)
+                message_prise_position(msg, False)
                 sleep(temps_execution - (t2 - t1))
                 return argent
 
@@ -1097,20 +1098,21 @@ def moyenne(liste: list or dict) -> float:
 
 
 # Adresse du webhook discord
-adr_webhook_généal = os.getenv("ADR_WEBHOOK_GENERAL")
+adr_webhook_prise_position = os.getenv("ADR_WEBHOOK_PRISE_POSITION")
 adr_webhook_état_bot = os.getenv("ADR_WEBHOOK_ETAT_BOT")
+adr_webhook_général = os.getenv("ADR_WEBHOOK_GENERAL")
 
 
-def message_webhook_général(message: str, prise_position: bool) -> None:
+def message_prise_position(message: str, prise_position: bool) -> None:
     """
-    Fonction qui envoie un message au serveur discord au travers d'un webhook sur le canal général
+    Fonction qui envoie un message au serveur discord au travers d'un webhook sur le canal de prise de position
     Envoie la prise ou vente de position, les gains, etc...
     Ex param :
     message : "vente d'une position etc...
     prise_position : True pour un achat et False pour une vente
     """
     webhook = DiscordWebhook(
-        url=adr_webhook_généal, username="Bot crypto")
+        url=adr_webhook_prise_position, username="Bot crypto")
 
     if prise_position == True:
         embed = DiscordEmbed(title='Prise de position', color="03b2f8")
@@ -1145,6 +1147,6 @@ def message_status_général(message: str) -> None:
     message : "Bot crypto est lancé"
     """
     webhook = DiscordWebhook(
-        url=adr_webhook_généal, username="Bot crypto", content=message)
+        url=adr_webhook_général, username="Bot crypto", content=message)
 
     webhook.execute()

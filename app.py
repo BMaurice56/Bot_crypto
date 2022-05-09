@@ -1,7 +1,7 @@
 from main import *
 from datetime import datetime
 
-symbol = 'BTCEUR'
+symbol = sys.argv[1]
 dodo = 60*14 + 56
 effet_levier = 100
 
@@ -12,8 +12,6 @@ position = {}
 
 while True:
     date = datetime.now().strftime("%A %d %B %Y %H:%M:%S")
-    état = f"programme toujours en cour d'exécution le : {date}"
-    print(état)
 
     donnée_bdd_rsi = select_rsi_vwap_cmf_bdd()
     donnée_bdd_data = select_data_bdd()
@@ -57,9 +55,8 @@ while True:
 
     prix = prix_temps_reel(symbol)
 
+    état = f"programme toujours en cour d'exécution le : {date}"
     infos = f"prix de la crypto : {prix}, moyenne des prédictions : {moyenne_liste}"
-    print(infos)
-    print()
 
     msg = état + "\n" + infos
 
@@ -71,7 +68,7 @@ while True:
             argent = argent - depense
             position[depense * effet_levier] = prix
             msg = f"Prise de position avec {depense} euros * {effet_levier} au prix de {prix} euros, il reste {argent}€"
-            message_webhook_général(msg, True)
+            message_prise_position(msg, True)
             surveil = surveillance(
                 symbol, argent, position, dodo, effet_levier)
             if surveil != None:
@@ -88,7 +85,7 @@ while True:
             gain = ((prix * argent_pos) / prix_pos) - argent_pos
             argent += argent_pos / effet_levier + gain
             msg = f"Vente de position au prix de {prix}€, prix avant : {prix_pos}€, gain de {gain}, il reste {argent}€"
-            message_webhook_général(msg, False)
+            message_prise_position(msg, False)
             position = {}
             sleep(dodo)
 

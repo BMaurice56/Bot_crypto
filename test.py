@@ -55,4 +55,7 @@ plt.scatter(indice_min, minimum)
 plt.scatter(indice_max, maximum)
 plt.show()
 
+from main import *
+
+print(sys.argv[0], sys.argv[1], sys.argv[2])
 """
