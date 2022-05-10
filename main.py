@@ -439,18 +439,15 @@ cur = con.cursor()
 ls_requete_data = []
 ls_requete_rsi = []
 
-ls_requete_predic_data = []
-ls_requete_predic_rsi = []
 
-
-def insert_bdd(table: str, symbol: str, data: pandas.DataFrame or list, empty_list=True, insert_commit=True) -> None:
+def insert_bdd(table: str, symbol: str, data: pandas.DataFrame, empty_list=True, insert_commit=True) -> None:
     """
     Fonction qui prend en argument la table et les données à inserer
     Et insert les données dans la bdd
     Ex param :
     table : data
     symbol : 'BTCEUR' ....
-    data : dataframe des données du serveur ou une liste
+    data : dataframe des données du serveur
     empty_list : vide les listes (par défaut activer, désactiver si insertion de nombreuses données comme au lancement par ex)
     insert_commit : True ou false (par défaut, con.commit() est executé)
     """
@@ -459,79 +456,18 @@ def insert_bdd(table: str, symbol: str, data: pandas.DataFrame or list, empty_li
         ls_requete_data.clear()
         ls_requete_rsi.clear()
 
-        ls_requete_predic_data.clear()
-        ls_requete_predic_rsi.clear()
-
     # Insertion normale des valeurs dans la table data
     # On transforme en str qu'au dernier moment car la liste
     # Est utilisé lors de l'insertion des données dans la bdd au lancement
     if table == "data":
-        ls = [SMA(data), EMA(data), MACD(data), stochRSI(data), bandes_bollinger(
-            data), float(data.close.values[-1])]
+        ls = [str(SMA(data)), str(EMA(data)), str(MACD(data)), str(stochRSI(data)), str(bandes_bollinger(
+            data)), float(data.close.values[-1])]
 
         ls_requete_data.append(ls)
 
         if insert_commit == True:
-            liste = copy.deepcopy(ls_requete_data)
-            for rq in liste:
-                rq[0] = str(rq[0])
-                rq[1] = str(rq[1])
-                rq[2] = str(rq[2])
-                rq[3] = str(rq[3])
-                rq[4] = str(rq[4])
-                cur.execute(
-                    "insert into data (sma, ema, macd, stochrsi, bande_bollinger, prix_fermeture) values (?,?,?,?,?,?)", rq)
-
-            con.commit()
-
-    # Calcul des prédictions qui peuvent etre fait sur la table data
-    # On fait la moyenne et on l'insert dans la bdd
-    elif table == "prédiction_data":
-        # On transforme en dataframe car c'est ce que prend les fonctions de prédiction
-        dataframe_temp = pandas.DataFrame(ls_requete_data)
-
-        dataframe_temp.columns = ['SMA', 'EMA', 'MACD', 'STOCHRSI',
-                                  'BB', 'PRIX_FERMETURE']
-
-        predic2 = prediction_liste_sma_ema(dataframe_temp, data)
-        predic3 = prediction_liste_macd(dataframe_temp, data)
-        predic4 = prediction_liste_stochrsi(dataframe_temp, data)
-        predic5 = prediction_liste_bandes_b(dataframe_temp, data)
-
-        ls = []
-
-        for elt in predic2:
-            ls.append(elt)
-        for elt in predic3:
-            ls.append(elt)
-        for elt in predic4:
-            ls.append(elt)
-        for elt in predic5:
-            ls.append(elt)
-
-        my_liste = moyenne(ls)
-
-        # On enregistre en décalé car d'abord on enregistre la moyenne des prédictions
-        # Puis on enregistre le prix réel passé les 15 minutes
-        if ls_requete_predic_data == []:
-            ls_requete_predic_data.append([my_liste, None])
-        else:
-            ls_requete_predic_data[len(ls_requete_predic_data) -
-                                   1][1] = float(data.close.values[-1])
-            ls_requete_predic_data.append([my_liste, None])
-
-        # A la fin, on récupère le prix réel final, on le met dans la liste
-        # Et on insert le tout dans la bdd
-        if insert_commit == True:
-
-            data_serveur = donnée_bis(
-                symbol, "600 min ago UTC", "0 min ago UTC", 40, client2)
-
-            ls_requete_predic_data[-1][1] = float(
-                data_serveur.close.values[-1])
-
             cur.executemany(
-                "insert into predic_data (prix_prédiction, prix_fermeture) values (?,?)", ls_requete_predic_data)
+                "insert into data (sma, ema, macd, stochrsi, bande_bollinger, prix_fermeture) values (?,?,?,?,?,?)", ls_requete_data)
 
             con.commit()
 
@@ -548,63 +484,6 @@ def insert_bdd(table: str, symbol: str, data: pandas.DataFrame or list, empty_li
 
             con.commit()
 
-    # Calcul des prédictions qui peuvent être fait sur la table rsi______
-    # On fait la moyenne des trois valeurs de la fonction de prédiction et on l'insert dans la bdd
-    elif table == "prédiction_rsi_vwap_cmf":
-        # On transforme en dataframe car c'est ce que prend les fonctions de prédiction
-        dataframe_temp = pandas.DataFrame(ls_requete_rsi)
-        dataframe_temp.columns = ['RSI', 'VWAP', 'CMF', 'PRIX_FERMETURE']
-
-        predic1 = prediction_rsi_wvap_cmf(dataframe_temp, data)
-
-        my_liste = moyenne(predic1)
-
-        # On enregistre en décalé car d'abord on enregistre la moyenne des prédictions
-        # Puis on enregistre le prix réel passé les 15 minutes
-        if ls_requete_predic_rsi == []:
-            ls_requete_predic_rsi.append([my_liste, None])
-        else:
-            ls_requete_predic_rsi[len(ls_requete_predic_rsi) -
-                                  1][1] = float(data.close.values[-1])
-            ls_requete_predic_rsi.append([my_liste, None])
-
-        # A la fin, on récupère le prix réel final, on le met dans la liste
-        # Et on insert le tout dans la bdd
-        if insert_commit == True:
-            data_serveur = donnée_bis(
-                symbol, "225 min ago UTC", "0 min ago UTC", 15, client3)
-
-            ls_requete_predic_rsi[-1][1] = float(data_serveur.close.values[-1])
-
-            cur.executemany(
-                "insert into predic_rsi (prix_prédiction, prix_fermeture) values (?,?)", ls_requete_predic_rsi)
-
-            con.commit()
-
-    # Insertion de tous les résultats dans la bdd
-    elif table == "résultat":
-        requete = "insert into résultat (moyenne_prédiction, prédiction_rsi, prédiction_vwap, prédiction_cmf," + \
-            " prédiction_sma, prédiction_ema, prédiction_macd1, prédiction_macd2," + \
-            " prédiction_macd3, prédiction_stochrsi1, prédiction_stochrsi2, prédiction_bb1, prédiction_bb2, prédiction_bb3, prédiction_historique, prix_final)" + \
-            " values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
-        cur.execute(requete, data)
-
-        con.commit()
-
-    # Insertion des prédictions déja faite dans les tables prédiction_etc...
-    elif table == "simple_insert_predic_data":
-        cur.execute(
-            "insert into predic_data (prix_prédiction, prix_fermeture) values (?,?)", data)
-
-        con.commit()
-
-    elif table == "simple_insert_predic_rsi":
-        cur.execute(
-            "insert into predic_rsi (prix_prédiction, prix_fermeture) values (?,?)", data)
-
-        con.commit()
-    #########################################################
-
 
 def insert_data_historique_bdd(symbol: str) -> None:
     """
@@ -620,7 +499,7 @@ def insert_data_historique_bdd(symbol: str) -> None:
     # A chaque tour de boucle, on récupère les données sur une durée précise
     # Et on vient appliquer toutes les fonctions dessus pour ensuite rentrer les données dans la bdd
     def data(symbol: str) -> None:
-        cpt = 0
+
         for i in range(3600, 40*15, -15):
 
             data = donnée_bis(symbol, f"{i} min ago UTC",
@@ -631,17 +510,8 @@ def insert_data_historique_bdd(symbol: str) -> None:
             else:
                 insert_bdd("data", symbol, data, False, False)
 
-            # Calcul des prédictions
-            if cpt >= 20:
-                if i == 615:
-                    insert_bdd("prédiction_data", symbol, data, False)
-                else:
-                    insert_bdd("prédiction_data", symbol, data, False, False)
-
-            cpt += 1
-
     def data2(symbol: str) -> None:
-        cpt = 0
+
         for i in range(3225, 15*15, -15):
 
             data = donnée_bis(symbol, f"{i} min ago UTC",
@@ -651,16 +521,6 @@ def insert_data_historique_bdd(symbol: str) -> None:
                 insert_bdd("rsi_vwap_cmf", symbol, data, False)
             else:
                 insert_bdd("rsi_vwap_cmf", symbol, data, False, False)
-
-            # Calcul des prédictions
-            if cpt >= 20:
-                if i == 240:
-                    insert_bdd("prédiction_rsi_vwap_cmf", symbol, data, False)
-                else:
-                    insert_bdd("prédiction_rsi_vwap_cmf",
-                               symbol, data, False, False)
-
-            cpt += 1
 
     p1 = Process(target=data, args=(symbol,))
     p2 = Process(target=data2, args=(symbol, ))
@@ -675,53 +535,42 @@ def insert_data_historique_bdd(symbol: str) -> None:
     p2.join()
 
 
-def select_data_bdd() -> pandas.DataFrame:
+def select_donnée_bdd() -> (pandas.DataFrame, pandas.DataFrame):
     """
-    Fonction qui récupère toutes les données de la bdd de la table data
+    Fonction qui récupère toutes les données de la bdd
+    Renvoie toutes les données et les prix sous forme de dataframe
+    Première dataframe : toutes les données
+    Deuxième dataframe : les prix
     """
-    donnée_bdd = cur.execute("SELECT * FROM data")
+    donnée_bdd = cur.execute("""
+    SELECT data.sma, data.ema, data.macd, data.stochrsi, data.bande_bollinger, rsi_vwap_cmf.rsi,
+    rsi_vwap_cmf.vwap, rsi_vwap_cmf.cmf
+    FROM data
+    INNER JOIN rsi_vwap_cmf ON rsi_vwap_cmf.id = data.id
+    """).fetchall()
 
-    # On vient retransformer les données dans leut état d'origine
+    prix = cur.execute("""
+    SELECT prix_fermeture FROM data
+    """).fetchall()
+
+    prix = pandas.DataFrame([x[0] for x in prix])
+
+    # On vient retransformer les données dans leur état d'origine
     # Et on remet le tout dans une dataframe
     donnée_dataframe = []
     for row in donnée_bdd:
         temp = []
-        cpt = 0
+        cpt = 1
         for element in row:
-            if cpt == 0:
-                temp.append(int(element))
-            elif cpt == 6:
-                temp.append(float(element))
-            else:
+            if cpt <= 2:
                 elt = ast.literal_eval(str(element))
-                temp.append(elt)
-            cpt += 1
-
-        donnée_dataframe.append(temp)
-
-    dp = pandas.DataFrame(donnée_dataframe)
-
-    dp.columns = ['ID', 'SMA', 'EMA', 'MACD', 'STOCHRSI',
-                  'BB', 'PRIX_FERMETURE']
-
-    return dp
-
-
-def select_rsi_vwap_cmf_bdd() -> pandas.DataFrame:
-    """
-    Fonction qui récupère toutes les données de la bdd de la table rsi_vwap_cmf
-    """
-    donnée_bdd = cur.execute("SELECT * FROM rsi_vwap_cmf")
-
-    # On vient retransformer les données dans leut état d'origine
-    # Et on remet le tout dans une dataframe
-    donnée_dataframe = []
-    for row in donnée_bdd:
-        temp = []
-        cpt = 0
-        for element in row:
-            if cpt == 0:
-                temp.append(int(element))
+                for nb in elt:
+                    temp.append(nb)
+            elif cpt <= 5:
+                elt = ast.literal_eval(str(element))
+                for liste in elt:
+                    for nb in liste:
+                        temp.append(nb)
             else:
                 temp.append(float(element))
             cpt += 1
@@ -730,311 +579,59 @@ def select_rsi_vwap_cmf_bdd() -> pandas.DataFrame:
 
     dp = pandas.DataFrame(donnée_dataframe)
 
-    dp.columns = ['ID', 'RSI', 'VWAP', 'CMF', 'PRIX_FERMETURE']
-
-    return dp
-
-
-def select_prediction_hist_all() -> pandas.DataFrame:
-    """
-    Fonction qui renvoie les predictions faites sur les valeurs antérieurs
-    Dans la table data, ce sont la moyenne des predictions faites sur les valeurs qui la compose
-    Et dans la table rsi_etc..., c'est la moyenne des trois valeurs de la fonction prediction
-    Et renvoie le tout sous forme d'une dataframe pandas
-    """
-    # Liaison par un inner join obligatoire car cela créait des couples de valeurs*
-    # Chaque valeur dans la première table était couplé avec chacune des autres valeurs de l'autre table
-    # Lors d'un select, au départ il y a 80 données dans chacune des deux tables et donc cela donnait 80x80 = 6400 couples
-    predic = cur.execute(
-        """SELECT predic_data.prix_prédiction, predic_rsi.prix_prédiction, predic_data.prix_fermeture
-    FROM predic_data
-    INNER JOIN predic_rsi ON predic_data.id = predic_rsi.id
-    """)
-
-    ls = []
-
-    for row in predic:
-        ls.append([row[0], row[1], row[2]])
-
-    df = pandas.DataFrame(ls)
-    df.columns = ['PRIX_DATA', 'PRIX_RSI', 'PRIX_F']
-
-    return df
+    return (dp, prix)
 
 
 # Fonctions de prédiction
 
-
-def prediction_rsi_wvap_cmf(donnée_bdd: pandas.DataFrame, data: pandas.DataFrame) -> (float, float, float):
+def prédiction(donnée_serveur_data: pandas.DataFrame, donnée_serveur_rsi: pandas.DataFrame) -> float:
     """
-    Fonction qui prend en arguement une dataframe pandas des données de la base de donnée
-    Ainsi que les dernieres données du serveur
-    Et renvoie une prédiction (avec le rsi et le vwap) 
-    Ex param :
-    donnée_bdd : donnée de la bdd ancienne (sous forme d'une dataframe pandas)
-    data : dernières données du serveur (sous forme d'une dataframe pandas)
+    Fonction qui prédit le future prix de la crypto
     """
-
-    # On transforme les données en une liste puis on remet de nouveau dans une dataframe
-    # Comme ça, il n'y a pas de nom de colonne et donc pas d'erreur
-    df_rsi_bdd = pandas.DataFrame(list(donnée_bdd['RSI']), dtype=float)
-    df_vwap_bdd = pandas.DataFrame(list(donnée_bdd['VWAP']), dtype=float)
-    df_cmf_bdd = pandas.DataFrame(list(donnée_bdd['CMF']), dtype=float)
-    y = donnée_bdd['PRIX_FERMETURE']
-
-    # On crée le module linéaire
-    regr = linear_model.LinearRegression()
-    regr2 = linear_model.LinearRegression()
-    regr3 = linear_model.LinearRegression()
-
-    # On lui donne les données en argument de la bdd et on les fit avec les prix de fermeture
-    regr.fit(df_rsi_bdd, y)
-    regr2.fit(df_vwap_bdd, y)
-    regr3.fit(df_cmf_bdd, y)
-
-    # On calcul les deux indices qu'on met dans une liste pour qu'ils puissent être transformer en dataframe pandas
-    rsi = pandas.DataFrame([RSI(data)])
-    vwap = pandas.DataFrame([VWAP(data)])
-    cmf = pandas.DataFrame([chaikin_money_flow(data)])
-
-    # Et enfin on prédit la potentiel valeur de la crypto
-    predic = regr.predict(rsi)
-    predic2 = regr2.predict(vwap)
-    predic3 = regr3.predict(cmf)
-
-    return float(predic[0]), float(predic2[0]), float(predic3[0])
-
-
-def prediction_liste_sma_ema(donnée_bdd: pandas.DataFrame, data: pandas.DataFrame) -> (float, float):
-    """
-    Fonction qui prend en arguement une dataframe pandas des données de la base de donnée
-    Ainsi que les dernieres données du serveur
-    Et renvoie une prédiction (avec le sma et le ema) 
-    Ex param :
-    donnée_bdd : donnée de la bdd ancienne (sous forme d'une dataframe pandas)
-    data : dernières données du serveur (sous forme d'une dataframe pandas)
-    """
-
-    # Comme les données sont sous forme d'une liste à chaque fois
-    # On dispatch chaque valeur de la liste dans une colonne
-    # Et on revient recréer la dataframe avec les valeurs dans les colonnes
-    df_bdd_sma = pandas.DataFrame(list(donnée_bdd['SMA']), dtype=float)
-    df_bdd_ema = pandas.DataFrame(list(donnée_bdd['EMA']), dtype=float)
-
-    y = donnée_bdd['PRIX_FERMETURE']
-
-    # On calcul le sma et le ema et on met les valeurs de la liste dans chaque colonnes d'une dataframe
-    sma = [SMA(data)]
-    df_sma = pandas.DataFrame(sma)
-
-    ema = [EMA(data)]
-    df_ema = pandas.DataFrame(ema)
-
-    # On crée le module linéaire pour le sma et le ema
-    regr = linear_model.LinearRegression()
-    regr2 = linear_model.LinearRegression()
-
-    # On lui fit les données de la bdd et les prix de fermeture
-    regr.fit(df_bdd_sma, y)
-    regr2.fit(df_bdd_ema, y)
-
-    # Et enfin on prédit la potentiel valeur de la crypto
-    predic = regr.predict(df_sma)
-    predic2 = regr2.predict(df_ema)
-
-    return float(predic[0]), float(predic2[0])
-
-
-def prediction_liste_macd(donnée_bdd: pandas.DataFrame, data: pandas.DataFrame) -> (float, float, float):
-    """
-    Fonction qui prend en arguement une dataframe pandas des données de la base de donnée
-    Ainsi que les dernieres données du serveur
-    Et renvoie une prédiction (avec le macd) 
-    Ex param :
-    donnée_bdd : donnée de la bdd ancienne (sous forme d'une dataframe pandas)
-    data : dernières données du serveur (sous forme d'une dataframe pandas)
-    """
-    # On récupère toutes les valeurs de la bdd
-    # Puis on sépare chaque listes entre elles
-    # Et enfin on vient créer une dataframe pour chaque
-    all_valeur = list(donnée_bdd['MACD'])
-    macd_bdd = []
-    signal_bdd = []
-    hist_bdd = []
-    for element in all_valeur:
-        macd_bdd.append(element[0])
-        signal_bdd.append(element[1])
-        hist_bdd.append(element[2])
-
-    # Chaques valeurs des listes de chaque liste seront dispatchées dans une colonne chacune
-    df_bdd_macd = pandas.DataFrame(macd_bdd, dtype=float)
-    df_bdd_signal = pandas.DataFrame(signal_bdd, dtype=float)
-    df_bdd_hist = pandas.DataFrame(hist_bdd, dtype=float)
-
-    # On récupère les prix de fermeture
-    y = donnée_bdd['PRIX_FERMETURE']
-
-    # On calcul le macd et on sépare les trois données en trois variables
-    macd, signal, hist = MACD(data)
-
-    # Puis on vient les transformer en dataframe
-    df_macd = pandas.DataFrame([macd])
-    df_signal = pandas.DataFrame([signal])
-    df_hist = pandas.DataFrame([hist])
-
-    # Et enfin on vient prédire les valeurs
-    regr = linear_model.LinearRegression()
-    regr2 = linear_model.LinearRegression()
-    regr3 = linear_model.LinearRegression()
-
-    # On lui fit les données de la bdd et les prix de fermeture
-    regr.fit(df_bdd_macd, y)
-    regr2.fit(df_bdd_signal, y)
-    regr3.fit(df_bdd_hist, y)
-
-    # Et enfin on prédit la potentiel valeur de la crypto
-    predic = regr.predict(df_macd)
-    predic2 = regr2.predict(df_signal)
-    predic3 = regr.predict(df_hist)
-
-    return float(predic[0]), float(predic2[0]), float(predic3[0])
-
-
-def prediction_liste_stochrsi(donnée_bdd: pandas.DataFrame, data: pandas.DataFrame) -> (float, float):
-    """
-    Fonction qui prend en arguement une dataframe pandas des données de la base de donnée
-    Ainsi que les dernieres données du serveur
-    Et renvoie une prédiction (avec le stochrsi) 
-    Ex param :
-    donnée_bdd : donnée de la bdd ancienne (sous forme d'une dataframe pandas)
-    data : dernières données du serveur (sous forme d'une dataframe pandas)
-    """
-    # On récupère toutes les valeurs de la bdd
-    # Puis on sépare chaque listes entre elles
-    # Et enfin on vient créer une dataframe pour chaque
-    all_data = list(donnée_bdd['STOCHRSI'])
-    ligne1_bdd = []
-    ligne2_bdd = []
-    for element in all_data:
-        ligne1_bdd.append(element[0])
-        ligne2_bdd.append(element[1])
-
-    # On récupère les prix de fermeture
-    y = donnée_bdd['PRIX_FERMETURE']
-
-    # Chaques valeurs des listes de chaque liste seront dispatchées dans une colonne chacune
-    df_bdd_ligne1 = pandas.DataFrame(ligne1_bdd)
-    df_bdd_ligne2 = pandas.DataFrame(ligne2_bdd)
-
-    # On vient créer les modules de prédiction
-    regr = linear_model.LinearRegression()
-    regr2 = linear_model.LinearRegression()
-
-    # On lui fit les données de la bdd et les prix de fermeture
-    regr.fit(df_bdd_ligne1, y)
-    regr2.fit(df_bdd_ligne2, y)
-
-    # On calcul le stochrsi et on sépare les deux données en deux variables
-    ligne1, ligne2 = stochRSI(data)
-
-    # Puis on vient les transformer en dataframe
-    df_ligne1 = pandas.DataFrame([ligne1])
-    df_ligne2 = pandas.DataFrame([ligne2])
-
-    # Et enfin on vient prédire les valeurs
-    predic = regr.predict(df_ligne1)
-    predic2 = regr2.predict(df_ligne2)
-
-    return float(predic[0]), float(predic2[0])
-
-
-def prediction_liste_bandes_b(donnée_bdd: pandas.DataFrame, data: pandas.DataFrame) -> (float, float, float):
-    """
-    Fonction qui prend en arguement une dataframe pandas des données de la base de donnée
-    Ainsi que les dernieres données du serveur
-    Et renvoie une prédiction (avec les bandas de bollinger) 
-    Ex param :
-    donnée_bdd : donnée de la bdd ancienne (sous forme d'une dataframe pandas)
-    data : dernières données du serveur (sous forme d'une dataframe pandas)
-    """
-    # On récupère toutes les valeurs de la bdd
-    # Puis on sépare chaque listes entre elles
-    # Et enfin on vient créer une dataframe pour chaque
-    all_data = list(donnée_bdd['BB'])
-    up_bdd = []
-    middle_bdd = []
-    low_bdd = []
-    for element in all_data:
-        up_bdd.append(element[0])
-        middle_bdd.append(element[1])
-        low_bdd.append(element[2])
-
-    # Chaques valeurs des listes de chaque liste seront dispatchées dans une colonne chacune
-    df_bdd_up = pandas.DataFrame(up_bdd, dtype=float)
-    df_bdd_middle = pandas.DataFrame(middle_bdd, dtype=float)
-    df_bdd_low = pandas.DataFrame(low_bdd, dtype=float)
-
-    # On récupère les prix de fermeture
-    y = donnée_bdd['PRIX_FERMETURE']
-
-    # On vient créer les modules de prédiction
-    regr = linear_model.LinearRegression()
-    regr2 = linear_model.LinearRegression()
-    regr3 = linear_model.LinearRegression()
-
-    # On lui fit les données de la bdd et les prix de fermeture
-    regr.fit(df_bdd_up, y)
-    regr2.fit(df_bdd_middle, y)
-    regr3.fit(df_bdd_low, y)
-
-    # On calcul les bb et on sépare les trois données en trois variables
-    up, middle, low = bandes_bollinger(data)
-
-    # Puis on vient les transformer en dataframe
-    df_up = pandas.DataFrame([up])
-    df_middle = pandas.DataFrame([middle])
-    df_low = pandas.DataFrame([low])
-
-    # Et enfin on vient prédire les valeurs
-    predic = regr.predict(df_up)
-    predic2 = regr2.predict(df_middle)
-    predic3 = regr3.predict(df_low)
-
-    return float(predic[0]), float(predic2[0]), float(predic3[0])
-
-
-def prediction_historique(donnée_bdd: pandas.DataFrame, moyenne_predic: list) -> float:
-    """
-    Fonction qui prend en argument les données des prédictions de la bdd
-    Et une liste composé de la moyenne des predic de data et de la predic du rsi____
-    Et renvoie la prédiction des prédic de l'historique
-    La fonctions calcul le prix potentiel par rapport au prédiction faite par les autres fonctions de prediction
-    Ex param :
-    donnée_bdd : données des prédiction historique
-    moyenne_prédic : [moyenne des prédictions de la table data, moyenne des prédictions de la fonctions de prédic rsi]
-    """
-    # On récupère les données qu'on transforme en liste
-    prix_data = list(donnée_bdd['PRIX_DATA'])
-    prix_rsi = list(donnée_bdd['PRIX_RSI'])
-
-    # On  vient les aujouter deux à deux dans une liste pou rensuite recréer une dataframe pandas sans nom de colonne
-    predic = []
-
-    for i in range(len(prix_data)):
-        predic.append([prix_data[i], prix_rsi[i]])
-
-    predic = pandas.DataFrame(predic)
-
-    # Après on créer le module, on lui fit les données et on prédit la prix de la crypto
-    y = donnée_bdd['PRIX_F']
+    X, y = select_donnée_bdd()
 
     regr = linear_model.LinearRegression()
+    regr.fit(X, y)
 
-    regr.fit(predic, y)
+    sma = SMA(donnée_serveur_data)
+    ema = EMA(donnée_serveur_data)
+    macd = MACD(donnée_serveur_data)
+    stochrsi = stochRSI(donnée_serveur_data)
+    bb = bandes_bollinger(donnée_serveur_data)
 
-    prediction = regr.predict([moyenne_predic])
+    rsi = RSI(donnée_serveur_rsi)
+    vwap = VWAP(donnée_serveur_rsi)
+    cmf = chaikin_money_flow(donnée_serveur_rsi)
 
-    return float(prediction[0])
+    ls = []
+
+    for elt in sma:
+        ls.append(elt)
+
+    for elt in ema:
+        ls.append(elt)
+
+    for element in macd:
+        for elt in element:
+            ls.append(elt)
+
+    for element in stochrsi:
+        for elt in element:
+            ls.append(elt)
+
+    for element in bb:
+        for elt in element:
+            ls.append(elt)
+
+    ls.append(rsi)
+    ls.append(vwap)
+    ls.append(cmf)
+
+    df_liste = pandas.DataFrame([ls])
+
+    prediction = regr.predict(df_liste)
+    
+    return prediction[0][0]
 
 
 # Fonctions de surveillance de position

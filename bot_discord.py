@@ -28,6 +28,20 @@ class Botcrypto(commands.Bot):
                 message_status_général(erreur)
                 message_status_général("Le bot s'est arrêté")
 
+        def arret_bot():
+            """
+            Fonction qui arrête le bot et l'insertion des données dans la bdd
+            """
+            proc = Popen("""ps -aux | grep "/bin/python3" | grep "bot_discord.py"| awk -F " " '{ print $2 }' """,
+                         shell=True, stdout=PIPE, stderr=PIPE)
+
+            sortie, autre = proc.communicate()
+
+            processus = sortie.decode('utf-8').split("\n")[1:-2]
+
+            for elt in processus:
+                os.system(f"kill -9 {elt}")
+
         @self.command(name="del")
         async def delete(ctx):
             """
@@ -113,16 +127,7 @@ class Botcrypto(commands.Bot):
             Fonction qui stop le bot
             Tue le processus du bot ainsi que les processus qui chargent la bdd si ce n'est pas fini
             """
-            proc = Popen("""ps -aux | grep "/bin/python3" | grep "bot_discord.py"| awk -F " " '{ print $2 }' """,
-                         shell=True, stdout=PIPE, stderr=PIPE)
-
-            sortie, autre = proc.communicate()
-
-            processus = sortie.decode('utf-8').split("\n")[1:-2]
-
-            for elt in processus:
-                os.system(f"kill -9 {elt}")
-
+            arret_bot()
             await ctx.send("Bot arrêté")
 
         @self.command(name="liste")
