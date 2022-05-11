@@ -26,6 +26,7 @@ class Botcrypto(commands.Bot):
             except:
                 erreur = traceback.format_exc()
                 message_status_général(erreur)
+                arret_bot()
                 message_status_général("Le bot s'est arrêté")
 
         def arret_bot():

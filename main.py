@@ -6,6 +6,7 @@ from binance.client import Client
 from sklearn import linear_model
 from dotenv import load_dotenv
 from functools import wraps
+from keras.models import *
 from dessinBDD import *
 import locale
 import pandas
@@ -24,7 +25,7 @@ locale.setlocale(locale.LC_TIME, '')
 
 # Chargement des clés
 
-load_dotenv(dotenv_path="config")
+load_dotenv(dotenv_path="config_bot")
 
 # Décorateurs
 
@@ -211,40 +212,6 @@ def prix_temps_reel(symbol: str) -> float:
 
 # Fonctions qui renvoient sous forme d'un entier ou décimal
 
-
-def croisement(liste1: list, liste2: list) -> int:
-    """
-    Fonction qui prend en argument deux listes de float
-    Et qui renvoie les croisements (lorsque tracé sur un graphique, les courbes se croisent)
-    """
-
-    if len(liste1) != len(liste2):
-        raise Exception("Les listes doivent être de la même taille")
-    elif True in list(map(math.isnan, liste1)):
-        raise Exception("Présence de nan dans la liste 1")
-    elif True in list(map(math.isnan, liste2)):
-        raise Exception("Présence de nan dans la liste 2")
-
-    cr = 0
-
-    # Vue qu'on itere sur les listes, cette variable permet d'avoir l'indice de l'élément en cour
-    compteur = 0
-
-    # On vérifie que l'élement n de la première liste est supérieur ou inférieur a celui de l'autre liste
-    # Et l'élément n+1 est inversement supérieur ou inférieur
-    for element in liste1:
-        if compteur < len(liste1)-1:
-            if element >= liste2[compteur] and liste1[compteur + 1] <= liste2[compteur + 1]:
-                cr += 1
-
-            elif element <= liste2[compteur] and liste1[compteur + 1] >= liste2[compteur + 1]:
-                cr += 1
-
-        compteur += 1
-
-    return cr
-
-
 def RSI(donnée_rsi: pandas.DataFrame) -> float:
     """
     Fonction qui prend en argument une dataframe pandas et une durée qui est un entier
@@ -384,7 +351,7 @@ def stochRSI(donnée_stochrsi: pandas.DataFrame) -> list:
     """
     Fonction qui prend en argument une dataframe pandas
     Et qui renvoie le stochRSI sous forme de deux listes
-    On utilise pas la fonction par défaut stochrsi de talib car 
+    On utilise pas la fonction par défaut stochrsi de talib car
     celle-ci applique stochf à rsi et non pas stoch à rsi
     """
     # On récupère les données de la colonne close
@@ -535,7 +502,7 @@ def insert_data_historique_bdd(symbol: str) -> None:
     p2.join()
 
 
-def select_donnée_bdd() -> (pandas.DataFrame, pandas.DataFrame):
+def select_donnée_bdd(df_numpy: str) -> [pandas.DataFrame, pandas.DataFrame] or [numpy.array, numpy.array]:
     """
     Fonction qui récupère toutes les données de la bdd
     Renvoie toutes les données et les prix sous forme de dataframe
@@ -553,7 +520,7 @@ def select_donnée_bdd() -> (pandas.DataFrame, pandas.DataFrame):
     SELECT prix_fermeture FROM data
     """).fetchall()
 
-    prix = pandas.DataFrame([x[0] for x in prix])
+    prix = [x[0] for x in prix]
 
     # On vient retransformer les données dans leur état d'origine
     # Et on remet le tout dans une dataframe
@@ -577,9 +544,16 @@ def select_donnée_bdd() -> (pandas.DataFrame, pandas.DataFrame):
 
         donnée_dataframe.append(temp)
 
-    dp = pandas.DataFrame(donnée_dataframe)
+    if df_numpy == "dataframe":
+        dp = pandas.DataFrame(donnée_dataframe)
+        prix_df = pandas.DataFrame(prix)
+        return [dp, prix_df]
 
-    return (dp, prix)
+    elif df_numpy == "numpy":
+        np = numpy.array(donnée_dataframe)
+        prix_np = numpy.array(prix)
+
+        return [np, prix_np]
 
 
 # Fonctions de prédiction
@@ -588,7 +562,7 @@ def prédiction(donnée_serveur_data: pandas.DataFrame, donnée_serveur_rsi: pan
     """
     Fonction qui prédit le future prix de la crypto
     """
-    X, y = select_donnée_bdd()
+    X, y = select_donnée_bdd()[0]
 
     regr = linear_model.LinearRegression()
     regr.fit(X, y)
@@ -630,8 +604,57 @@ def prédiction(donnée_serveur_data: pandas.DataFrame, donnée_serveur_rsi: pan
     df_liste = pandas.DataFrame([ls])
 
     prediction = regr.predict(df_liste)
-    
+
     return prediction[0][0]
+
+
+def prédiction_keras(donnée_serveur_data: pandas.DataFrame, donnée_serveur_rsi: pandas.DataFrame) -> float:
+    """"""
+    X, y = select_donnée_bdd()[1]
+
+    modele = Sequential()
+
+    modele.fit(X, y)
+
+    sma = SMA(donnée_serveur_data)
+    ema = EMA(donnée_serveur_data)
+    macd = MACD(donnée_serveur_data)
+    stochrsi = stochRSI(donnée_serveur_data)
+    bb = bandes_bollinger(donnée_serveur_data)
+
+    rsi = RSI(donnée_serveur_rsi)
+    vwap = VWAP(donnée_serveur_rsi)
+    cmf = chaikin_money_flow(donnée_serveur_rsi)
+
+    ls = []
+
+    for elt in sma:
+        ls.append(elt)
+
+    for elt in ema:
+        ls.append(elt)
+
+    for element in macd:
+        for elt in element:
+            ls.append(elt)
+
+    for element in stochrsi:
+        for elt in element:
+            ls.append(elt)
+
+    for element in bb:
+        for elt in element:
+            ls.append(elt)
+
+    ls.append(rsi)
+    ls.append(vwap)
+    ls.append(cmf)
+
+    df_liste = numpy.array(ls)
+
+    predic = modele.predict(df_liste)
+
+    return predic
 
 
 # Fonctions de surveillance de position
