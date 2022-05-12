@@ -3,9 +3,23 @@ import numpy
 import pandas
 import math
 
+# Autres fonctions
 
-# Fonctions qui renvoient sous forme d'un entier ou décimal
+
+def moyenne(liste: list or dict) -> float:
+    """
+    Fonction qui calcule la moyenne des éléments d'une liste d'entier ou de décimaux
+    Obliger de faire la deuxième liste en deux étape car parfois, les nombres décimaux
+    sont sous forme d'une chaine de caractère, et donc faut d'abord les re-transformer en décimaux
+    """
+    liste2 = [float(x) for x in liste]
+    liste2 = [float(x) for x in liste2 if math.isnan(x) == False]
+
+    return sum(liste2) / len(liste2)
+
+# Fonctions qui renvoient sous forme d'un entier ou décimal ou d'une liste
 # data de 15 éléments
+
 
 def RSI(donnée_rsi: pandas.DataFrame) -> float:
     """
@@ -126,6 +140,105 @@ def LinearRegression(donnée_lr: pandas.DataFrame) -> float:
 
     return line
 
+
+def TSF(donnée_tsf: pandas.DataFrame) -> float:
+    """
+    Fonction qui renvoie le TSF (calcule une ligne de meilleure adéquation sur une période donnée 
+    pour tenter de prédire les tendances futures)
+    """
+    data_close = [float(x) for x in donnée_tsf.close.values]
+
+    np_close = numpy.array(data_close)
+
+    tsf = float(talib.TSF(np_close, 15)[-1])
+
+    return tsf
+
+
+def aroon_oscilator(donnée_ao: pandas.DataFrame) -> float:
+    """
+    Fonction qui calcule le AO (aide les traders à savoir quand un marché a une tendance à la hausse, 
+    à la baisse, ou se trouve dans une zone de fluctuation ou un marché sans tendance)
+    """
+    data_high = [float(x) for x in donnée_ao.high.values]
+    data_low = [float(x) for x in donnée_ao.low.values]
+
+    np_high = numpy.array(data_high)
+    np_low = numpy.array(data_low)
+
+    ao = float(talib.AROONOSC(np_high, np_low)[-1])
+
+    return ao
+
+
+def williams_R(donnée_wr) -> float:
+    """
+    Fonction qui calcule le williams R (indicateur technique de surachat 
+    et de survente qui peut offrir des signaux potentiels d'achat et de vente)
+    """
+
+    data_high = [float(x) for x in donnée_wr.high.values]
+    data_low = [float(x) for x in donnée_wr.low.values]
+    data_close = [float(x) for x in donnée_wr.close.values]
+
+    np_high = numpy.array(data_high)
+    np_low = numpy.array(data_low)
+    np_close = numpy.array(data_close)
+
+    r = float(talib.WILLR(np_high, np_low, np_close, 15)[-1])
+
+    return r
+####################liste####################
+
+
+def ROC(donnée_roc: pandas.DataFrame) -> list:
+    """
+    Fonction qui calcule le ROC (compare le prix actuel à un prix antérieur 
+    et est utilisé pour confirmer les mouvements de prix ou détecter les divergences)
+    """
+    data = [float(x) for x in donnée_roc.close.values]
+
+    np_data = numpy.array(data)
+
+    roc = [float(x) for x in talib.ROC(np_data) if math.isnan(x) == False]
+
+    return roc
+
+
+def OBV(donnée_obv: pandas.DataFrame) -> list:
+    """
+    Fonction qui calcule le OBV (combine le prix et le volume afin de déterminer 
+    si les mouvements de prix sont forts ou faibles)
+    """
+    data_volume = [float(x) for x in donnée_obv.low.values]
+    data_close = [float(x) for x in donnée_obv.close.values]
+
+    np_volume = numpy.array(data_volume)
+    np_close = numpy.array(data_close)
+
+    obv = talib.OBV(np_close, np_volume)
+
+    ls = []
+
+    for elt in obv:
+        ls.append(elt)
+
+    return ls
+
+
+def MOM(donnée_mom: pandas.DataFrame) -> list:
+    """
+    Fonction qui calcule le MOM (compare le prix actuel par rapport au prix antérieur)
+    """
+    data = [float(x) for x in donnée_mom.close.values]
+
+    np_data = numpy.array(data)
+
+    mom = [float(x) for x in talib.MOM(np_data) if math.isnan(x) == False]
+
+    return mom
+###################################################################
+
 # Fonctions qui renvoient sous forme d'une liste
 # data de 40 éléments
 
@@ -188,7 +301,12 @@ def evening_star(donnée_es: pandas.DataFrame) -> list:
 
     es = talib.CDLEVENINGSTAR(np_open, np_high, np_low, np_close)
 
-    return es
+    ls = []
+
+    for elt in es:
+        ls.append(elt)
+
+    return ls
 
 
 def harami(donnée_harami: pandas.DataFrame) -> list:
@@ -207,7 +325,12 @@ def harami(donnée_harami: pandas.DataFrame) -> list:
 
     ha = talib.CDLHARAMI(np_open, np_high, np_low, np_close)
 
-    return ha
+    ls = []
+
+    for elt in ha:
+        ls.append(elt)
+
+    return ls
 
 
 def doji(donnée_doji: pandas.DataFrame) -> list:
@@ -226,7 +349,12 @@ def doji(donnée_doji: pandas.DataFrame) -> list:
 
     doji_data = talib.CDLDOJI(np_open, np_high, np_low, np_close)
 
-    return doji_data
+    ls = []
+
+    for elt in doji_data:
+        ls.append(elt)
+
+    return ls
 
 
 def ADX(donnée_adx: pandas.DataFrame) -> list:
@@ -261,6 +389,72 @@ def KAMA(donnée_kama) -> list:
     kama = [float(x) for x in talib.KAMA(np_close) if math.isnan(x) == False]
 
     return kama
+
+
+def T3(donnée_t3: pandas.DataFrame) -> list:
+    """
+    Fonction qui calcule le triple moving average exponential (peut donner des signaux potentiels d'achat 
+    et de vente et tente de filtrer le bruit à court terme.)
+    """
+    data_open = [float(x) for x in donnée_t3.open.values]
+    data_high = [float(x) for x in donnée_t3.high.values]
+    data_low = [float(x) for x in donnée_t3.low.values]
+    data_close = [float(x) for x in donnée_t3.close.values]
+
+    np_open = numpy.array(data_open)
+    np_high = numpy.array(data_high)
+    np_low = numpy.array(data_low)
+    np_close = numpy.array(data_close)
+
+    t3 = [float(x) for x in talib.T3(np_close) if math.isnan(x) == False]
+
+    return t3
+
+
+def TRIMA(donnée_trima: pandas.DataFrame) -> list:
+    """
+    Fonction qui calcule le TRIMA (Moyenne mobile simple qui a été moyennée une nouvelle fois, 
+    créant ainsi une ligne très lisse)
+    """
+    data_close = [float(x) for x in donnée_trima.close.values]
+
+    np_close = numpy.array(data_close)
+
+    tr = [float(x) for x in talib.TRIMA(np_close) if math.isnan(x) == False]
+
+    return tr
+
+
+def PPO(donnée_ppo: pandas.DataFrame) -> list:
+    """
+    Fonction qui calcule le PPO (calcule la différence entre les deux moyennes mobiles)
+    """
+    data = [float(x) for x in donnée_ppo.close.values]
+
+    np_data = numpy.array(data)
+
+    ppo = [float(x) for x in talib.PPO(np_data) if math.isnan(x) == False]
+
+    return ppo
+
+
+def ultimate_oscilator(donnée_uo: pandas.DataFrame) -> list:
+    """
+    Fonction qui calcule l'ultimate oscilator (combine l'action des prix à court terme, 
+    à moyen terme et à long terme en un seul oscillateur)
+    """
+    data_high = [float(x) for x in donnée_uo.high.values]
+    data_low = [float(x) for x in donnée_uo.low.values]
+    data_close = [float(x) for x in donnée_uo.close.values]
+
+    np_high = numpy.array(data_high)
+    np_low = numpy.array(data_low)
+    np_close = numpy.array(data_close)
+
+    uo = [float(x) for x in talib.ULTOSC(
+        np_high, np_low, np_close) if math.isnan(x) == False]
+
+    return uo
 
 # Fonctions qui renvoient sous forme d'une liste de listes
 

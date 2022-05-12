@@ -14,16 +14,4 @@ data = donnée(symbol, interval, "30000 min ago UTC", fin, 2000)
 
 from main import *
 
-symbol = 'BTCEUR'
-
-
-for i in range(3000, 40*15, -15):
-
-    data = donnée(symbol, f"{i} min ago UTC",
-                      f"{i - 15*15} min ago UTC", 15)
-    
-    d = toto(data)
-    print(d)
-    break
-    
-
+prédiction_keras(pandas.DataFrame(), pandas.DataFrame())

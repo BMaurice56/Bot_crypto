@@ -1,9 +1,13 @@
-from main import *
 from datetime import datetime
+from main import *
+import locale
 
 symbol = sys.argv[1]
 dodo = 60*14 + 57
 effet_levier = 100
+
+# Définition de la zone pour l'horodatage car la date était en anglais avec le module datetime
+locale.setlocale(locale.LC_TIME, '')
 
 insert_data_historique_bdd(symbol)
 

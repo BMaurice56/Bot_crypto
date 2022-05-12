@@ -1,5 +1,9 @@
+from multiprocessing import Process
 from indices_techniques import *
+from données_serveur import *
 import sqlite3
+import ast
+
 
 # création de la base DB
 connexion = sqlite3.connect("data_base.db")
@@ -15,6 +19,15 @@ def bdd_data():
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     sma TEXT, 
     ema TEXT,
+    evening_star TEXT,
+    harami TEXT,
+    doji TEXT,
+    adx TEXT,
+    kama TEXT,
+    t3 TEXT,
+    trima TEXT,
+    ppo TEXT,
+    u_oscilator TEXT,
     macd TEXT,
     stochrsi TEXT, 
     bande_bollinger TEXT,
@@ -34,6 +47,15 @@ def bdd_rsi_vwap_cmf():
     rsi REAL,
     vwap REAL,
     cmf REAL,
+    cci REAL,
+    mfi REAL,
+    linearregression REAL,
+    tsf REAL,
+    a_oscilator REAL,
+    w_r REAL,
+    roc TEXT,
+    obv TEXT,
+    mom TEXT,
     prix_fermeture REAL
     )
     """)
@@ -43,6 +65,7 @@ def bdd_rsi_vwap_cmf():
 # Fonctions BDD
 
 # Connexion à la bdd et créaton du curseur pour interagire avec
+
 
 ls_requete_data = []
 ls_requete_rsi = []
@@ -68,27 +91,41 @@ def insert_bdd(table: str, symbol: str, data: pandas.DataFrame, empty_list=True,
     # On transforme en str qu'au dernier moment car la liste
     # Est utilisé lors de l'insertion des données dans la bdd au lancement
     if table == "data":
-        ls = [str(SMA(data)), str(EMA(data)), str(MACD(data)), str(stochRSI(data)), str(bandes_bollinger(
-            data)), float(data.close.values[-1])]
+        ls = [str(SMA(data)), str(EMA(data)), str(evening_star(data)), str(harami(data)),
+              str(doji(data)), str(ADX(data)), str(
+                  KAMA(data)), str(T3(data)), str(TRIMA(data)),
+              str(PPO(data)), str(ultimate_oscilator(data)),
+              str(MACD(data)), str(stochRSI(data)), str(bandes_bollinger(
+                  data)), float(data.close.values[-1])]
 
         ls_requete_data.append(ls)
 
         if insert_commit == True:
-            curseur.executemany(
-                "insert into data (sma, ema, macd, stochrsi, bande_bollinger, prix_fermeture) values (?,?,?,?,?,?)", ls_requete_data)
+            curseur.executemany("""
+            insert into data (sma, ema, evening_star, harami,
+            doji, adx, kama, t3, trima, ppo, u_oscilator,
+            macd, stochrsi, bande_bollinger, prix_fermeture) 
+            values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            """, ls_requete_data)
 
             connexion.commit()
 
     # Insertion normale des valeurs dans la table rsi____
     elif table == "rsi_vwap_cmf":
         ls = [RSI(data), VWAP(data), chaikin_money_flow(
-            data), float(data.close.values[-1])]
+            data), CCI(data), MFI(data), LinearRegression(
+            data), TSF(data), aroon_oscilator(data), williams_R(
+            data), str(ROC(data)), str(OBV(data)), str(MOM(data)), float(data.close.values[-1])]
 
         ls_requete_rsi.append(ls)
 
         if insert_commit == True:
-            curseur.executemany(
-                "insert into rsi_vwap_cmf (rsi, vwap, cmf, prix_fermeture) values (?,?,?,?)", ls_requete_rsi)
+            curseur.executemany("""
+            insert into rsi_vwap_cmf 
+            (rsi, vwap, cmf, cci, mfi, linearregression,
+            tsf, a_oscilator, w_r, roc, obv, mom, prix_fermeture) 
+            values (?,?,?,?,?,?,?,?,?,?,?,?,?)
+            """, ls_requete_rsi)
 
             connexion.commit()
 
@@ -149,10 +186,17 @@ def select_donnée_bdd(df_numpy: str) -> [pandas.DataFrame, pandas.DataFrame] or
     Renvoie toutes les données et les prix sous forme de dataframe
     Première dataframe : toutes les données
     Deuxième dataframe : les prix
+    Ex param :
+    df_numpy : dataframe ou numpy
     """
     donnée_bdd = curseur.execute("""
-    SELECT data.sma, data.ema, data.macd, data.stochrsi, data.bande_bollinger, rsi_vwap_cmf.rsi,
-    rsi_vwap_cmf.vwap, rsi_vwap_cmf.cmf
+    SELECT data.sma, data.ema, data.evening_star, data.harami, data.doji, 
+    data.adx, data.kama, data.t3, data.trima, data.ppo, data.u_oscilator,
+    data.macd, data.stochrsi, data.bande_bollinger, 
+    rsi_vwap_cmf.rsi, rsi_vwap_cmf.vwap, rsi_vwap_cmf.cmf,
+    rsi_vwap_cmf.cci, rsi_vwap_cmf.mfi, rsi_vwap_cmf.linearregression,
+    rsi_vwap_cmf.tsf, rsi_vwap_cmf.a_oscilator, rsi_vwap_cmf.w_r,
+    rsi_vwap_cmf.roc, rsi_vwap_cmf.obv, rsi_vwap_cmf.mom
     FROM data
     INNER JOIN rsi_vwap_cmf ON rsi_vwap_cmf.id = data.id
     """).fetchall()
@@ -170,17 +214,18 @@ def select_donnée_bdd(df_numpy: str) -> [pandas.DataFrame, pandas.DataFrame] or
         temp = []
         cpt = 1
         for element in row:
-            if cpt <= 2:
+            if cpt <= 11 or cpt >= 24:
                 elt = ast.literal_eval(str(element))
                 for nb in elt:
                     temp.append(nb)
-            elif cpt <= 5:
+            elif cpt <= 14:
                 elt = ast.literal_eval(str(element))
                 for liste in elt:
                     for nb in liste:
                         temp.append(nb)
-            else:
+            elif cpt <= 23:
                 temp.append(float(element))
+
             cpt += 1
 
         donnée_dataframe.append(temp)
@@ -195,6 +240,7 @@ def select_donnée_bdd(df_numpy: str) -> [pandas.DataFrame, pandas.DataFrame] or
         prix_np = numpy.array(prix)
 
         return [np, prix_np]
+
 
 if __name__ == "__main__":
     bdd_data()
