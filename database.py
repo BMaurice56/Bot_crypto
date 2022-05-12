@@ -145,7 +145,7 @@ def insert_data_historique_bdd(symbol: str) -> None:
     # Et on vient appliquer toutes les fonctions dessus pour ensuite rentrer les données dans la bdd
     def data(symbol: str) -> None:
 
-        for i in range(3600, 40*15, -15):
+        for i in range(15600, 40*15, -15):
 
             data = donnée_bis(symbol, f"{i} min ago UTC",
                               f"{i - 40*15} min ago UTC", 40, client2)
@@ -157,7 +157,7 @@ def insert_data_historique_bdd(symbol: str) -> None:
 
     def data2(symbol: str) -> None:
 
-        for i in range(3225, 15*15, -15):
+        for i in range(15225, 15*15, -15):
 
             data = donnée_bis(symbol, f"{i} min ago UTC",
                               f"{i - 15*15} min ago UTC", 15, client3)
