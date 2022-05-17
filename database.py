@@ -19,7 +19,6 @@ def bdd_data():
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     sma TEXT, 
     ema TEXT,
-    evening_star TEXT,
     harami TEXT,
     doji TEXT,
     adx TEXT,
@@ -67,48 +66,34 @@ def bdd_rsi_vwap_cmf():
 # Connexion à la bdd et créaton du curseur pour interagire avec
 
 
-ls_requete_data = []
-ls_requete_rsi = []
-
-
-def insert_bdd(table: str, symbol: str, data: pandas.DataFrame, empty_list=True, insert_commit=True) -> None:
+def insert_bdd(table: str, data: pandas.DataFrame) -> None:
     """
     Fonction qui prend en argument la table et les données à inserer
     Et insert les données dans la bdd
     Ex param :
     table : data
-    symbol : 'BTCEUR' ....
     data : dataframe des données du serveur
-    empty_list : vide les listes (par défaut activer, désactiver si insertion de nombreuses données comme au lancement par ex)
-    insert_commit : True ou false (par défaut, connexion.commit() est executé)
     """
-    # Vidage des listes avant l'execution des autres parties de la fonction
-    if empty_list == True:
-        ls_requete_data.clear()
-        ls_requete_rsi.clear()
 
     # Insertion normale des valeurs dans la table data
     # On transforme en str qu'au dernier moment car la liste
     # Est utilisé lors de l'insertion des données dans la bdd au lancement
     if table == "data":
-        ls = [str(SMA(data)), str(EMA(data)), str(evening_star(data)), str(harami(data)),
+        ls = [str(SMA(data)), str(EMA(data)), str(harami(data)),
               str(doji(data)), str(ADX(data)), str(
                   KAMA(data)), str(T3(data)), str(TRIMA(data)),
               str(PPO(data)), str(ultimate_oscilator(data)),
               str(MACD(data)), str(stochRSI(data)), str(bandes_bollinger(
                   data)), float(data.close.values[-1])]
 
-        ls_requete_data.append(ls)
+        curseur.execute("""
+        insert into data (sma, ema, harami,
+        doji, adx, kama, t3, trima, ppo, u_oscilator,
+        macd, stochrsi, bande_bollinger, prix_fermeture) 
+        values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        """, ls)
 
-        if insert_commit == True:
-            curseur.executemany("""
-            insert into data (sma, ema, evening_star, harami,
-            doji, adx, kama, t3, trima, ppo, u_oscilator,
-            macd, stochrsi, bande_bollinger, prix_fermeture) 
-            values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-            """, ls_requete_data)
-
-            connexion.commit()
+        connexion.commit()
 
     # Insertion normale des valeurs dans la table rsi____
     elif table == "rsi_vwap_cmf":
@@ -117,25 +102,26 @@ def insert_bdd(table: str, symbol: str, data: pandas.DataFrame, empty_list=True,
             data), TSF(data), aroon_oscilator(data), williams_R(
             data), str(ROC(data)), str(OBV(data)), str(MOM(data)), float(data.close.values[-1])]
 
-        ls_requete_rsi.append(ls)
+        curseur.execute("""
+        insert into rsi_vwap_cmf 
+        (rsi, vwap, cmf, cci, mfi, linearregression,
+        tsf, a_oscilator, w_r, roc, obv, mom, prix_fermeture) 
+        values (?,?,?,?,?,?,?,?,?,?,?,?,?)
+        """, ls)
 
-        if insert_commit == True:
-            curseur.executemany("""
-            insert into rsi_vwap_cmf 
-            (rsi, vwap, cmf, cci, mfi, linearregression,
-            tsf, a_oscilator, w_r, roc, obv, mom, prix_fermeture) 
-            values (?,?,?,?,?,?,?,?,?,?,?,?,?)
-            """, ls_requete_rsi)
-
-            connexion.commit()
+        connexion.commit()
 
 
-def insert_data_historique_bdd(symbol: str) -> None:
+def insert_data_historique_bdd(symbol: str, nombre_données: int) -> None:
     """
     Fonction qui permet de charger les x dernières minutes/heures (avec un espace de x min/heure pour chaque jeux de données)
     Dans la base de donnée
+    Calcul du nombre initial des boucles :
+    15 x nombres_données + 600 ou 225 selon intervalles de données
+    Ex : 15 x 100 + 600 = 2100 et 15 * 100 + 225 = 1725
     Ex param :
     symbol : 'BTCEUR'
+    nombres_données : 1000
     """
     # On enlève tout dans la bdd
     bdd_data()
@@ -143,41 +129,51 @@ def insert_data_historique_bdd(symbol: str) -> None:
 
     # A chaque tour de boucle, on récupère les données sur une durée précise
     # Et on vient appliquer toutes les fonctions dessus pour ensuite rentrer les données dans la bdd
-    def data(symbol: str) -> None:
 
-        for i in range(15600, 40*15, -15):
+    données_serveur = donnée(
+        symbol, f"{15 * nombre_données + 600} min ago UTC", "0 min ago UTC", (15 * nombre_données + 600)//15)
 
-            data = donnée_bis(symbol, f"{i} min ago UTC",
-                              f"{i - 40*15} min ago UTC", 40, client2)
+    liste_data = []
+    liste_rsi = []
 
-            if i == 615:
-                insert_bdd("data", symbol, data, False)
-            else:
-                insert_bdd("data", symbol, data, False, False)
+    for i in range(0, len(données_serveur)-40):
 
-    def data2(symbol: str) -> None:
+        data = données_serveur[i:i+40]
 
-        for i in range(15225, 15*15, -15):
+        ls = [str(SMA(data)), str(EMA(data)), str(harami(data)),
+              str(doji(data)), str(ADX(data)), str(
+                  KAMA(data)), str(T3(data)), str(TRIMA(data)),
+              str(PPO(data)), str(ultimate_oscilator(data)),
+              str(MACD(data)), str(stochRSI(data)), str(bandes_bollinger(
+                  data)), float(data.close.values[-1])]
 
-            data = donnée_bis(symbol, f"{i} min ago UTC",
-                              f"{i - 15*15} min ago UTC", 15, client3)
+        liste_data.append(ls)
 
-            if i == 240:
-                insert_bdd("rsi_vwap_cmf", symbol, data, False)
-            else:
-                insert_bdd("rsi_vwap_cmf", symbol, data, False, False)
+    for j in range(25, len(données_serveur)-15):
+        data = données_serveur[j:j+15]
 
-    p1 = Process(target=data, args=(symbol,))
-    p2 = Process(target=data2, args=(symbol, ))
+        ls = [RSI(data), VWAP(data), chaikin_money_flow(
+            data), CCI(data), MFI(data), LinearRegression(
+            data), TSF(data), aroon_oscilator(data), williams_R(
+            data), str(ROC(data)), str(OBV(data)), str(MOM(data)), float(data.close.values[-1])]
 
-    p1.daemon = True
-    p2.daemon = True
+        liste_rsi.append(ls)
 
-    p1.start()
-    p2.start()
+    curseur.executemany("""
+        insert into data (sma, ema, harami,
+        doji, adx, kama, t3, trima, ppo, u_oscilator,
+        macd, stochrsi, bande_bollinger, prix_fermeture) 
+        values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        """, liste_data)
 
-    p1.join()
-    p2.join()
+    curseur.executemany("""
+        insert into rsi_vwap_cmf 
+        (rsi, vwap, cmf, cci, mfi, linearregression,
+        tsf, a_oscilator, w_r, roc, obv, mom, prix_fermeture) 
+        values (?,?,?,?,?,?,?,?,?,?,?,?,?)
+        """, liste_rsi)
+
+    connexion.commit()
 
 
 def select_donnée_bdd(df_numpy: str) -> [pandas.DataFrame, pandas.DataFrame] or [numpy.array, numpy.array]:
@@ -190,7 +186,7 @@ def select_donnée_bdd(df_numpy: str) -> [pandas.DataFrame, pandas.DataFrame] or
     df_numpy : dataframe ou numpy
     """
     donnée_bdd = curseur.execute("""
-    SELECT data.sma, data.ema, data.evening_star, data.harami, data.doji, 
+    SELECT data.sma, data.ema, data.harami, data.doji, 
     data.adx, data.kama, data.t3, data.trima, data.ppo, data.u_oscilator,
     data.macd, data.stochrsi, data.bande_bollinger, 
     rsi_vwap_cmf.rsi, rsi_vwap_cmf.vwap, rsi_vwap_cmf.cmf,
@@ -214,16 +210,16 @@ def select_donnée_bdd(df_numpy: str) -> [pandas.DataFrame, pandas.DataFrame] or
         temp = []
         cpt = 1
         for element in row:
-            if cpt <= 11 or cpt >= 24:
+            if cpt <= 10 or cpt >= 23:
                 elt = ast.literal_eval(str(element))
                 for nb in elt:
                     temp.append(nb)
-            elif cpt <= 14:
+            elif cpt <= 13:
                 elt = ast.literal_eval(str(element))
                 for liste in elt:
                     for nb in liste:
                         temp.append(nb)
-            elif cpt <= 23:
+            elif cpt <= 22:
                 temp.append(float(element))
 
             cpt += 1

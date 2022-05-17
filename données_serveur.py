@@ -105,9 +105,6 @@ api_key = os.getenv("API_KEY")
 api_secret = os.getenv("API_SECRET")
 
 client = Client(api_key, api_secret)
-client2 = Client(api_key, api_secret)
-client3 = Client(api_key, api_secret)
-
 
 @connexion
 def donnée(symbol: str, début: str, fin: str, longueur: int) -> pandas.DataFrame:
@@ -116,10 +113,9 @@ def donnée(symbol: str, début: str, fin: str, longueur: int) -> pandas.DataFra
     Et qui renvoie les données sous forme d'une dataframe pandas
     Ex param :
     symbol : 'BTCEUR'
-    interval : client.KLINE_INTERVAL_5MINUTE ou client.KLINE_INTERVAL_1HOUR ...
-    début : "200 min ago UTC" ou "40 hour ago UTC" ...
+    début : "200 min ago UTC" 
     fin : "0 min ago UTC" ...
-    interval : 40 données ...
+    longueur : 40 données ...
     """
     donnée_historique = []
     while len(donnée_historique) != longueur:
@@ -131,42 +127,6 @@ def donnée(symbol: str, début: str, fin: str, longueur: int) -> pandas.DataFra
         else:
             donnée_historique = client.get_historical_klines(
                 symbol, client.KLINE_INTERVAL_15MINUTE, début, fin)
-
-        # On enlève les données pas nécessaire
-        for i in range(len(donnée_historique)):
-            donnée_historique[i] = donnée_historique[i][:7]
-
-    # Création de la df et nommage des colonnes
-    data = pandas.DataFrame(donnée_historique)
-
-    data.columns = ['timestart', 'open', 'high', 'low',
-                    'close', 'volume', 'timeend']
-
-    return data
-
-
-@connexion
-def donnée_bis(symbol: str, début: str, fin: str, longueur: int, client_n) -> pandas.DataFrame:
-    """
-    Fonction qui prend en argument un symbol de type "BTCEUR" ou encore "ETHEUR" etc...
-    Et qui renvoie les données sous forme d'une dataframe pandas
-    Ex param :
-    symbol : 'BTCEUR'
-    interval : client.KLINE_INTERVAL_5MINUTE ou client.KLINE_INTERVAL_1HOUR ...
-    début : "200 min ago UTC" ou "40 hour ago UTC" ...
-    fin : "0 min ago UTC" ...
-    interval : 40 données ...
-    """
-    donnée_historique = []
-    while len(donnée_historique) != longueur:
-        # Récupération des données de la crypto
-        if fin[0] == "0":
-            donnée_historique = client_n.get_historical_klines(
-                symbol, client_n.KLINE_INTERVAL_15MINUTE, début)
-
-        else:
-            donnée_historique = client_n.get_historical_klines(
-                symbol, client_n.KLINE_INTERVAL_15MINUTE, début, fin)
 
         # On enlève les données pas nécessaire
         for i in range(len(donnée_historique)):

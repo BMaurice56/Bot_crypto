@@ -284,31 +284,6 @@ def EMA(donnée_ema: pandas.DataFrame) -> list:
     return ema
 
 
-def evening_star(donnée_es: pandas.DataFrame) -> list:
-    """
-    Fonction qui calcule le evening star (modèle de retournement baissier)
-    Renvoie sous forme d'une liste composée de [-100, 0 ou 100]
-    """
-    data_open = [float(x) for x in donnée_es.open.values]
-    data_high = [float(x) for x in donnée_es.high.values]
-    data_low = [float(x) for x in donnée_es.low.values]
-    data_close = [float(x) for x in donnée_es.close.values]
-
-    np_open = numpy.array(data_open)
-    np_high = numpy.array(data_high)
-    np_low = numpy.array(data_low)
-    np_close = numpy.array(data_close)
-
-    es = talib.CDLEVENINGSTAR(np_open, np_high, np_low, np_close)
-
-    ls = []
-
-    for elt in es:
-        ls.append(elt)
-
-    return ls
-
-
 def harami(donnée_harami: pandas.DataFrame) -> list:
     """
     Fonction qui calcule le harami (modèle de renversement qui peut être haussier ou baissier)

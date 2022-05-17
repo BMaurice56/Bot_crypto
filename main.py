@@ -1,65 +1,14 @@
 from discord_webhook import DiscordWebhook, DiscordEmbed
 from time import sleep, perf_counter
-from sklearn import linear_model
 from database import *
 import copy
 import sys
-
 
 from keras.models import Sequential
 from keras.layers import Dense
 
 
 # Fonctions de prédiction
-
-def prédiction(donnée_serveur_data: pandas.DataFrame, donnée_serveur_rsi: pandas.DataFrame) -> float:
-    """
-    Fonction qui prédit le future prix de la crypto
-    """
-    X, y = select_donnée_bdd()[0]
-
-    regr = linear_model.LinearRegression()
-    regr.fit(X, y)
-
-    sma = SMA(donnée_serveur_data)
-    ema = EMA(donnée_serveur_data)
-    macd = MACD(donnée_serveur_data)
-    stochrsi = stochRSI(donnée_serveur_data)
-    bb = bandes_bollinger(donnée_serveur_data)
-
-    rsi = RSI(donnée_serveur_rsi)
-    vwap = VWAP(donnée_serveur_rsi)
-    cmf = chaikin_money_flow(donnée_serveur_rsi)
-
-    ls = []
-
-    for elt in sma:
-        ls.append(elt)
-
-    for elt in ema:
-        ls.append(elt)
-
-    for element in macd:
-        for elt in element:
-            ls.append(elt)
-
-    for element in stochrsi:
-        for elt in element:
-            ls.append(elt)
-
-    for element in bb:
-        for elt in element:
-            ls.append(elt)
-
-    ls.append(rsi)
-    ls.append(vwap)
-    ls.append(cmf)
-
-    df_liste = pandas.DataFrame([ls])
-
-    prediction = regr.predict(df_liste)
-
-    return prediction[0][0]
 
 
 def prédiction_keras(donnée_serveur_data: pandas.DataFrame, donnée_serveur_rsi: pandas.DataFrame) -> float:
@@ -68,26 +17,20 @@ def prédiction_keras(donnée_serveur_data: pandas.DataFrame, donnée_serveur_rs
 
     modele = Sequential()
 
-    modele.add(Dense(10000, input_dim=418, activation='relu'))
-    modele.add(Dense(9000, activation='relu'))
-    modele.add(Dense(8000, activation='relu'))
-    modele.add(Dense(7000, activation='relu'))
-    modele.add(Dense(6000, activation='relu'))
-    modele.add(Dense(5000, activation='relu'))
-    modele.add(Dense(4000, activation='relu'))
-    modele.add(Dense(3000, activation='relu'))
-    modele.add(Dense(2000, activation='relu'))
-    modele.add(Dense(1000, activation='relu'))
-    modele.add(Dense(500, activation='sigmoid'))
+    modele.add(Dense(100, input_dim=378, activation='relu'))
+    modele.add(Dense(80, activation='relu'))
+    modele.add(Dense(60, activation='relu'))
+    modele.add(Dense(40, activation='relu'))
+    modele.add(Dense(20, activation='relu'))
 
     modele.compile(loss='mean_squared_logarithmic_error',
-                   optimizer='adam', metrics=['accuracy'])
+                   optimizer='adam')
 
-    modele.fit(X, y, epochs=1000, batch_size=50)
+    modele.fit(X, y, epochs=100, batch_size=1)
 
     accuracy = modele.evaluate(X, y)
 
-    print('Accuracy: %.2f' % (accuracy*100))
+    print(f'Accuracy: {accuracy}')
 
     """
     sma = SMA(donnée_serveur_data)
