@@ -17,16 +17,13 @@ def prédiction_keras(donnée_serveur_data: pandas.DataFrame, donnée_serveur_rs
 
     modele = Sequential()
 
-    modele.add(Dense(100, input_dim=378, activation='relu'))
-    modele.add(Dense(80, activation='relu'))
-    modele.add(Dense(60, activation='relu'))
-    modele.add(Dense(40, activation='relu'))
-    modele.add(Dense(20, activation='relu'))
+    modele.add(Dense(50, input_dim=378, activation='relu'))
+    modele.add(Dense(25, activation='relu'))
 
     modele.compile(loss='mean_squared_logarithmic_error',
                    optimizer='adam')
 
-    modele.fit(X, y, epochs=100, batch_size=1)
+    modele.fit(X, y, epochs=100, batch_size=5)
 
     accuracy = modele.evaluate(X, y)
 
@@ -174,3 +171,7 @@ def message_status_général(message: str) -> None:
         url=adr_webhook_général, username="Bot crypto", content=message)
 
     webhook.execute()
+
+
+if __name__ == "__main__":
+    prédiction_keras(pandas.DataFrame(), pandas.DataFrame())
