@@ -18,12 +18,13 @@ def prédiction_keras(donnée_serveur_data: pandas.DataFrame, donnée_serveur_rs
     modele = Sequential()
 
     modele.add(Dense(50, input_dim=378, activation='relu'))
-    modele.add(Dense(25, activation='relu'))
+    modele.add(Dense(15, input_dim=378, activation='relu'))
+
 
     modele.compile(loss='mean_squared_logarithmic_error',
                    optimizer='adam')
 
-    modele.fit(X, y, epochs=100, batch_size=5)
+    modele.fit(X, y, epochs=20, batch_size=4)
 
     accuracy = modele.evaluate(X, y)
 

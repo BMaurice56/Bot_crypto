@@ -1,22 +1,15 @@
-"""
-import matplotlib.pyplot as plt
-from datetime import datetime
-
-
-
-interval = client.KLINE_INTERVAL_15MINUTE
-fin = "0 min ago UTC"
-
-data = donnée(symbol, interval, "30000 min ago UTC", fin, 2000)
-#data = select_data_bdd()
-
-
-from main import *
-t1 = perf_counter()
-insert_data_historique_bdd('BTCEUR', 10_000)
-t2 = perf_counter()
-print(t2 - t1)
-"""
 from main import *
 
-prédiction_keras(pandas.DataFrame(), pandas.DataFrame())
+#prédiction_keras(pandas.DataFrame(), pandas.DataFrame())
+
+toto = curseur.execute("select harami from data").fetchall()
+indice_min = 10**9
+for element in toto:
+    element = ast.literal_eval(str(element[0]))
+    for elt in element:
+        if elt != 0:
+            if element.index(elt) < indice_min:
+                print(element)
+                indice_min = element.index(elt)
+
+print(indice_min, len(toto[0]))
