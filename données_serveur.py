@@ -106,6 +106,7 @@ api_secret = os.getenv("API_SECRET")
 
 client = Client(api_key, api_secret)
 
+
 @connexion
 def donnée(symbol: str, début: str, fin: str, longueur: int) -> pandas.DataFrame:
     """

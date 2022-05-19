@@ -1,4 +1,3 @@
-from multiprocessing import Process
 from indices_techniques import *
 from données_serveur import *
 import sqlite3

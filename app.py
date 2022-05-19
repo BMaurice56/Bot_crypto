@@ -20,13 +20,7 @@ while True:
 
     prix = prix_temps_reel(symbol)
 
-    data.close.values[-1] = prix
-    rsi_vwap_cmf.close.values[-1] = prix
-
-    insert_bdd("data", symbol, data)
-    insert_bdd("rsi_vwap_cmf", symbol, rsi_vwap_cmf)
-
-    prediction = prédiction(data, rsi_vwap_cmf)
+    prediction = prédiction_keras(data, rsi_vwap_cmf)
 
     état = f"programme toujours en cour d'exécution le : {date}"
     infos = f"prix de la crypto : {prix}, prix de la prédiction : {prediction}"

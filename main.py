@@ -1,18 +1,16 @@
 from discord_webhook import DiscordWebhook, DiscordEmbed
+from keras.models import Sequential, model_from_json
 from time import sleep, perf_counter
-from database import *
-import copy
-import sys
-
-from keras.models import Sequential
 from keras.layers import Dense
+from database import *
 
 
-# Fonctions de prédiction
+# Fonction d'entrainement
+def training_keras() -> None:
+    """
+    Fonction qui entraine les neurones et les sauvegardes
+    """
 
-
-def prédiction_keras(donnée_serveur_data: pandas.DataFrame, donnée_serveur_rsi: pandas.DataFrame) -> float:
-    """"""
     X, y = select_donnée_bdd("numpy")
 
     modele = Sequential()
@@ -20,57 +18,71 @@ def prédiction_keras(donnée_serveur_data: pandas.DataFrame, donnée_serveur_rs
     modele.add(Dense(50, input_dim=378, activation='relu'))
     modele.add(Dense(15, input_dim=378, activation='relu'))
 
-
     modele.compile(loss='mean_squared_logarithmic_error',
                    optimizer='adam')
 
-    modele.fit(X, y, epochs=20, batch_size=4)
+    modele.fit(X, y, epochs=50, batch_size=4)
 
-    accuracy = modele.evaluate(X, y)
+    modele_json = modele.to_json()
 
-    print(f'Accuracy: {accuracy}')
+    with open("modele.json", "w") as json_file:
+        json_file.write(modele_json)
 
+    modele.save_weights("modele.h5")
+
+    print("Modèle sauvegarder !")
+
+# Fonction de prédiction
+
+
+def prédiction_keras(donnée_serveur_data: pandas.DataFrame, donnée_serveur_rsi: pandas.DataFrame) -> float:
     """
-    sma = SMA(donnée_serveur_data)
-    ema = EMA(donnée_serveur_data)
-    macd = MACD(donnée_serveur_data)
-    stochrsi = stochRSI(donnée_serveur_data)
-    bb = bandes_bollinger(donnée_serveur_data)
+    Fonction qui fait les prédiction et renvoie le prix potentiel de la crypto
+    """
 
-    rsi = RSI(donnée_serveur_rsi)
-    vwap = VWAP(donnée_serveur_rsi)
-    cmf = chaikin_money_flow(donnée_serveur_rsi)
+    ls = [SMA(donnée_serveur_data), EMA(donnée_serveur_data), harami(donnée_serveur_data),
+          doji(donnée_serveur_data), ADX(donnée_serveur_data),
+          KAMA(donnée_serveur_data), T3(
+              donnée_serveur_data), TRIMA(donnée_serveur_data),
+          PPO(donnée_serveur_data), ultimate_oscilator(donnée_serveur_data),
+          MACD(donnée_serveur_data), stochRSI(donnée_serveur_data), bandes_bollinger(donnée_serveur_data)]
 
-    ls = []
+    ls += [RSI(donnée_serveur_rsi), VWAP(donnée_serveur_rsi), chaikin_money_flow(
+        donnée_serveur_rsi), CCI(donnée_serveur_rsi), MFI(donnée_serveur_rsi), LinearRegression(
+        donnée_serveur_rsi), TSF(donnée_serveur_rsi), aroon_oscilator(donnée_serveur_rsi), williams_R(
+        donnée_serveur_rsi), ROC(donnée_serveur_rsi), OBV(donnée_serveur_rsi), MOM(donnée_serveur_rsi)]
 
-    for elt in sma:
-        ls.append(elt)
+    donnée_prédiction = []
 
-    for elt in ema:
-        ls.append(elt)
+    cpt = 1
+    for element in ls:
+        if cpt <= 10 or cpt >= 23:
+            for nb in element:
+                donnée_prédiction.append(nb)
+        elif cpt <= 13:
+            for liste in element:
+                for nb in liste:
+                    donnée_prédiction.append(nb)
+        elif cpt <= 22:
+            donnée_prédiction.append(element)
 
-    for element in macd:
-        for elt in element:
-            ls.append(elt)
+        cpt += 1
 
-    for element in stochrsi:
-        for elt in element:
-            ls.append(elt)
+    np_liste = numpy.array([donnée_prédiction])
 
-    for element in bb:
-        for elt in element:
-            ls.append(elt)
+    json_file = open('modele.json', 'r')
+    loaded_model_json = json_file.read()
+    json_file.close()
 
-    ls.append(rsi)
-    ls.append(vwap)
-    ls.append(cmf)
+    loaded_model = model_from_json(loaded_model_json)
+    loaded_model.load_weights("modele.h5")
 
-    df_liste = numpy.array(ls)
+    loaded_model.compile(
+        loss='mean_squared_logarithmic_error', optimizer='adam')
 
-    predic = modele.predict(df_liste)
+    predic = moyenne(loaded_model.predict(np_liste)[0])
 
     return predic
-    """
 
 
 # Fonctions de surveillance de position
@@ -172,7 +184,3 @@ def message_status_général(message: str) -> None:
         url=adr_webhook_général, username="Bot crypto", content=message)
 
     webhook.execute()
-
-
-if __name__ == "__main__":
-    prédiction_keras(pandas.DataFrame(), pandas.DataFrame())
