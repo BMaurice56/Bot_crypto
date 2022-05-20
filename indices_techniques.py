@@ -57,7 +57,12 @@ def VWAP(donnée_vwap: pandas.DataFrame) -> float:
         prix_typique = (haut[i] + bas[i] + fermeture[i])/3
         somme_pr_t_x_volume += prix_typique * volume[i]
 
-    vwap = somme_pr_t_x_volume / sum(volume)
+    somme_volume = sum(volume)
+
+    if somme_volume == 0:
+        somme_volume = 1
+
+    vwap = somme_pr_t_x_volume / somme_volume
 
     return vwap
 
@@ -84,7 +89,12 @@ def chaikin_money_flow(donnée_cmf: pandas.DataFrame) -> float:
         moyenne_flow.append(flow)
         moyenne_volume.append(volumme)
 
-    result = moyenne(moyenne_flow) / moyenne(moyenne_volume)
+    my_volume = moyenne(moyenne_volume)
+
+    if my_volume == 0:
+        my_volume = 1
+
+    result = moyenne(moyenne_flow) / my_volume
 
     return result
 

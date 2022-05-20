@@ -3,6 +3,7 @@ from keras.models import Sequential, model_from_json
 from time import sleep, perf_counter
 from keras.layers import Dense
 from database import *
+import sys
 
 
 # Fonction d'entrainement
@@ -32,10 +33,11 @@ def training_keras() -> None:
 
     print("Modèle sauvegarder !")
 
+
 # Fonction de prédiction
 
 
-def prédiction_keras(donnée_serveur_data: pandas.DataFrame, donnée_serveur_rsi: pandas.DataFrame) -> float:
+def prédiction_keras(donnée_serveur_data: pandas.DataFrame, donnée_serveur_rsi: pandas.DataFrame, Modèle) -> float:
     """
     Fonction qui fait les prédiction et renvoie le prix potentiel de la crypto
     """
@@ -70,17 +72,7 @@ def prédiction_keras(donnée_serveur_data: pandas.DataFrame, donnée_serveur_rs
 
     np_liste = numpy.array([donnée_prédiction])
 
-    json_file = open('modele.json', 'r')
-    loaded_model_json = json_file.read()
-    json_file.close()
-
-    loaded_model = model_from_json(loaded_model_json)
-    loaded_model.load_weights("modele.h5")
-
-    loaded_model.compile(
-        loss='mean_squared_logarithmic_error', optimizer='adam')
-
-    predic = moyenne(loaded_model.predict(np_liste)[0])
+    predic = moyenne(Modèle.predict(np_liste)[0])
 
     return predic
 
