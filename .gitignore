@@ -3,9 +3,5 @@ __pycache__/main.cpython-310.pyc
 __pycache__/database.cpython-310.pyc
 __pycache__/données_serveur.cpython-310.pyc
 __pycache__/indices_techniques.cpython-310.pyc
-Modèle_bdd/BATBUSD/data_base.db
-Modèle_bdd/BTCEUR/data_base.db
-Modèle_bdd/BNBBUSD/data_base.db
-Modèle_bdd/BTCBUSD/data_base.db
-Modèle_bdd/ETHBUSD/data_base.db
+Modèle/*/data_base.db
 data_base.db

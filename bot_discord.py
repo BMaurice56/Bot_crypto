@@ -87,7 +87,7 @@ class Botcrypto(commands.Bot):
 
             # Vérifie que le message n'est pas celui envoyé par le bot
             def check(m):
-                return m.content != "Quelles crypto ? BTCEUR ? ETHEUR ? BATBUSD ?"
+                return m.content != "Quelles crypto ? BTCEUR ? ETHEUR ? BATBUSD ?" and m.channel == ctx.channel
 
             # On attend la réponse
             msg = await self.wait_for("message", check=check)
@@ -110,7 +110,7 @@ class Botcrypto(commands.Bot):
 
             # Vérifie que le message n'est pas celui envoyé par le bot
             def check(m):
-                return m.content != "Sur quelles crypto trader ? BTCEUR ? ETHEUR ? BATBUSD ?"
+                return m.content != "Sur quelles crypto trader ? BTCEUR ? ETHEUR ? BATBUSD ?" and m.channel == ctx.channel
 
             # On attend la réponse
             msg = await bot.wait_for("message", check=check)
@@ -141,7 +141,7 @@ class Botcrypto(commands.Bot):
 
             # Vérifie que le message n'est pas celui envoyé par le bot
             def check(m):
-                return m.content != "Quelles pair de crypto voulus ? BTC ? ETH ? BAT ? LUNA ? EUR ?"
+                return m.content != "Quelles pair de crypto voulus ? BTC ? ETH ? BAT ? LUNA ? EUR ?" and m.channel == ctx.channel
 
             # On attend la réponse
             msg = await bot.wait_for("message", check=check)

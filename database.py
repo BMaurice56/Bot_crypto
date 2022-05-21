@@ -4,13 +4,22 @@ import sqlite3
 import ast
 
 
-# création de la base DB
-connexion = sqlite3.connect("data_base.db")
-# création du curseur
-curseur = connexion.cursor()
+def get_db(f):
+    """
+    Fonction qui créer la connexion avec la base de donnée
+    """
+    @wraps(f)
+    def connexion(*args, **kwargs):
+        # création de la base DB
+        connexion = sqlite3.connect("data_base.db")
+        # création du curseur
+        curseur = connexion.cursor()
+        return f(curseur=curseur,connexion=connexion, *args, **kwargs)
 
+    return connexion
 
-def bdd_data():
+@get_db
+def bdd_data(curseur, connexion):
     curseur.execute("DROP TABLE IF EXISTS data")
     curseur.execute("""
     CREATE TABLE data 
@@ -35,8 +44,8 @@ def bdd_data():
 
     connexion.commit()
 
-
-def bdd_rsi_vwap_cmf():
+@get_db
+def bdd_rsi_vwap_cmf(curseur, connexion):
     curseur.execute("DROP TABLE IF EXISTS rsi_vwap_cmf")
     curseur.execute("""
     CREATE TABLE rsi_vwap_cmf 
@@ -64,13 +73,13 @@ def bdd_rsi_vwap_cmf():
 
 # Connexion à la bdd et créaton du curseur pour interagire avec
 
-
-def insert_bdd(table: str, data: pandas.DataFrame) -> None:
+@get_db
+def insert_bdd(table: str, data: pandas.DataFrame, curseur, connexion) -> None:
     """
     Fonction qui prend en argument la table et les données à inserer
     Et insert les données dans la bdd
     Ex param :
-    table : data
+    table : data ou rsi_vwap_cmf
     data : dataframe des données du serveur
     """
 
@@ -110,8 +119,8 @@ def insert_bdd(table: str, data: pandas.DataFrame) -> None:
 
         connexion.commit()
 
-
-def insert_data_historique_bdd(symbol: str, nombre_données: int) -> None:
+@get_db
+def insert_data_historique_bdd(symbol: str, nombre_données: int, curseur, connexion) -> None:
     """
     Fonction qui permet de charger les x dernières minutes/heures (avec un espace de x min/heure pour chaque jeux de données)
     Dans la base de donnée
@@ -174,8 +183,8 @@ def insert_data_historique_bdd(symbol: str, nombre_données: int) -> None:
 
     connexion.commit()
 
-
-def select_donnée_bdd(df_numpy: str) -> [pandas.DataFrame, pandas.DataFrame] or [numpy.array, numpy.array]:
+@get_db
+def select_donnée_bdd(df_numpy: str, curseur, connexion) -> [pandas.DataFrame, pandas.DataFrame] or [numpy.array, numpy.array]:
     """
     Fonction qui récupère toutes les données de la bdd
     Renvoie toutes les données et les prix sous forme de dataframe
