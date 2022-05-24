@@ -1,22 +1,14 @@
 from datetime import datetime
 from main import *
 import locale
+import requests
 
 symbol = sys.argv[1]
 dodo = 60*14 + 58
 effet_levier = 100
 
 
-json_file = open(f'Modèle_bdd/{symbol}/modele.json', 'r')
-loaded_model_json = json_file.read()
-json_file.close()
-
-loaded_model = model_from_json(loaded_model_json)
-loaded_model.load_weights(f"Modèle_bdd/{symbol}/modele.h5")
-
-loaded_model.compile(
-    loss='mean_squared_logarithmic_error', optimizer='adam')
-
+loaded_model, loaded_model_up, loaded_model_down = chargement_modele(symbol)
 
 # Définition de la zone pour l'horodatage car la date était en anglais avec le module datetime
 locale.setlocale(locale.LC_TIME, '')
@@ -24,18 +16,66 @@ locale.setlocale(locale.LC_TIME, '')
 argent = 150
 
 while True:
+    argent = requests.get("http://127.0.0.1:5000/argent")
+    argent = int(argent.content.decode("utf-8"))
+
     date = datetime.now().strftime("%A %d %B %Y %H:%M:%S")
 
-    data = donnée(symbol, "600 min ago UTC", "0 min ago UTC", 40)
-    rsi_vwap_cmf = donnée(symbol, "225 min ago UTC", "0 min ago UTC", 15)
+    data = donnée(f"{symbol}USDT", "600 min ago UTC", "0 min ago UTC", 40)
+    data_up = donnée(f"{symbol}UPUSDT", "600 min ago UTC", "0 min ago UTC", 40)
+    data_down = donnée(f"{symbol}DOWNUSDT",
+                       "600 min ago UTC", "0 min ago UTC", 40)
 
-    prix = prix_temps_reel(symbol)
+    rsi_vwap_cmf = donnée(
+        f"{symbol}USDT", "225 min ago UTC", "0 min ago UTC", 15)
+    rsi_vwap_cmf_up = donnée(
+        f"{symbol}UPUSDT", "225 min ago UTC", "0 min ago UTC", 15)
+    rsi_vwap_cmf_down = donnée(
+        f"{symbol}DOWNUSDT", "225 min ago UTC", "0 min ago UTC", 15)
+
+    prix = prix_temps_reel(f"{symbol}USDT")
+    prix_up = prix_temps_reel(f"{symbol}UPUSDT")
+    prix_down = prix_temps_reel(f"{symbol}DOWNUSDT")
 
     prediction = prédiction_keras(data, rsi_vwap_cmf, loaded_model)
+    prediction_up = prédiction_keras(data_up, rsi_vwap_cmf_up, loaded_model_up)
+    prediction_down = prédiction_keras(
+        data_down, rsi_vwap_cmf_down, loaded_model_down)
 
     état = f"programme toujours en cour d'exécution le : {date}"
     infos = f"prix de la crypto : {prix}, prix de la prédiction : {prediction}"
+    up = f"prix crypto up : {prix_up}, prix de la prédiction : {prediction_up}"
+    down = f"prix crypto down : {prix_down}, prix de la prédiction : {prediction_down}"
 
-    msg = état + "\n" + infos
+    msg = état + "\n" + infos + "\n" + up + "\n" + down
 
     message_webhook_état_bot(msg)
+
+    if prix < prediction and prix_up < prediction_up and prix_down > prediction_down:
+        pos = requests.get("http://127.0.0.1:5000/presence_position")
+        pos = pos.content.decode("utf-8")
+        if pos == "None":
+            ar = argent * 0, 5
+            donnée = {"montant": ar, "prix_pos": prix,
+                      "stop_loss": (prix * 0, 9983)}
+            requests.get("http://127.0.0.1:5000/prise_position", data=donnée)
+            msg = f"Prise de position avec {ar} euros * {2} au prix de {prix} euros, il reste {argent - ar}€"
+            message_prise_position(msg, True)
+        else:
+            pos = ast.literal_eval(pos)
+            prix = prix_temps_reel(symbol + "USDT")
+            donnée = {"montant": pos[0], "prix_pos": pos[1],
+                      "stop_loss": (prix * 0, 9983)}
+            if pos[2] < donnée["stop_loss"]:
+                requests.get(
+                    "http://127.0.0.1:5000/prise_position", data=donnée)
+    else:
+        pos = requests.get("http://127.0.0.1:5000/presence_position")
+        pos = pos.content.decode("utf-8")
+        if pos != "None":
+            pr = requests.get("http://127.0.0.1:5000/vente_position")
+            pr = pr.content.decode("utf-8").split(";")
+            msg = f"Vente de position au prix de {pr[0]}€, prix avant : {pr[1]}€, il reste {pr[2]}€"
+            message_prise_position(msg, False)
+
+    sleep(dodo)

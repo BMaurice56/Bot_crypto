@@ -106,18 +106,18 @@ class Botcrypto(commands.Bot):
             Permet de ne pas bloquer le bot discord et donc d'executre d'autre commandes à coté
             Comme l'arrêt du bot ou le relancer, le prix à l'instant T, etc...
             """
-            await ctx.send("Sur quelles crypto trader ? BTCEUR ? ETHEUR ? BATBUSD ?")
+            await ctx.send("Sur quelles crypto trader ? BTC ou BNB ?")
 
             # Vérifie que le message n'est pas celui envoyé par le bot
             def check(m):
-                return m.content != "Sur quelles crypto trader ? BTCEUR ? ETHEUR ? BATBUSD ?" and m.channel == ctx.channel
+                return m.content != "Sur quelles crypto trader ? BTC ou BNB ?" and m.channel == ctx.channel
 
             # On attend la réponse
             msg = await bot.wait_for("message", check=check)
 
             # Puis on vérifie que la cryptomonnaie existe bien
             crypto = msg.content
-            if crypto in listes_crypto:
+            if crypto in ['BTC', 'BNB']:
                 process = Process(target=lancement_bot, args=(crypto,))
                 process.start()
             else:
@@ -171,6 +171,16 @@ class Botcrypto(commands.Bot):
                     liste_crypto_voulu.append(crypto_voulu)
                     for elt in liste_crypto_voulu:
                         await ctx.send(elt)
+
+        @self.command(name="message")
+        async def message(ctx):
+            """"""
+            messages = await ctx.channel.history().flatten()
+
+            fichier = open("messages.txt", "a")
+            
+            for each_message in messages:
+                fichier.write(each_message.content)
 
     async def on_ready(self):
         """

@@ -35,8 +35,6 @@ def training_keras() -> None:
 
 
 # Fonction de prédiction
-
-
 def prédiction_keras(donnée_serveur_data: pandas.DataFrame, donnée_serveur_rsi: pandas.DataFrame, Modèle) -> float:
     """
     Fonction qui fait les prédiction et renvoie le prix potentiel de la crypto
@@ -77,9 +75,47 @@ def prédiction_keras(donnée_serveur_data: pandas.DataFrame, donnée_serveur_rs
     return predic
 
 
+# Fonction de chargement des modèles
+def chargement_modele(symbol):
+    """
+    Fonction qui charge et renvoie les trois modèles
+    """
+
+    json_file = open(f'Modèle/SPOT/{symbol}/{symbol}USDT/modele.json', 'r')
+    json_file_up = open(
+        f'Modèle/SPOT_EFFET_LEVIER/{symbol}/{symbol}UPUSDT/modele.json', 'r')
+    json_file_down = open(
+        f'Modèle/SPOT_EFFET_LEVIER/{symbol}/{symbol}DOWNUSDT/modele.json', 'r')
+
+    loaded_model_json = json_file.read()
+    loaded_model_json_up = json_file_up.read()
+    loaded_model_json_down = json_file_down.read()
+
+    json_file.close()
+    json_file_up.close()
+    json_file_down.close()
+
+    loaded_model = model_from_json(loaded_model_json)
+    loaded_model_up = model_from_json(loaded_model_json_up)
+    loaded_model_down = model_from_json(loaded_model_json_down)
+
+    loaded_model.load_weights(f"Modèle/SPOT/{symbol}/{symbol}USDT/modele.h5")
+    loaded_model_up.load_weights(
+        f"Modèle/SPOT_EFFET_LEVIER/{symbol}/{symbol}UPUSDT/modele.h5")
+    loaded_model_down.load_weights(
+        f"Modèle/SPOT_EFFET_LEVIER/{symbol}/{symbol}DOWNUSDT/modele.h5")
+
+    loaded_model.compile(
+        loss='mean_squared_logarithmic_error', optimizer='adam')
+    loaded_model_up.compile(
+        loss='mean_squared_logarithmic_error', optimizer='adam')
+    loaded_model_down.compile(
+        loss='mean_squared_logarithmic_error', optimizer='adam')
+
+    return loaded_model, loaded_model_up, loaded_model_down
+
+
 # Fonctions de surveillance de position
-
-
 def surveillance(symbol: str, argent: int, position: dict, temps_execution: int, effet_levier: int) -> None or float:
     """
     Fonction qui prend en argument un symbol, l'argent du compte, la prise de position ou non et le temps d'execution de la fonction

@@ -1,4 +1,16 @@
-from main import *
+#from main import *
+import requests
+#balance_usdt = client.get_asset_balance(asset='USDT')['free']
+donnée = {"montant" : 3000, "prix_pos" : 36000, "stop_loss" : 35950}
+#toto = requests.get("http://127.0.0.1:5000/prise_position", data=donnée)
+#toto2 = requests.get("http://127.0.0.1:5000/argent", data=donnée)
+#toto3 = requests.get("http://127.0.0.1:5000/vente_position", data=donnée)
+#print("toto.content", toto2.content, "toto3.content")
+
+pos = requests.get("http://127.0.0.1:5000/presence_position")
+pos = pos.content
+print(pos.decode("utf-8"))
+
 
 """
 if prediction > prix:
