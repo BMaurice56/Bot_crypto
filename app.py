@@ -6,7 +6,6 @@ symbol = sys.argv[1]
 dodo = 60*14 + 58
 effet_levier = 100
 
-
 loaded_model, loaded_model_up, loaded_model_down = chargement_modele(symbol)
 
 # Définition de la zone pour l'horodatage car la date était en anglais avec le module datetime
@@ -16,7 +15,7 @@ argent = 150
 
 while True:
     argent = requests.get("http://127.0.0.1:5000/argent")
-    argent = int(argent.content.decode("utf-8"))
+    argent = float(argent.content.decode("utf-8"))
 
     date = datetime.now().strftime("%A %d %B %Y %H:%M:%S")
 
@@ -30,9 +29,9 @@ while True:
     rsi_vwap_cmf_up = datas[4]
     rsi_vwap_cmf_down = datas[5]
 
-    prix = data['close'][39]
-    prix_up = data_up['close'][39]
-    prix_down = data_down['close'][39]
+    prix = float(data['close'][39])
+    prix_up = float(data_up['close'][39])
+    prix_down = float(data_down['close'][39])
 
     prediction = prédiction_keras(data, rsi_vwap_cmf, loaded_model)
     prediction_up = prédiction_keras(data_up, rsi_vwap_cmf_up, loaded_model_up)

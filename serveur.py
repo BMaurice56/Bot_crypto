@@ -15,7 +15,6 @@ prix_btc = 0
 
 symbol = sys.argv[1]
 
-
 @app.route('/')
 def home():
     """"""

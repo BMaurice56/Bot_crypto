@@ -13,14 +13,13 @@ class Botcrypto(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix="!")
 
-        def lancement_bot(symbol):
+        def lancement_bot():
             """
             Fonction qui permet de lancer le bot
             Et de renvoyer l'erreur sur le serveur s'il y en a une qui apparait
             """
             try:
                 message_status_général("Le bot est lancé !")
-                sys.argv = ['', symbol]
                 runpy.run_path("app.py")
             except:
                 erreur = traceback.format_exc()
@@ -37,7 +36,6 @@ class Botcrypto(commands.Bot):
             """
             Fonction qui lance le serveur fait maison
             """
-            sys.argv = ['', symbol]
             runpy.run_path("serveur.py")
 
         def arret_bot():
@@ -130,7 +128,8 @@ class Botcrypto(commands.Bot):
             # Puis on vérifie que la cryptomonnaie existe bien
             crypto = msg.content
             if crypto in ['BTC', 'BNB']:
-                process = Process(target=lancement_bot, args=(crypto,))
+                sys.argv = ['', crypto]
+                process = Process(target=lancement_bot)
                 process2 = Process(target=lancement_serveur_bis)
 
                 process2.start()
@@ -195,7 +194,7 @@ class Botcrypto(commands.Bot):
             messages = await ctx.channel.history().flatten()
 
             fichier = open("messages.txt", "a")
-
+            
             for each_message in messages:
                 fichier.write(each_message.content)
 
