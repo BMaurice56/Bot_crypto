@@ -13,6 +13,7 @@ effet_levier = 2
 
 prix_btc = 0
 
+symbol = sys.argv[1]
 
 @app.route('/')
 def home():
@@ -55,7 +56,7 @@ def vente_position():
     data = [x for x in csv.reader(fichier)][0]
 
     global prix_btc
-    prix_btc = prix_temps_reel("BTCUSDT")
+    prix_btc = prix_temps_reel(f"{symbol}USDT")
 
     global argents
     argents = argents + ((prix_btc *
@@ -101,7 +102,7 @@ def check_position():
         if data != []:
             data = ast.literal_eval(data[0])
             global prix_btc
-            prix_btc = prix_temps_reel("BTCUSDT")
+            prix_btc = prix_temps_reel(f"{symbol}USDT")
             if prix_btc < data[-1]:
                 vente_position()
         sleep(1)
