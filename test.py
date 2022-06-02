@@ -1,5 +1,6 @@
-#from main import *
-import requests
+from main import *
+"""
+
 #balance_usdt = client.get_asset_balance(asset='USDT')['free']
 donnée = {"montant" : 3000, "prix_pos" : 36000, "stop_loss" : 35950}
 #toto = requests.get("http://127.0.0.1:5000/prise_position", data=donnée)
@@ -11,6 +12,12 @@ pos = requests.get("http://127.0.0.1:5000/presence_position")
 pos = pos.content
 print(pos.decode("utf-8"))
 
+"""
+symbol = 'BTC'
+
+d = all_data(symbol)
+
+print(d)
 
 """
 if prediction > prix:

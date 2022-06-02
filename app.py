@@ -1,7 +1,6 @@
 from datetime import datetime
 from main import *
 import locale
-import requests
 
 symbol = sys.argv[1]
 dodo = 60*14 + 58
@@ -21,21 +20,19 @@ while True:
 
     date = datetime.now().strftime("%A %d %B %Y %H:%M:%S")
 
-    data = donnée(f"{symbol}USDT", "600 min ago UTC", "0 min ago UTC", 40)
-    data_up = donnée(f"{symbol}UPUSDT", "600 min ago UTC", "0 min ago UTC", 40)
-    data_down = donnée(f"{symbol}DOWNUSDT",
-                       "600 min ago UTC", "0 min ago UTC", 40)
+    datas = all_data(symbol)
 
-    rsi_vwap_cmf = donnée(
-        f"{symbol}USDT", "225 min ago UTC", "0 min ago UTC", 15)
-    rsi_vwap_cmf_up = donnée(
-        f"{symbol}UPUSDT", "225 min ago UTC", "0 min ago UTC", 15)
-    rsi_vwap_cmf_down = donnée(
-        f"{symbol}DOWNUSDT", "225 min ago UTC", "0 min ago UTC", 15)
+    data = datas[0]
+    data_up = datas[1]
+    data_down = datas[2]
 
-    prix = prix_temps_reel(f"{symbol}USDT")
-    prix_up = prix_temps_reel(f"{symbol}UPUSDT")
-    prix_down = prix_temps_reel(f"{symbol}DOWNUSDT")
+    rsi_vwap_cmf = datas[3]
+    rsi_vwap_cmf_up = datas[4]
+    rsi_vwap_cmf_down = datas[5]
+
+    prix = data['close'][39]
+    prix_up = data_up['close'][39]
+    prix_down = data_down['close'][39]
 
     prediction = prédiction_keras(data, rsi_vwap_cmf, loaded_model)
     prediction_up = prédiction_keras(data_up, rsi_vwap_cmf_up, loaded_model_up)

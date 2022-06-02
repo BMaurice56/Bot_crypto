@@ -1,9 +1,7 @@
-from multiprocessing import Process
 from discord.ext import commands
 from main import *
 import traceback
 import runpy
-
 
 fichier = open("crypto.txt", "r")
 text = fichier.read()
@@ -26,9 +24,20 @@ class Botcrypto(commands.Bot):
                 runpy.run_path("app.py")
             except:
                 erreur = traceback.format_exc()
-                message_status_général(erreur)
+                if len(erreur) > 2000:
+                    while len(erreur) >= 2000:
+                        message_status_général(erreur[:2000])
+                        erreur = erreur[2000:]
+                    if erreur != "":
+                        message_status_général(erreur)
                 arret_bot()
                 message_status_général("Le bot s'est arrêté")
+
+        def lancement_serveur_bis():
+            """
+            Fonction qui lance le serveur fait maison
+            """
+            runpy.run_path("serveur.py")
 
         def arret_bot():
             """
@@ -73,6 +82,8 @@ class Botcrypto(commands.Bot):
             prix : donne le prix actuel de la cryptomonnaie voulus
 
             liste : liste les pairs de cryptomonnais possible
+
+            statut : affiche le statut du bot discord et du bot crypto
 
             """
 
@@ -119,7 +130,12 @@ class Botcrypto(commands.Bot):
             crypto = msg.content
             if crypto in ['BTC', 'BNB']:
                 process = Process(target=lancement_bot, args=(crypto,))
+                process2 = Process(target=lancement_serveur_bis)
+
+                process2.start()
+                sleep(5)
                 process.start()
+
             else:
                 await ctx.send("La cryptomonnaie n'existe pas")
 
@@ -181,6 +197,25 @@ class Botcrypto(commands.Bot):
             
             for each_message in messages:
                 fichier.write(each_message.content)
+
+        @self.command(name="statut")
+        async def statut(ctx):
+            """
+            Fonction qui renvoie le statut du bot discord et celui de la crypto
+            """
+            await ctx.send("Bot discord toujours en cours d'exécution !")
+
+            proc = Popen("""ps -aux | grep "/bin/python3" | grep "bot_discord.py"| awk -F " " '{ print $2 }' """,
+                         shell=True, stdout=PIPE, stderr=PIPE)
+
+            sortie, autre = proc.communicate()
+
+            processus = sortie.decode('utf-8').split("\n")[1:-2]
+
+            if processus != []:
+                await ctx.send("Bot crypto lancé !")
+            else:
+                await ctx.send("Bot crypto arrêté !")
 
     async def on_ready(self):
         """

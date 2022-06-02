@@ -107,8 +107,8 @@ def check_position():
         sleep(1)
 
 
-if __name__ == "__main__":
-    p = Process(target=check_position)
-    p.start()
-    print("toto")
-    app.run()
+
+p = Process(target=check_position)
+p.start()
+
+app.run()

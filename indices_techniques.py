@@ -14,6 +14,8 @@ def moyenne(liste: list or dict) -> float:
     """
     liste2 = [float(x) for x in liste]
     liste2 = [float(x) for x in liste2 if math.isnan(x) == False]
+    if len(liste2) == 0:
+        liste2.append(5)
 
     return sum(liste2) / len(liste2)
 

@@ -1,7 +1,9 @@
+from multiprocessing import Process, Manager
 from subprocess import Popen, PIPE
 from binance.client import Client
 from dotenv import load_dotenv
 from functools import wraps
+import requests
 import pandas
 import os
 
@@ -151,3 +153,57 @@ def prix_temps_reel(symbol: str) -> float:
     """
 
     return float(client.get_ticker(symbol=symbol)['lastPrice'])
+
+
+@connexion
+def all_data(symbol: str) -> dict:
+    """
+    Fonction qui prend en argument un symbol
+    Et renvoie toutes les données de tous les jetons (ceux avec effet de levier aussi) sous forme d'une seule liste
+    """
+    manager = Manager()
+    dico = manager.dict()
+
+    def requete(sl: str, limit: str, dictionnaire: dict, position_list: int):
+        """"""
+        api = """https://api.binance.com/api/v3/klines"""
+
+        param = {'symbol': sl,
+                 'interval': '15m',
+                 'limit': limit}
+
+        donnee = requests.get(api, params=param)
+
+        data = donnee.json()
+
+        for i in range(len(data)):
+            data[i] = data[i][:7]
+
+        data = pandas.DataFrame(data)
+
+        data.columns = ['timestart', 'open', 'high', 'low',
+                        'close', 'volume', 'timeend']
+
+        dictionnaire[position_list] = data
+
+        data_15 = data[25:].rename(index=lambda x: x - 25)
+
+        dictionnaire[position_list + 3] = data_15
+
+        return dictionnaire
+
+    p = Process(target=requete, args=(f"{symbol}USDT", 40, dico, 0,))
+    p2 = Process(target=requete, args=(f"{symbol}UPUSDT", 40, dico, 1,))
+    p3 = Process(target=requete, args=(f"{symbol}DOWNUSDT", 40, dico, 2,))
+
+    p.start()
+    p2.start()
+    p3.start()
+
+    p.join()
+    p2.join()
+    p3.join()
+
+    dico = dict(sorted(dico.items()))
+
+    return dico
