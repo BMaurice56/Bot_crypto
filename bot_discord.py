@@ -37,6 +37,7 @@ class Botcrypto(commands.Bot):
             """
             Fonction qui lance le serveur fait maison
             """
+            sys.argv = ['', symbol]
             runpy.run_path("serveur.py")
 
         def arret_bot():
@@ -194,7 +195,7 @@ class Botcrypto(commands.Bot):
             messages = await ctx.channel.history().flatten()
 
             fichier = open("messages.txt", "a")
-            
+
             for each_message in messages:
                 fichier.write(each_message.content)
 

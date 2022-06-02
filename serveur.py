@@ -15,6 +15,7 @@ prix_btc = 0
 
 symbol = sys.argv[1]
 
+
 @app.route('/')
 def home():
     """"""
@@ -106,7 +107,6 @@ def check_position():
             if prix_btc < data[-1]:
                 vente_position()
         sleep(1)
-
 
 
 p = Process(target=check_position)

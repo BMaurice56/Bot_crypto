@@ -14,9 +14,10 @@ def get_db(f):
         connexion = sqlite3.connect("data_base.db")
         # création du curseur
         curseur = connexion.cursor()
-        return f(curseur=curseur,connexion=connexion, *args, **kwargs)
+        return f(curseur=curseur, connexion=connexion, *args, **kwargs)
 
     return connexion
+
 
 @get_db
 def bdd_data(curseur, connexion):
@@ -43,6 +44,7 @@ def bdd_data(curseur, connexion):
     """)
 
     connexion.commit()
+
 
 @get_db
 def bdd_rsi_vwap_cmf(curseur, connexion):
@@ -72,6 +74,7 @@ def bdd_rsi_vwap_cmf(curseur, connexion):
 # Fonctions BDD
 
 # Connexion à la bdd et créaton du curseur pour interagire avec
+
 
 @get_db
 def insert_bdd(table: str, data: pandas.DataFrame, curseur, connexion) -> None:
@@ -118,6 +121,7 @@ def insert_bdd(table: str, data: pandas.DataFrame, curseur, connexion) -> None:
         """, ls)
 
         connexion.commit()
+
 
 @get_db
 def insert_data_historique_bdd(symbol: str, nombre_données: int, curseur, connexion) -> None:
@@ -182,6 +186,7 @@ def insert_data_historique_bdd(symbol: str, nombre_données: int, curseur, conne
         """, liste_rsi)
 
     connexion.commit()
+
 
 @get_db
 def select_donnée_bdd(df_numpy: str, curseur, connexion) -> [pandas.DataFrame, pandas.DataFrame] or [numpy.array, numpy.array]:
