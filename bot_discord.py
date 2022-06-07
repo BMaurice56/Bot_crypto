@@ -188,16 +188,6 @@ class Botcrypto(commands.Bot):
                     for elt in liste_crypto_voulu:
                         await ctx.send(elt)
 
-        @self.command(name="message")
-        async def message(ctx):
-            """"""
-            messages = await ctx.channel.history().flatten()
-
-            fichier = open("messages.txt", "a")
-            
-            for each_message in messages:
-                fichier.write(each_message.content)
-
         @self.command(name="statut")
         async def statut(ctx):
             """
