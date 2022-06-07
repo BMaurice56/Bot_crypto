@@ -1,23 +1,40 @@
-from main import *
-"""
+#from main import *
+fichier = open("messages.txt", "r")
 
-#balance_usdt = client.get_asset_balance(asset='USDT')['free']
-donnée = {"montant" : 3000, "prix_pos" : 36000, "stop_loss" : 35950}
-#toto = requests.get("http://127.0.0.1:5000/prise_position", data=donnée)
-#toto2 = requests.get("http://127.0.0.1:5000/argent", data=donnée)
-#toto3 = requests.get("http://127.0.0.1:5000/vente_position", data=donnée)
-#print("toto.content", toto2.content, "toto3.content")
+text = fichier.read().split(chr(32))
 
-pos = requests.get("http://127.0.0.1:5000/presence_position")
-pos = pos.content
-print(pos.decode("utf-8"))
+fichier.close()
 
-"""
-symbol = 'BTC'
+for i in range(5):
+    for ch in text:
+        if ch == ":" or ch == "crypto" or ch == "up" or ch == "down" or ch == "prix" or ch == "de" or ch == "la" or ch == "prédiction":
+            text.remove(ch)
+        elif "\n" in ch:
+            element = ch.split("\n")[0]
+            index = text.index(ch)
+            text[index] = element
 
-d = all_data(symbol)
+for i in range(5):
+    for element in text:
+        if "programme" in element:
+            index = text.index(element)
+            index_p = element.index("p")
+            text[index] = element[:index_p]
+            text = text[:index + 1] + text[index + 11:]
 
-print(d)
+for i in range(5):
+    for elt in text:
+        if "," in elt:
+            indice = text.index(elt)
+            text[indice] = elt[:-1]
+
+for i in range(len(text)):
+    text[i] = float(text[i])
+
+fh = open("messages.txt", "w")
+
+for element in text:
+    fh.write(str(element) + "\n")
 
 """
 if prediction > prix:
