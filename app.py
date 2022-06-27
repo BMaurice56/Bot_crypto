@@ -2,20 +2,26 @@ from datetime import datetime
 from main import *
 import locale
 
-symbol = sys.argv[1]
+#symbol = sys.argv[1]
+symbol = "BTC"
 dodo = 60*14 + 58
-effet_levier = 100
 
 loaded_model, loaded_model_up, loaded_model_down = chargement_modele(symbol)
 
 # Définition de la zone pour l'horodatage car la date était en anglais avec le module datetime
 locale.setlocale(locale.LC_TIME, '')
 
-argent = 150
+api = "https://api.kucoin.com"
+kucoin_api_key = os.getenv("KUCOIN_API_KEY")
+kucoin_api_secret = os.getenv("KUCOIN_API_SECRET")
 
 while True:
-    argent = requests.get("http://127.0.0.1:5000/argent")
-    argent = float(argent.content.decode("utf-8"))
+    argent = float(client.get_asset_balance("USDT")['free'])
+    btcup = float(client.get_asset_balance("BTCUP")['free'])
+    btcdown = float(client.get_asset_balance("BTCDOWN")['free'])
+
+    position_up = ""
+    position_down = ""
 
     date = datetime.now().strftime("%A %d %B %Y %H:%M:%S")
 
@@ -46,32 +52,5 @@ while True:
     msg = état + "\n" + infos + "\n" + up + "\n" + down
 
     message_webhook_état_bot(msg)
-
-    if prix < prediction and prix_up < prediction_up and prix_down > prediction_down:
-        pos = requests.get("http://127.0.0.1:5000/presence_position")
-        pos = pos.content.decode("utf-8")
-        if pos == "None":
-            ar = argent * 0, 5
-            donnée = {"montant": ar, "prix_pos": prix,
-                      "stop_loss": (prix * 0, 9983)}
-            requests.get("http://127.0.0.1:5000/prise_position", data=donnée)
-            msg = f"Prise de position avec {ar} euros * {2} au prix de {prix} euros, il reste {argent - ar}€"
-            message_prise_position(msg, True)
-        else:
-            pos = ast.literal_eval(pos)
-            prix = prix_temps_reel(symbol + "USDT")
-            donnée = {"montant": pos[0], "prix_pos": pos[1],
-                      "stop_loss": (prix * 0, 9983)}
-            if pos[2] < donnée["stop_loss"]:
-                requests.get(
-                    "http://127.0.0.1:5000/prise_position", data=donnée)
-    else:
-        pos = requests.get("http://127.0.0.1:5000/presence_position")
-        pos = pos.content.decode("utf-8")
-        if pos != "None":
-            pr = requests.get("http://127.0.0.1:5000/vente_position")
-            pr = pr.content.decode("utf-8").split(";")
-            msg = f"Vente de position au prix de {pr[0]}€, prix avant : {pr[1]}€, il reste {pr[2]}€"
-            message_prise_position(msg, False)
 
     sleep(dodo)

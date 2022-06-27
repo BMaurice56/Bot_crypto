@@ -4,7 +4,13 @@ from binance.client import Client
 from dotenv import load_dotenv
 from functools import wraps
 import requests
+import hashlib
+import base64
 import pandas
+import time
+import hmac
+import json
+import ast
 import os
 
 # Chargement des clés
@@ -100,8 +106,9 @@ def connexion(f):
 
     return auto_con
 
-
+# BINANCE
 # Fonctions qui récupère les données du serveur
+
 
 api_key = os.getenv("API_KEY")
 api_secret = os.getenv("API_SECRET")
@@ -121,6 +128,7 @@ def donnée(symbol: str, début: str, fin: str, longueur: int) -> pandas.DataFra
     longueur : 40 données ...
     """
     donnée_historique = []
+    # Tant que l'on a pas la bonne quantité de donnée on continue
     while len(donnée_historique) != longueur:
         # Récupération des données de la crypto
         if fin[0] == "0":
@@ -159,13 +167,16 @@ def prix_temps_reel(symbol: str) -> float:
 def all_data(symbol: str) -> dict:
     """
     Fonction qui prend en argument un symbol
-    Et renvoie toutes les données de tous les jetons (ceux avec effet de levier aussi) sous forme d'une seule liste
+    Et renvoie toutes les données de tous les jetons (ceux avec effet de levier aussi) sous forme d'un seul dictionnaire
     """
+    # Création du dictionnaire que recevra toutes les dataframes avec les données
     manager = Manager()
     dico = manager.dict()
 
     def requete(sl: str, limit: str, dictionnaire: dict, position_list: int):
-        """"""
+        """
+        Fonction qui récupère les données d'une crypto de façon asyncrone
+        """
         api = """https://api.binance.com/api/v3/klines"""
 
         param = {'symbol': sl,
@@ -184,9 +195,22 @@ def all_data(symbol: str) -> dict:
         data.columns = ['timestart', 'open', 'high', 'low',
                         'close', 'volume', 'timeend']
 
+        # On enregistre les données qui ont 40 pour longeur
+
         dictionnaire[position_list] = data
 
+        # Puis on vient enregistrer les données qui ont 15 pour longueur
+        # On renomme les lignes pour que ça commence à partir de zéro
+
         data_15 = data[25:].rename(index=lambda x: x - 25)
+
+        # Les données avec 15 de longueur on rajoute 3 à la clé pour garder l'ordre par rapport aux trois cryptos
+        # BTC 40
+        # BTCUP 40
+        # BTCDOWN 40
+        # BTC 15
+        # BTCUP 15
+        # BTCDOWN 15
 
         dictionnaire[position_list + 3] = data_15
 
@@ -207,3 +231,46 @@ def all_data(symbol: str) -> dict:
     dico = dict(sorted(dico.items()))
 
     return dico
+
+# KUCOIN
+
+
+api = "https://api.kucoin.com"
+
+kucoin_api_key = os.getenv("KUCOIN_API_KEY")
+kucoin_api_secret = os.getenv("KUCOIN_API_SECRET")
+kucoin_phrase_securite = os.getenv("KUCOIN_PHRASE_SECURITE")
+
+
+def get_USDT():
+    """
+    Fonction qui récupère le montant de USDT sur le compte de trading
+    """
+    param = {'currency': 'USDT',
+             'type': 'trade'}
+
+    param_json = json.dumps(param)
+
+    now = int(time.time() * 1000)
+
+    str_to_sign = str(now) + 'GET' + '/api/v1/accounts' + param_json
+
+    signature = base64.b64encode(
+        hmac.new(kucoin_api_secret.encode('utf-8'), str_to_sign.encode('utf-8'), hashlib.sha256).digest())
+
+    passphrase = base64.b64encode(hmac.new(kucoin_api_secret.encode(
+        'utf-8'), kucoin_phrase_securite.encode('utf-8'), hashlib.sha256).digest())
+
+    headers = {
+        "KC-API-SIGN": signature,
+        "KC-API-TIMESTAMP": str(now),
+        "KC-API-KEY": kucoin_api_key,
+        "KC-API-PASSPHRASE": passphrase,
+        "KC-API-KEY-VERSION": "2",
+        "Content-Type": "application/json"
+    }
+
+    argent = ast.literal_eval(requests.get(api + "/api/v1/accounts",
+                                           headers=headers, data=param_json).content.decode('utf-8'))['data'][0]['available']
+
+    return float(argent)

@@ -32,3 +32,32 @@ else:
     else:
         sleep(dodo)
 """
+
+"""
+if prix < prediction and prix_up < prediction_up and prix_down > prediction_down:
+        pos = requests.get("http://127.0.0.1:5000/presence_position")
+        pos = pos.content.decode("utf-8")
+        if pos == "None":
+            ar = argent * 0, 5
+            donnée = {"montant": ar, "prix_pos": prix,
+                      "stop_loss": (prix * 0, 9983)}
+            requests.get("http://127.0.0.1:5000/prise_position", data=donnée)
+            msg = f"Prise de position avec {ar} euros * {2} au prix de {prix} euros, il reste {argent - ar}€"
+            message_prise_position(msg, True)
+        else:
+            pos = ast.literal_eval(pos)
+            prix = prix_temps_reel(symbol + "USDT")
+            donnée = {"montant": pos[0], "prix_pos": pos[1],
+                      "stop_loss": (prix * 0, 9983)}
+            if pos[2] < donnée["stop_loss"]:
+                requests.get(
+                    "http://127.0.0.1:5000/prise_position", data=donnée)
+    else:
+        pos = requests.get("http://127.0.0.1:5000/presence_position")
+        pos = pos.content.decode("utf-8")
+        if pos != "None":
+            pr = requests.get("http://127.0.0.1:5000/vente_position")
+            pr = pr.content.decode("utf-8").split(";")
+            msg = f"Vente de position au prix de {pr[0]}€, prix avant : {pr[1]}€, il reste {pr[2]}€"
+            message_prise_position(msg, False)
+"""

@@ -29,14 +29,10 @@ class Botcrypto(commands.Bot):
                         erreur = erreur[2000:]
                     if erreur != "":
                         message_status_général(erreur)
+                else:
+                    message_status_général(erreur)
                 arret_bot()
                 message_status_général("Le bot s'est arrêté")
-
-        def lancement_serveur_bis():
-            """
-            Fonction qui lance le serveur fait maison
-            """
-            runpy.run_path("serveur.py")
 
         def arret_bot():
             """
@@ -116,6 +112,7 @@ class Botcrypto(commands.Bot):
             Permet de ne pas bloquer le bot discord et donc d'executre d'autre commandes à coté
             Comme l'arrêt du bot ou le relancer, le prix à l'instant T, etc...
             """
+            """
             await ctx.send("Sur quelles crypto trader ? BTC ou BNB ?")
 
             # Vérifie que le message n'est pas celui envoyé par le bot
@@ -127,13 +124,12 @@ class Botcrypto(commands.Bot):
 
             # Puis on vérifie que la cryptomonnaie existe bien
             crypto = msg.content
+            """
+            crypto = 'BTC'
             if crypto in ['BTC', 'BNB']:
                 sys.argv = ['', crypto]
                 process = Process(target=lancement_bot)
-                process2 = Process(target=lancement_serveur_bis)
 
-                process2.start()
-                sleep(5)
                 process.start()
 
             else:

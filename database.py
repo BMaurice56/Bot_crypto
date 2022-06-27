@@ -1,7 +1,6 @@
 from indices_techniques import *
 from données_serveur import *
 import sqlite3
-import ast
 
 
 def get_db(f):
@@ -139,8 +138,8 @@ def insert_data_historique_bdd(symbol: str, nombre_données: int, curseur, conne
     bdd_data()
     bdd_rsi_vwap_cmf()
 
-    # A chaque tour de boucle, on récupère les données sur une durée précise
-    # Et on vient appliquer toutes les fonctions dessus pour ensuite rentrer les données dans la bdd
+    # On récupère toutes les données en 1 seule requête (car sinon beaucoup trop long)
+    # Puis on vient itérer sur ces données
 
     données_serveur = donnée(
         symbol, f"{15 * nombre_données + 600} min ago UTC", "0 min ago UTC", (15 * nombre_données + 600)//15)
