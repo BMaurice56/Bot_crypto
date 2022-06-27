@@ -242,18 +242,16 @@ kucoin_api_secret = os.getenv("KUCOIN_API_SECRET")
 kucoin_phrase_securite = os.getenv("KUCOIN_PHRASE_SECURITE")
 
 
-def get_USDT():
+def montant_compte(symbol: str or list) -> float or list:
     """
-    Fonction qui récupère le montant de USDT sur le compte de trading
+    Fonction qui renvoie le montant que possède le compte selon le ou les symbols voulus
     """
-    param = {'currency': 'USDT',
-             'type': 'trade'}
 
-    param_json = json.dumps(param)
+    endpoint = '/api/v1/accounts'
 
     now = int(time.time() * 1000)
 
-    str_to_sign = str(now) + 'GET' + '/api/v1/accounts' + param_json
+    str_to_sign = str(now) + 'GET' + endpoint
 
     signature = base64.b64encode(
         hmac.new(kucoin_api_secret.encode('utf-8'), str_to_sign.encode('utf-8'), hashlib.sha256).digest())
@@ -270,7 +268,24 @@ def get_USDT():
         "Content-Type": "application/json"
     }
 
-    argent = ast.literal_eval(requests.get(api + "/api/v1/accounts",
-                                           headers=headers, data=param_json).content.decode('utf-8'))['data'][0]['available']
+    argent = ast.literal_eval(requests.get(api + endpoint,
+                                           headers=headers).content.decode('utf-8'))['data']
 
-    return float(argent)
+    montant = 0
+
+    if symbol == 'USDT':
+        for elt in argent:
+            if elt['currency'] == 'USDT' and elt['type'] == 'trade':
+                montant = float(elt['available'])
+
+    elif symbol == 'BTCUP':
+        for elt in argent:
+            if elt['currency'] == 'BTC3L' and elt['type'] == 'trade':
+                montant = float(elt['available'])
+
+    elif symbol == 'BTCDOWN':
+        for elt in argent:
+            if elt['currency'] == 'BTC3S' and elt['type'] == 'trade':
+                montant = float(elt['available'])
+
+    return montant
