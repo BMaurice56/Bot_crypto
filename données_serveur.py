@@ -1,4 +1,5 @@
 from multiprocessing import Process, Manager
+from decimal import Decimal, ROUND_DOWN
 from subprocess import Popen, PIPE
 from binance.client import Client
 from dotenv import load_dotenv
@@ -242,12 +243,26 @@ kucoin_api_secret = os.getenv("KUCOIN_API_SECRET")
 kucoin_phrase_securite = os.getenv("KUCOIN_PHRASE_SECURITE")
 
 
-def montant_compte(symbol: str or list) -> float or list:
+def arrondi(valeur: float or str, zero_apres_virgule=None) -> float:
     """
-    Fonction qui renvoie le montant que possède le compte selon le ou les symbols voulus
+    Fonction qui prend en argument un décimal et renvoie ce décimal arrondi à 0,0001
     """
 
-    endpoint = '/api/v1/accounts'
+    val = Decimal(str(valeur))
+    if zero_apres_virgule != None:
+        return float(val.quantize(Decimal(str(zero_apres_virgule)), ROUND_DOWN))
+    return float(val.quantize(Decimal('0.0001'), ROUND_DOWN))
+
+
+@connexion
+def montant_compte(symbol: str) -> float:
+    """
+    Fonction qui renvoie le montant que possède le compte selon le ou les symbols voulus
+    Ex paramètre :
+    symbol : USDT
+    """
+
+    endpoint = f"/api/v1/accounts?currency={symbol}&type=trade"
 
     now = int(time.time() * 1000)
 
@@ -268,24 +283,46 @@ def montant_compte(symbol: str or list) -> float or list:
         "Content-Type": "application/json"
     }
 
-    argent = ast.literal_eval(requests.get(api + endpoint,
-                                           headers=headers).content.decode('utf-8'))['data']
+    argent = ast.literal_eval(requests.get(
+        api + endpoint, headers=headers).content.decode('utf-8'))["data"]
 
-    montant = 0
+    if argent != []:
+        money = arrondi(argent[0]['available']) * 0.999
+        return money
+    else:
+        return 0
 
-    if symbol == 'USDT':
-        for elt in argent:
-            if elt['currency'] == 'USDT' and elt['type'] == 'trade':
-                montant = float(elt['available'])
 
-    elif symbol == 'BTCUP':
-        for elt in argent:
-            if elt['currency'] == 'BTC3L' and elt['type'] == 'trade':
-                montant = float(elt['available'])
+@connexion
+def prix_temps_reel_kucoin(symbol: str) -> float:
+    """
+    Fonction qui renvoie le prix de la crypto en temps réel
+    Ex paramètre : 
+    symbol : BTC3S-USDT
+    """
 
-    elif symbol == 'BTCDOWN':
-        for elt in argent:
-            if elt['currency'] == 'BTC3S' and elt['type'] == 'trade':
-                montant = float(elt['available'])
+    endpoint = f"/api/v1/market/orderbook/level1?symbol={symbol}"
 
-    return montant
+    now = int(time.time() * 1000)
+
+    str_to_sign = str(now) + 'GET' + endpoint
+
+    signature = base64.b64encode(
+        hmac.new(kucoin_api_secret.encode('utf-8'), str_to_sign.encode('utf-8'), hashlib.sha256).digest())
+
+    passphrase = base64.b64encode(hmac.new(kucoin_api_secret.encode(
+        'utf-8'), kucoin_phrase_securite.encode('utf-8'), hashlib.sha256).digest())
+
+    headers = {
+        "KC-API-SIGN": signature,
+        "KC-API-TIMESTAMP": str(now),
+        "KC-API-KEY": kucoin_api_key,
+        "KC-API-PASSPHRASE": passphrase,
+        "KC-API-KEY-VERSION": "2",
+        "Content-Type": "application/json"
+    }
+
+    argent = float(ast.literal_eval(requests.get(
+        api + endpoint, headers=headers).content.decode('utf-8'))["data"]["price"])
+
+    return argent
