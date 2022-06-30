@@ -254,19 +254,23 @@ def arrondi(valeur: float or str, zero_apres_virgule=None) -> float:
     return float(val.quantize(Decimal('0.0001'), ROUND_DOWN))
 
 
-@connexion
-def montant_compte(symbol: str) -> float:
+def headers(methode: str, endpoint: str, param=None) -> dict:
     """
-    Fonction qui renvoie le montant que possède le compte selon le ou les symbols voulus
+    Fonction qui fait l'entête de la requête http
     Ex paramètre :
-    symbol : USDT
+    methode : 'GET'
+    endpoint : 'api/v1/orders'
     """
-
-    endpoint = f"/api/v1/accounts?currency={symbol}&type=trade"
-
     now = int(time.time() * 1000)
 
-    str_to_sign = str(now) + 'GET' + endpoint
+    if methode == 'GET':
+        str_to_sign = str(now) + 'GET' + endpoint
+
+    elif methode == 'POST':
+        str_to_sign = str(now) + 'POST' + endpoint + param
+
+    elif methode == 'DELETE':
+        str_to_sign = str(now) + 'DELETE' + endpoint
 
     signature = base64.b64encode(
         hmac.new(kucoin_api_secret.encode('utf-8'), str_to_sign.encode('utf-8'), hashlib.sha256).digest())
@@ -283,11 +287,26 @@ def montant_compte(symbol: str) -> float:
         "Content-Type": "application/json"
     }
 
+    return headers
+
+
+@connexion
+def montant_compte(symbol: str) -> float:
+    """
+    Fonction qui renvoie le montant que possède le compte selon le ou les symbols voulus
+    Ex paramètre :
+    symbol : USDT
+    """
+
+    endpoint = f"/api/v1/accounts?currency={symbol}&type=trade"
+
+    entête = headers('GET', endpoint)
+
     argent = ast.literal_eval(requests.get(
-        api + endpoint, headers=headers).content.decode('utf-8'))["data"]
+        api + endpoint, headers=entête).content.decode('utf-8'))["data"]
 
     if argent != []:
-        money = arrondi(argent[0]['available']) * 0.999
+        money = arrondi(float(argent[0]['available']) * 0.999)
         return money
     else:
         return 0
@@ -305,24 +324,95 @@ def prix_temps_reel_kucoin(symbol: str) -> float:
 
     now = int(time.time() * 1000)
 
-    str_to_sign = str(now) + 'GET' + endpoint
-
-    signature = base64.b64encode(
-        hmac.new(kucoin_api_secret.encode('utf-8'), str_to_sign.encode('utf-8'), hashlib.sha256).digest())
-
-    passphrase = base64.b64encode(hmac.new(kucoin_api_secret.encode(
-        'utf-8'), kucoin_phrase_securite.encode('utf-8'), hashlib.sha256).digest())
-
-    headers = {
-        "KC-API-SIGN": signature,
-        "KC-API-TIMESTAMP": str(now),
-        "KC-API-KEY": kucoin_api_key,
-        "KC-API-PASSPHRASE": passphrase,
-        "KC-API-KEY-VERSION": "2",
-        "Content-Type": "application/json"
-    }
+    entête = headers('GET', endpoint)
 
     argent = float(ast.literal_eval(requests.get(
-        api + endpoint, headers=headers).content.decode('utf-8'))["data"]["price"])
+        api + endpoint, headers=entête).content.decode('utf-8'))["data"]["price"])
 
     return argent
+
+
+@connexion
+def prise_position(info: dict):
+    """
+    Fonction qui prend une position soit d'achat soit de vente et place un stoploss
+    Ex paramètres :
+    info : {
+    "montant" : "50",
+    "symbol" : "BTC3S-USDT",
+    "achat_vente" : "True" (pour achat)
+    }
+    """
+
+    id_position = randint(0, 100_000_000)
+
+    endpoint = "/api/v1/orders"
+
+    if info["achat_vente"] == True:
+        achat = "buy"
+        type_achat = "funds"
+    else:
+        achat = "sell"
+        type_achat = "size"
+
+    param = {"clientOid": id_position,
+             "side": achat,
+             "symbol": info["symbol"],
+             'type': "market",
+             type_achat: str(info["montant"])}
+
+    param = json.dumps(param)
+
+    entête = headers('POST', endpoint, param)
+
+    prise_position = requests.post(api + endpoint, headers=entête, data=param)
+
+    sleep(1)
+
+    if info["achat_vente"] == True:
+        id_stoploss = randint(0, 100_000_000)
+
+        fichier = open("stoploss.txt", "w")
+
+        endpoint2 = "/api/v1/stop-order"
+
+        symbol = info["symbol"].split("-")[0]
+
+        money = montant_compte(symbol)
+
+        prix = prix_temps_reel_kucoin(info["symbol"])
+
+        param = {"clientOid": id_stoploss,
+                 "side": "sell",
+                 "symbol": info["symbol"],
+                 'stop': "loss",
+                 "stopPrice": str(arrondi(prix * 0.996)),
+                 "price": str(arrondi(prix * 0.991)),
+                 "size": str(arrondi(money))}
+
+        param = json.dumps(param)
+
+        entête = headers('POST', endpoint2, param)
+
+        prise_position = requests.post(
+            api + endpoint2, headers=entête, data=param)
+
+        fichier.write(ast.literal_eval(
+            prise_position.content.decode('utf-8'))["data"]["orderId"])
+        fichier.close()
+
+    else:
+        fichier = open("stoploss.txt", "r")
+
+        id_stls = fichier.read()
+
+        endpoint3 = f"/api/v1/stop-order/{id_stls}"
+
+        entête = headers('DELETE', endpoint3)
+
+        supression_position = requests.delete(api + endpoint3, headers=entête)
+
+        fichier = open("stoploss.txt", "w")
+        fichier.close()
+
+        return supression_position, supression_position.content
