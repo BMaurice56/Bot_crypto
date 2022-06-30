@@ -1,8 +1,7 @@
 from discord_webhook import DiscordWebhook, DiscordEmbed
 from keras.models import Sequential, model_from_json
-from time import sleep, perf_counter
+from time import perf_counter
 from keras.layers import Dense
-from random import randint
 from database import *
 import sys
 

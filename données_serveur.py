@@ -4,6 +4,8 @@ from subprocess import Popen, PIPE
 from binance.client import Client
 from dotenv import load_dotenv
 from functools import wraps
+from random import randint
+from time import sleep
 import requests
 import hashlib
 import base64

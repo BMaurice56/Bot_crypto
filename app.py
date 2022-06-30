@@ -16,9 +16,9 @@ kucoin_api_key = os.getenv("KUCOIN_API_KEY")
 kucoin_api_secret = os.getenv("KUCOIN_API_SECRET")
 
 while True:
-    argent = float(client.get_asset_balance("USDT")['free'])
-    btcup = float(client.get_asset_balance("BTCUP")['free'])
-    btcdown = float(client.get_asset_balance("BTCDOWN")['free'])
+    argent = montant_compte("USDT")
+    btcup = montant_compte("BTC3L")
+    btcdown = montant_compte("BTC3S")
 
     position_up = ""
     position_down = ""
