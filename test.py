@@ -1,34 +1,11 @@
 from main import *
 
 
-def presence_position(type_ordre: str) -> None or dict:
-    """
-    Fonction qui renvoie les positions en cours sur une pair de crypto précis
-    Ex paramètre :
-    type_ordre : market ou stoploss
-    """
-    if type_ordre == "market":
-        endpoint = "/api/v1/orders?status=active"
-    
-    elif type_ordre == "stoploss":
-        endpoint = "/api/v1/stop-order?status=active"
-
-    entête = headers("GET", endpoint)
-
-    position = requests.get(api + endpoint, headers=entête)
-
-    resultat = json.loads(position.content.decode("utf-8"))['data']['items']
-
-    if resultat == []:
-        return None
-    else:
-        return resultat[0]
-
-
 def supression_position():
     """
     Fonction qui supprime une ou plusieurs positions
     """
+
 
 """
 money = montant_compte('USDT')
@@ -37,13 +14,13 @@ info = {"montant": money, "symbol": "BTC3S-USDT", "achat_vente": True}
 
 prise_position(info)
 """
-toto = presence_position("market")
+toto = presence_position("market", "BTC3L-USDT")
 
 print(toto)
 
-toto = presence_position("stoploss")
+toto = presence_position("stoploss",  "BTC3L-USDT")
 
-print(toto, type(toto))
+print(toto)
 
 
 """

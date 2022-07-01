@@ -338,6 +338,8 @@ def prix_temps_reel_kucoin(symbol: str) -> float:
 def prise_position(info: dict):
     """
     Fonction qui prend une position soit d'achat soit de vente et place un stoploss
+    Quand on achète on place automatiquement un stoploss
+    Et quand on vend, on retire le stoploss et/ou l'ordre s'il n'a pas été exécuté
     Ex paramètres :
     info : {
     "montant" : "50",
@@ -345,6 +347,36 @@ def prise_position(info: dict):
     "achat_vente" : "True" (pour achat)
     }
     """
+    # Lorsque l'on vend, on vérifie s'il y a toujours le stoploss ou
+    # si celui-ci a placé un ordre mais que cet ordre n'a pas été exécuté
+    if info["achat_vente"] == False:
+        presence_market = presence_position("market", info["symbol"])
+
+        if presence_market == None:
+
+            fichier = open("stoploss.txt", "r")
+
+            id_stls = fichier.read()
+
+            endpoint3 = f"/api/v1/stop-order/{id_stls}"
+
+            entête = headers('DELETE', endpoint3)
+
+            supression_position = requests.delete(
+                api + endpoint3, headers=entête)
+
+            fichier = open("stoploss.txt", "w")
+            fichier.close()
+
+        else:
+            id_stls = presence_market['id']
+
+            endpoint3 = f"/api/v1/orders{id_stls}"
+
+            entête = headers('DELETE', endpoint3)
+
+            supression_position = requests.delete(
+                api + endpoint3, headers=entête)
 
     id_position = randint(0, 100_000_000)
 
@@ -403,18 +435,37 @@ def prise_position(info: dict):
             prise_position.content.decode('utf-8'))["data"]["orderId"])
         fichier.close()
 
+
+@connexion
+def presence_position(type_ordre: str, symbol: str) -> None or dict:
+    """
+    Fonction qui renvoie les positions en cours sur une pair de crypto précis
+    Ex paramètre :
+    type_ordre : market ou stoploss
+    symbol : BTC3S-USDT
+    Sortie de la fonction ex :
+    {'id': '62bed9c3fe2886000174f4c7', 'symbol': 'BTC3L-USDT', 'opType': 'DEAL', 'type': 'limit', 
+    'side': 'sell', 'price': '0.0045', 'size': '5608.6144', 'funds': '0', 'dealFunds': '0', 'dealSize': '0', 
+    'fee': '0', 'feeCurrency': 'USDT', 'stp': '', 'stop': '', 'stopTriggered': False, 'stopPrice': '0', 
+    'timeInForce': 'GTC', 'postOnly': False, 'hidden': False, 'iceberg': False, 'visibleSize': '0', 
+    'cancelAfter': 0, 'channel': 'IOS', 'clientOid': None, 'remark': None, 
+    'tags': None, 'isActive': True, 'cancelExist': False, 'createdAt': 1656674755916, 'tradeType': 'TRADE'}
+    """
+    if type_ordre == "market":
+        endpoint = "/api/v1/orders?status=active"
+
+    elif type_ordre == "stoploss":
+        endpoint = "/api/v1/stop-order?status=active"
+
+    endpoint += f"&symbol={symbol}"
+
+    entête = headers("GET", endpoint)
+
+    position = requests.get(api + endpoint, headers=entête)
+
+    resultat = json.loads(position.content.decode("utf-8"))['data']['items']
+
+    if resultat == []:
+        return None
     else:
-        fichier = open("stoploss.txt", "r")
-
-        id_stls = fichier.read()
-
-        endpoint3 = f"/api/v1/stop-order/{id_stls}"
-
-        entête = headers('DELETE', endpoint3)
-
-        supression_position = requests.delete(api + endpoint3, headers=entête)
-
-        fichier = open("stoploss.txt", "w")
-        fichier.close()
-
-        return supression_position, supression_position.content
+        return resultat[0]
