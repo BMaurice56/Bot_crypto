@@ -449,12 +449,13 @@ def presence_position(type_ordre: str, symbol: str) -> None or dict:
     type_ordre : market ou stoploss
     symbol : BTC3S-USDT
     Sortie de la fonction :
-    {'id': '62bed9c3fe2886000174f4c7', 'symbol': 'BTC3L-USDT', 'opType': 'DEAL', 'type': 'limit', 
-    'side': 'sell', 'price': '0.0045', 'size': '5608.6144', 'funds': '0', 'dealFunds': '0', 'dealSize': '0', 
-    'fee': '0', 'feeCurrency': 'USDT', 'stp': '', 'stop': '', 'stopTriggered': False, 'stopPrice': '0', 
-    'timeInForce': 'GTC', 'postOnly': False, 'hidden': False, 'iceberg': False, 'visibleSize': '0', 
-    'cancelAfter': 0, 'channel': 'IOS', 'clientOid': None, 'remark': None, 
-    'tags': None, 'isActive': True, 'cancelExist': False, 'createdAt': 1656674755916, 'tradeType': 'TRADE'}
+    {'id': 'vs9o2om0ejjhbdd5000qjne9', 'symbol': 'BTC3S-USDT', 'userId': '62b59916f4913f0001954877', 
+    'status': 'NEW', 'type': 'limit', 'side': 'sell', 'price': '3.44060000000000000000', 'size': '14.06590000000000000000',
+    'funds': None, 'stp': None, 'timeInForce': 'GTC', 'cancelAfter': -1, 'postOnly': False, 'hidden': False, 
+    'iceberg': False, 'visibleSize': None, 'channel': 'API', 'clientOid': '94598129', 'remark': None, 'tags': None, 
+    'orderTime': 1656780007654000020, 'domainId': 'kucoin', 'tradeSource': 'USER', 'tradeType': 'TRADE', 
+    'feeCurrency': 'USDT', 'takerFeeRate': '0.00100000000000000000', 'makerFeeRate': '0.00100000000000000000',
+    'createdAt': 1656780007655, 'stop': 'loss', 'stopTriggerTime': None, 'stopPrice': '3.45800000000000000000'}
     """
     if type_ordre == "market":
         endpoint = "/api/v1/orders?status=active"
@@ -497,3 +498,58 @@ def information_ordre(id_ordre: str) -> dict:
     info_ordre = requests.get(api + endpoint, headers=entête)
 
     return json.loads(info_ordre.content.decode('utf-8'))['data']
+
+
+@connexion
+def remonter_stoploss(symbol: str):
+    """
+    Fonction qui remonte le stoploss s'il y a eu une augmentation par rapport au précédent stoploss
+    Ex paramètre :
+    symbol : BTC3S-USDT
+    """
+    # On enlève le précédent ordre
+    fichier = open("stoploss.txt", "r")
+
+    id_stls = fichier.read()
+
+    endpoint3 = f"/api/v1/stop-order/{id_stls}"
+
+    entête = headers('DELETE', endpoint3)
+
+    supression_position = requests.delete(
+        api + endpoint3, headers=entête)
+
+    fichier.close()
+    ##################################################
+
+    # Puis on remet un nouveau stoploss
+    id_stoploss = randint(0, 100_000_000)
+
+    fichier = open("stoploss.txt", "w")
+
+    endpoint2 = "/api/v1/stop-order"
+
+    crypto = symbol.split("-")[0]
+
+    money = montant_compte(crypto)
+
+    prix = prix_temps_reel_kucoin(symbol)
+
+    param = {"clientOid": id_stoploss,
+             "side": "sell",
+             "symbol": symbol,
+             'stop': "loss",
+             "stopPrice": str(arrondi(prix * 0.996)),
+             "price": str(arrondi(prix * 0.991)),
+             "size": str(arrondi(money))}
+
+    param = json.dumps(param)
+
+    entête = headers('POST', endpoint2, param)
+
+    prise_position = requests.post(
+        api + endpoint2, headers=entête, data=param)
+
+    fichier.write(ast.literal_eval(
+        prise_position.content.decode('utf-8'))["data"]["orderId"])
+    fichier.close()

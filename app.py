@@ -2,7 +2,7 @@ from datetime import datetime
 from main import *
 import locale
 
-#symbol = sys.argv[1]
+# symbol = sys.argv[1]
 symbol = "BTC"
 dodo = 60*14 + 58
 
@@ -19,6 +19,8 @@ while True:
     argent = montant_compte("USDT")
     btcup = montant_compte("BTC3L")
     btcdown = montant_compte("BTC3S")
+
+    achat = False
 
     date = datetime.now().strftime("%A %d %B %Y %H:%M:%S")
 
@@ -79,6 +81,8 @@ while True:
             msg = f"Prise de position avec {argent} usdt au prix de {float(data_ordre2['price'])}$, il reste {montant_compte('USDT')} usdt"
             message_prise_position(msg, True)
             ########################################################################
+
+            achat = True
         else:
             info = {"montant": argent,
                     "symbol": "BTC3L-USDT", "achat_vente": True}
@@ -89,6 +93,8 @@ while True:
 
             msg = f"Prise de position avec {argent} usdt au prix de {float(data_ordre['price'])}$, il reste {montant_compte('USDT')} usdt"
             message_prise_position(msg, True)
+
+            achat = True
 
     elif prix > prediction and prix_up > prediction_up and prix_down < prediction_down:
         if btcdown > 2:
@@ -120,6 +126,8 @@ while True:
             message_prise_position(msg, True)
             ########################################################################
 
+            achat = True
+
         else:
             info = {"montant": argent,
                     "symbol": "BTC3S-USDT", "achat_vente": True}
@@ -130,5 +138,39 @@ while True:
 
             msg = f"Prise de position avec {argent} usdt au prix de {float(data_ordre['price'])}$, il reste {montant_compte('USDT')} usdt"
             message_prise_position(msg, True)
+
+            achat = True
+
+    if achat == False:
+        btcup = montant_compte("BTC3L")
+        btcdown = montant_compte("BTC3S")
+
+        if btcup > 2:
+            prix_up = prix_temps_reel_kucoin("BTC3L-USDT")
+
+            stoploss = presence_position("stoploss", "BTC3L-USDT")
+
+            if stoploss != None:
+
+                stopPrice = arrondi(stoploss["stopPrice"])
+
+                nouveau_stopPrice = arrondi(prix_up * 0.996)
+
+                if stopPrice < nouveau_stopPrice:
+                    remonter_stoploss("BTC3L-USDT")
+
+        elif btcdown > 2:
+            prix_down = prix_temps_reel_kucoin("BTC3S-USDT")
+
+            stoploss = presence_position("stoploss", "BTC3S-USDT")
+
+            if stoploss != None:
+
+                stopPrice = arrondi(stoploss["stopPrice"])
+
+                nouveau_stopPrice = arrondi(prix_down * 0.996)
+
+                if stopPrice < nouveau_stopPrice:
+                    remonter_stoploss("BTC3S-USDT")
 
     sleep(dodo)
