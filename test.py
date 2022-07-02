@@ -1,19 +1,11 @@
 from main import *
 
-
-def supression_position():
-    """
-    Fonction qui supprime une ou plusieurs positions
-    """
-
-
 """
 money = montant_compte('USDT')
 
 info = {"montant": money, "symbol": "BTC3S-USDT", "achat_vente": True}
 
-prise_position(info)
-"""
+print(prise_position(info))
 toto = presence_position("market", "BTC3L-USDT")
 
 print(toto)
@@ -21,9 +13,10 @@ print(toto)
 toto = presence_position("stoploss",  "BTC3L-USDT")
 
 print(toto)
-
-
 """
+
+
+""" 
 toto = False
 
 if toto == True:

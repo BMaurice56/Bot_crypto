@@ -335,17 +335,20 @@ def prix_temps_reel_kucoin(symbol: str) -> float:
 
 
 @connexion
-def prise_position(info: dict):
+def prise_position(info: dict) -> str:
     """
     Fonction qui prend une position soit d'achat soit de vente et place un stoploss
     Quand on achète on place automatiquement un stoploss
     Et quand on vend, on retire le stoploss et/ou l'ordre s'il n'a pas été exécuté
+    Renvoie l'id de la position prise
     Ex paramètres :
     info : {
     "montant" : "50",
     "symbol" : "BTC3S-USDT",
     "achat_vente" : "True" (pour achat)
     }
+    Sortie de la fonction :
+    "vs9o2om08lvqav06000s2u7e"
     """
     # Lorsque l'on vend, on vérifie s'il y a toujours le stoploss ou
     # si celui-ci a placé un ordre mais que cet ordre n'a pas été exécuté
@@ -435,6 +438,8 @@ def prise_position(info: dict):
             prise_position.content.decode('utf-8'))["data"]["orderId"])
         fichier.close()
 
+    return ast.literal_eval(prise_position.content.decode('utf-8'))["data"]["orderId"]
+
 
 @connexion
 def presence_position(type_ordre: str, symbol: str) -> None or dict:
@@ -443,7 +448,7 @@ def presence_position(type_ordre: str, symbol: str) -> None or dict:
     Ex paramètre :
     type_ordre : market ou stoploss
     symbol : BTC3S-USDT
-    Sortie de la fonction ex :
+    Sortie de la fonction :
     {'id': '62bed9c3fe2886000174f4c7', 'symbol': 'BTC3L-USDT', 'opType': 'DEAL', 'type': 'limit', 
     'side': 'sell', 'price': '0.0045', 'size': '5608.6144', 'funds': '0', 'dealFunds': '0', 'dealSize': '0', 
     'fee': '0', 'feeCurrency': 'USDT', 'stp': '', 'stop': '', 'stopTriggered': False, 'stopPrice': '0', 
@@ -469,3 +474,26 @@ def presence_position(type_ordre: str, symbol: str) -> None or dict:
         return None
     else:
         return resultat[0]
+
+
+@connexion
+def information_ordre(id_ordre: str) -> dict:
+    """
+    Fonction qui renvoie les informations sur un ordre passé
+    Ex param :
+    id_ordre : vs9o2om08lvqav06000s2u7e
+    Sortie de la fonction :
+    {"id":"vs9o2om08lvqav06000s2u7e","symbol":"BTC3S-USDT","opType":"DEAL",
+    "type":"limit","side":"sell","price":"3.4136","size":"14.4306","funds":null,"dealFunds":"0",
+    "dealSize":"0","fee":"0","feeCurrency":"USDT","stp":null,"stop":"loss","stopTriggered":false,
+    "stopPrice":"3.4309","timeInForce":"GTC","postOnly":false,"hidden":false,"iceberg":false,"visibleSize":null,
+    "cancelAfter":-1,"channel":"API","clientOid":"30688036","remark":null,
+    "tags":null,"isActive":false,"cancelExist":true,"createdAt":1656767871013,"tradeType":"TRADE"}
+    """
+    endpoint = f"/api/v1/orders/{id_ordre}"
+
+    entête = headers("GET", endpoint)
+
+    info_ordre = requests.get(api + endpoint, headers=entête)
+
+    return json.loads(info_ordre.content.decode('utf-8'))['data']

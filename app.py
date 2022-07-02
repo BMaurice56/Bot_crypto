@@ -20,9 +20,6 @@ while True:
     btcup = montant_compte("BTC3L")
     btcdown = montant_compte("BTC3S")
 
-    position_up = ""
-    position_down = ""
-
     date = datetime.now().strftime("%A %d %B %Y %H:%M:%S")
 
     datas = all_data(symbol)
@@ -52,5 +49,86 @@ while True:
     msg = état + "\n" + infos + "\n" + up + "\n" + down
 
     message_webhook_état_bot(msg)
+
+    if prix < prediction and prix_up < prediction_up and prix_down > prediction_down:
+        if btcup > 2:
+            pass
+        elif btcdown > 2:
+            # Vente de la crypto descendante
+            info = {"montant": btcdown,
+                    "symbol": "BTC3S-USDT", "achat_vente": False}
+
+            ordre = prise_position(info)
+
+            data_ordre = information_ordre(ordre)
+
+            argent = montant_compte('USDT')
+
+            msg = f"Vente de position au prix de {float(data_ordre['price'])}$, il reste {argent} usdt"
+            message_prise_position(msg, False)
+            ########################################################################
+
+            # Achat de la crypto montante
+            info2 = {"montant": argent,
+                     "symbol": "BTC3L-USDT", "achat_vente": True}
+
+            ordre2 = prise_position(info2)
+
+            data_ordre2 = information_ordre(ordre2)
+
+            msg = f"Prise de position avec {argent} usdt au prix de {float(data_ordre2['price'])}$, il reste {montant_compte('USDT')} usdt"
+            message_prise_position(msg, True)
+            ########################################################################
+        else:
+            info = {"montant": argent,
+                    "symbol": "BTC3L-USDT", "achat_vente": True}
+
+            ordre = prise_position(info)
+
+            data_ordre = information_ordre(ordre)
+
+            msg = f"Prise de position avec {argent} usdt au prix de {float(data_ordre['price'])}$, il reste {montant_compte('USDT')} usdt"
+            message_prise_position(msg, True)
+
+    elif prix > prediction and prix_up > prediction_up and prix_down < prediction_down:
+        if btcdown > 2:
+            pass
+        elif btcup > 2:
+            # Vente de la crypto montant
+            info = {"montant": btcup,
+                    "symbol": "BTC3L-USDT", "achat_vente": False}
+
+            ordre = prise_position(info)
+
+            data_ordre = information_ordre(ordre)
+
+            argent = montant_compte('USDT')
+
+            msg = f"Vente de position au prix de {float(data_ordre['price'])}$, il reste {argent} usdt"
+            message_prise_position(msg, False)
+            ########################################################################
+
+            # Achat de la crypto descendante
+            info2 = {"montant": argent,
+                     "symbol": "BTC3S-USDT", "achat_vente": True}
+
+            ordre2 = prise_position(info2)
+
+            data_ordre2 = information_ordre(ordre2)
+
+            msg = f"Prise de position avec {argent} usdt au prix de {float(data_ordre2['price'])}$, il reste {montant_compte('USDT')} usdt"
+            message_prise_position(msg, True)
+            ########################################################################
+
+        else:
+            info = {"montant": argent,
+                    "symbol": "BTC3S-USDT", "achat_vente": True}
+
+            ordre = prise_position(info)
+
+            data_ordre = information_ordre(ordre)
+
+            msg = f"Prise de position avec {argent} usdt au prix de {float(data_ordre['price'])}$, il reste {montant_compte('USDT')} usdt"
+            message_prise_position(msg, True)
 
     sleep(dodo)
