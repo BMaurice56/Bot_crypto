@@ -81,11 +81,11 @@ def chargement_modele(symbol):
     Fonction qui charge et renvoie les trois modèles
     """
 
-    json_file = open(f'Modèle/SPOT/{symbol}/{symbol}USDT/modele.json', 'r')
+    json_file = open(f'Modèle_1h/SPOT/{symbol}USDT/modele.json', 'r')
     json_file_up = open(
-        f'Modèle/SPOT_EFFET_LEVIER/{symbol}/{symbol}UPUSDT/modele.json', 'r')
+        f'Modèle_1h/SPOT_EFFET_LEVIER/{symbol}UPUSDT/modele.json', 'r')
     json_file_down = open(
-        f'Modèle/SPOT_EFFET_LEVIER/{symbol}/{symbol}DOWNUSDT/modele.json', 'r')
+        f'Modèle_1h/SPOT_EFFET_LEVIER/{symbol}DOWNUSDT/modele.json', 'r')
 
     loaded_model_json = json_file.read()
     loaded_model_json_up = json_file_up.read()

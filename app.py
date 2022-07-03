@@ -4,16 +4,12 @@ import locale
 
 # symbol = sys.argv[1]
 symbol = "BTC"
-dodo = 60*14 + 58
+dodo = 60*59 + 58
 
 loaded_model, loaded_model_up, loaded_model_down = chargement_modele(symbol)
 
 # Définition de la zone pour l'horodatage car la date était en anglais avec le module datetime
 locale.setlocale(locale.LC_TIME, '')
-
-api = "https://api.kucoin.com"
-kucoin_api_key = os.getenv("KUCOIN_API_KEY")
-kucoin_api_secret = os.getenv("KUCOIN_API_SECRET")
 
 while True:
     argent = montant_compte("USDT")
@@ -52,6 +48,7 @@ while True:
 
     message_webhook_état_bot(msg)
 
+    """
     if prix < prediction and prix_up < prediction_up and prix_down > prediction_down:
         if btcup > 2:
             pass
@@ -172,5 +169,5 @@ while True:
 
                 if stopPrice < nouveau_stopPrice:
                     remonter_stoploss("BTC3S-USDT")
-
+    """
     sleep(dodo)

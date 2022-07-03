@@ -183,7 +183,7 @@ def all_data(symbol: str) -> dict:
         api = """https://api.binance.com/api/v3/klines"""
 
         param = {'symbol': sl,
-                 'interval': '15m',
+                 'interval': '1h',
                  'limit': limit}
 
         donnee = requests.get(api, params=param)
