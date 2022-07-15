@@ -99,11 +99,11 @@ def chargement_modele(symbol):
     loaded_model_up = model_from_json(loaded_model_json_up)
     loaded_model_down = model_from_json(loaded_model_json_down)
 
-    loaded_model.load_weights(f"Modèle/SPOT/{symbol}/{symbol}USDT/modele.h5")
+    loaded_model.load_weights(f"Modèle_1h/SPOT/{symbol}USDT/modele.h5")
     loaded_model_up.load_weights(
-        f"Modèle/SPOT_EFFET_LEVIER/{symbol}/{symbol}UPUSDT/modele.h5")
+        f"Modèle_1h/SPOT_EFFET_LEVIER/{symbol}UPUSDT/modele.h5")
     loaded_model_down.load_weights(
-        f"Modèle/SPOT_EFFET_LEVIER/{symbol}/{symbol}DOWNUSDT/modele.h5")
+        f"Modèle_1h/SPOT_EFFET_LEVIER/{symbol}DOWNUSDT/modele.h5")
 
     loaded_model.compile(
         loss='mean_squared_logarithmic_error', optimizer='adam')

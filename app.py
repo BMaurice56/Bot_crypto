@@ -16,8 +16,6 @@ while True:
     btcup = montant_compte("BTC3L")
     btcdown = montant_compte("BTC3S")
 
-    achat = False
-
     date = datetime.now().strftime("%A %d %B %Y %H:%M:%S")
 
     datas = all_data(symbol)
@@ -48,8 +46,7 @@ while True:
 
     message_webhook_état_bot(msg)
 
-    """
-    if prix < prediction and prix_up < prediction_up and prix_down > prediction_down:
+    if prix < prediction and prix_up < prediction_up and prix_down > prediction_down and prediction_down < 0.3:
         if btcup > 2:
             pass
         elif btcdown > 2:
@@ -79,7 +76,6 @@ while True:
             message_prise_position(msg, True)
             ########################################################################
 
-            achat = True
         else:
             info = {"montant": argent,
                     "symbol": "BTC3L-USDT", "achat_vente": True}
@@ -90,8 +86,6 @@ while True:
 
             msg = f"Prise de position avec {argent} usdt au prix de {float(data_ordre['price'])}$, il reste {montant_compte('USDT')} usdt"
             message_prise_position(msg, True)
-
-            achat = True
 
     elif prix > prediction and prix_up > prediction_up and prix_down < prediction_down:
         if btcdown > 2:
@@ -123,8 +117,6 @@ while True:
             message_prise_position(msg, True)
             ########################################################################
 
-            achat = True
-
         else:
             info = {"montant": argent,
                     "symbol": "BTC3S-USDT", "achat_vente": True}
@@ -136,38 +128,13 @@ while True:
             msg = f"Prise de position avec {argent} usdt au prix de {float(data_ordre['price'])}$, il reste {montant_compte('USDT')} usdt"
             message_prise_position(msg, True)
 
-            achat = True
+    btcup = montant_compte("BTC3L")
+    btcdown = montant_compte("BTC3S")
 
-    if achat == False:
-        btcup = montant_compte("BTC3L")
-        btcdown = montant_compte("BTC3S")
+    if btcup > 2:
+        remonter_stoploss("BTC3L-USDT", 30)
 
-        if btcup > 2:
-            prix_up = prix_temps_reel_kucoin("BTC3L-USDT")
+    elif btcdown > 2:
+        remonter_stoploss("BTC3S-USDT", 30)
 
-            stoploss = presence_position("stoploss", "BTC3L-USDT")
-
-            if stoploss != None:
-
-                stopPrice = arrondi(stoploss["stopPrice"])
-
-                nouveau_stopPrice = arrondi(prix_up * 0.996)
-
-                if stopPrice < nouveau_stopPrice:
-                    remonter_stoploss("BTC3L-USDT")
-
-        elif btcdown > 2:
-            prix_down = prix_temps_reel_kucoin("BTC3S-USDT")
-
-            stoploss = presence_position("stoploss", "BTC3S-USDT")
-
-            if stoploss != None:
-
-                stopPrice = arrondi(stoploss["stopPrice"])
-
-                nouveau_stopPrice = arrondi(prix_down * 0.996)
-
-                if stopPrice < nouveau_stopPrice:
-                    remonter_stoploss("BTC3S-USDT")
-    """
-    sleep(dodo)
+    sleep(28)
