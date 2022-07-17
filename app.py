@@ -51,82 +51,26 @@ while True:
             pass
         elif btcdown > 2:
             # Vente de la crypto descendante
-            info = {"montant": btcdown,
-                    "symbol": "BTC3S-USDT", "achat_vente": False}
-
-            ordre = prise_position(info)
-
-            data_ordre = information_ordre(ordre)
-
-            argent = montant_compte('USDT')
-
-            msg = f"Vente de position au prix de {float(data_ordre['price'])}$, il reste {argent} usdt"
-            message_prise_position(msg, False)
-            ########################################################################
+            achat_vente(btcdown, "BTC3S-USDT", False)
 
             # Achat de la crypto montante
-            info2 = {"montant": argent,
-                     "symbol": "BTC3L-USDT", "achat_vente": True}
-
-            ordre2 = prise_position(info2)
-
-            data_ordre2 = information_ordre(ordre2)
-
-            msg = f"Prise de position avec {argent} usdt au prix de {float(data_ordre2['price'])}$, il reste {montant_compte('USDT')} usdt"
-            message_prise_position(msg, True)
-            ########################################################################
+            achat_vente(argent, "BTC3L-USDT", True)
 
         else:
-            info = {"montant": argent,
-                    "symbol": "BTC3L-USDT", "achat_vente": True}
-
-            ordre = prise_position(info)
-
-            data_ordre = information_ordre(ordre)
-
-            msg = f"Prise de position avec {argent} usdt au prix de {float(data_ordre['price'])}$, il reste {montant_compte('USDT')} usdt"
-            message_prise_position(msg, True)
+            achat_vente(argent, "BTC3L-USDT", True)
 
     elif prix > prediction and prix_up > prediction_up and prix_down < prediction_down:
         if btcdown > 2:
             pass
         elif btcup > 2:
             # Vente de la crypto montant
-            info = {"montant": btcup,
-                    "symbol": "BTC3L-USDT", "achat_vente": False}
-
-            ordre = prise_position(info)
-
-            data_ordre = information_ordre(ordre)
-
-            argent = montant_compte('USDT')
-
-            msg = f"Vente de position au prix de {float(data_ordre['price'])}$, il reste {argent} usdt"
-            message_prise_position(msg, False)
-            ########################################################################
+            achat_vente(btcup, "BTC3L-USDT", False)
 
             # Achat de la crypto descendante
-            info2 = {"montant": argent,
-                     "symbol": "BTC3S-USDT", "achat_vente": True}
-
-            ordre2 = prise_position(info2)
-
-            data_ordre2 = information_ordre(ordre2)
-
-            msg = f"Prise de position avec {argent} usdt au prix de {float(data_ordre2['price'])}$, il reste {montant_compte('USDT')} usdt"
-            message_prise_position(msg, True)
-            ########################################################################
+            achat_vente(argent, "BTC3S-USDT", True)
 
         else:
-            info = {"montant": argent,
-                    "symbol": "BTC3S-USDT", "achat_vente": True}
-
-            ordre = prise_position(info)
-
-            data_ordre = information_ordre(ordre)
-
-            msg = f"Prise de position avec {argent} usdt au prix de {float(data_ordre['price'])}$, il reste {montant_compte('USDT')} usdt"
-            message_prise_position(msg, True)
+            achat_vente(argent, "BTC3S-USDT", True)
 
     btcup = montant_compte("BTC3L")
     btcdown = montant_compte("BTC3S")
@@ -136,5 +80,8 @@ while True:
 
     elif btcdown > 2:
         remonter_stoploss("BTC3S-USDT", 30)
+
+    else:
+        sleep(dodo)
 
     sleep(28)

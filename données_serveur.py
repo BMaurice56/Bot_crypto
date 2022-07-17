@@ -423,8 +423,8 @@ def prise_position(info: dict) -> str:
                  "side": "sell",
                  "symbol": info["symbol"],
                  'stop': "loss",
-                 "stopPrice": str(arrondi(prix * 0.9966)),
-                 "price": str(arrondi(prix * 0.995)),
+                 "stopPrice": str(arrondi(prix * 0.99)),
+                 "price": str(arrondi(prix * 0.9875)),
                  "size": str(arrondi(money))}
 
         param = json.dumps(param)
@@ -501,7 +501,7 @@ def information_ordre(id_ordre: str) -> dict:
 
 
 @connexion
-def remonter_stoploss(symbol: str, dodo: int):
+def remonter_stoploss(symbol: str, dodo: int) -> None:
     """
     Fonction qui remonte le stoploss s'il y a eu une augmentation par rapport au précédent stoploss
     Ex paramètre :
@@ -516,7 +516,7 @@ def remonter_stoploss(symbol: str, dodo: int):
 
             stopPrice = arrondi(stoploss["stopPrice"])
 
-            nouveau_stopPrice = arrondi(prix * 0.9966)
+            nouveau_stopPrice = arrondi(prix * 0.99)
 
             if stopPrice < nouveau_stopPrice:
 
@@ -552,8 +552,8 @@ def remonter_stoploss(symbol: str, dodo: int):
                          "side": "sell",
                          "symbol": symbol,
                          'stop': "loss",
-                         "stopPrice": str(arrondi(prix * 0.9966)),
-                         "price": str(arrondi(prix * 0.995)),
+                         "stopPrice": str(arrondi(prix * 0.99)),
+                         "price": str(arrondi(prix * 0.9875)),
                          "size": str(arrondi(money))}
 
                 param = json.dumps(param)
@@ -568,3 +568,34 @@ def remonter_stoploss(symbol: str, dodo: int):
                 fichier.close()
 
         sleep(dodo)
+
+
+@connexion
+def achat_vente(montant: int or float, symbol: str, achat_ou_vente: bool) -> None:
+    """
+    Fonction qui achète ou vente les cryptomonnaies
+    Ex param :
+    montant : 50
+    symbol : "BTC3S-USDT
+    achat_vente : True ou False
+    """
+
+    info = {"montant": montant,
+            "symbol": symbol, "achat_vente": achat_ou_vente}
+
+    ordre = prise_position(info)
+
+    data_ordre = information_ordre(ordre)
+
+    global argent
+
+    if achat_ou_vente == False:
+        argent = montant_compte('USDT')
+
+        msg = f"Vente de position au prix de {float(data_ordre['price'])}$, il reste {argent} usdt"
+        message_prise_position(msg, False)
+
+    else:
+        global argent
+        msg = f"Prise de position avec {argent} usdt au prix de {float(data_ordre['price'])}$, il reste {montant_compte('USDT')} usdt"
+        message_prise_position(msg, True)
