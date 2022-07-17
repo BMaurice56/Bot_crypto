@@ -596,6 +596,5 @@ def achat_vente(montant: int or float, symbol: str, achat_ou_vente: bool) -> Non
         message_prise_position(msg, False)
 
     else:
-        global argent
         msg = f"Prise de position avec {argent} usdt au prix de {float(data_ordre['price'])}$, il reste {montant_compte('USDT')} usdt"
         message_prise_position(msg, True)
