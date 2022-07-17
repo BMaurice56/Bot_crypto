@@ -2,7 +2,7 @@ from multiprocessing import Process, Manager
 from decimal import Decimal, ROUND_DOWN
 from subprocess import Popen, PIPE
 from binance.client import Client
-from dotenv import load_dotenv
+from message_discord import *
 from functools import wraps
 from random import randint
 from time import sleep
@@ -14,11 +14,7 @@ import time
 import hmac
 import json
 import ast
-import os
 
-# Chargement des clés
-
-load_dotenv(dotenv_path="config_bot")
 
 # Décorateurs
 
@@ -587,14 +583,13 @@ def achat_vente(montant: int or float, symbol: str, achat_ou_vente: bool) -> Non
 
     data_ordre = information_ordre(ordre)
 
-    global argent
-
     if achat_ou_vente == False:
+        global argent
         argent = montant_compte('USDT')
 
         msg = f"Vente de position au prix de {float(data_ordre['price'])}$, il reste {argent} usdt"
         message_prise_position(msg, False)
 
     else:
-        msg = f"Prise de position avec {argent} usdt au prix de {float(data_ordre['price'])}$, il reste {montant_compte('USDT')} usdt"
+        msg = f"Prise de position avec {montant} usdt au prix de {float(data_ordre['price'])}$, il reste {montant_compte('USDT')} usdt"
         message_prise_position(msg, True)

@@ -1,13 +1,8 @@
 from main import *
 
-money = montant_compte('USDT')
+argent = montant_compte('USDT')
 
-info = {"montant": money, "symbol": "BTC3S-USDT", "achat_vente": True}
-
-print(prise_position(info))
-
-
-print(presence_position("stoploss", "BTC3S-USDT"))
+achat_vente(argent, "BTC3L-USDT", True)
 
 """
 toto = presence_position("market", "BTC3L-USDT")
