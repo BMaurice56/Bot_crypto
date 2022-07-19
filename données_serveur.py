@@ -385,7 +385,7 @@ def prise_position(info: dict) -> str:
     sleep(1)
 
     if info["achat_vente"] == True:
-        création_stoploss(symbol)
+        création_stoploss(info["symbol"])
 
     return ast.literal_eval(prise_position.content.decode('utf-8'))["data"]["orderId"]
 
@@ -482,6 +482,8 @@ def remonter_stoploss(symbol: str, dodo: int) -> None:
 def création_stoploss(symbol: str) -> None:
     """
     Fonction qui crée un stoploss
+    Ex param :
+    symbol : "BTC3L-USDT"
     """
     id_stoploss = randint(0, 100_000_000)
 
@@ -489,15 +491,17 @@ def création_stoploss(symbol: str) -> None:
 
     endpoint2 = "/api/v1/stop-order"
 
-    symbol = info["symbol"].split("-")[0]
+    sb = symbol
 
-    money = montant_compte(symbol)
+    crypto = sb.split("-")[0]
 
-    prix = prix_temps_reel_kucoin(info["symbol"])
+    money = montant_compte(crypto)
+
+    prix = prix_temps_reel_kucoin(symbol)
 
     param = {"clientOid": id_stoploss,
              "side": "sell",
-             "symbol": info["symbol"],
+             "symbol": symbol,
              'stop': "loss",
              "stopPrice": str(arrondi(prix * 0.97)),
              "price": str(arrondi(prix * 0.9675)),
@@ -556,6 +560,8 @@ def achat_vente(montant: int or float, symbol: str, achat_ou_vente: bool) -> Non
 
     ordre = prise_position(info)
 
+    prix = prix_temps_reel_kucoin(symbol)
+
     data_ordre = information_ordre(ordre)
 
     if achat_ou_vente == False:
@@ -566,5 +572,5 @@ def achat_vente(montant: int or float, symbol: str, achat_ou_vente: bool) -> Non
         message_prise_position(msg, False)
 
     else:
-        msg = f"Prise de position avec {montant} usdt au prix de {float(data_ordre['price'])}$, il reste {montant_compte('USDT')} usdt"
+        msg = f"Prise de position avec {montant} usdt au prix de {prix}$, il reste {montant_compte('USDT')} usdt"
         message_prise_position(msg, True)
