@@ -300,7 +300,7 @@ def montant_compte(symbol: str) -> float:
 
     entête = headers('GET', endpoint)
 
-    argent = ast.literal_eval(requests.get(
+    argent = json.loads(requests.get(
         api + endpoint, headers=entête).content.decode('utf-8'))["data"]
 
     if argent != []:
@@ -324,7 +324,7 @@ def prix_temps_reel_kucoin(symbol: str) -> float:
 
     entête = headers('GET', endpoint)
 
-    argent = float(ast.literal_eval(requests.get(
+    argent = float(json.loads(requests.get(
         api + endpoint, headers=entête).content.decode('utf-8'))["data"]["price"])
 
     return argent
@@ -387,7 +387,7 @@ def prise_position(info: dict) -> str:
     if info["achat_vente"] == True:
         création_stoploss(info["symbol"])
 
-    return ast.literal_eval(prise_position.content.decode('utf-8'))["data"]["orderId"]
+    return json.loads(prise_position.content.decode('utf-8'))["data"]["orderId"]
 
 
 @connexion
@@ -474,7 +474,7 @@ def remonter_stoploss(symbol: str, dodo: int) -> None:
 
                 # Puis on remet un nouveau stoploss
                 création_stoploss(symbol)
-        
+
         else:
             création_stoploss(symbol)
 
@@ -517,7 +517,7 @@ def création_stoploss(symbol: str) -> None:
     prise_position = requests.post(
         api + endpoint2, headers=entête, data=param)
 
-    fichier.write(ast.literal_eval(
+    fichier.write(json.loads(
         prise_position.content.decode('utf-8'))["data"]["orderId"])
 
     fichier.close()
