@@ -1,4 +1,3 @@
 from main import *
 
-création_stoploss("BTC3L-USDT")
-
+print(presence_position("stoploss", "BTC3L-USDT"))

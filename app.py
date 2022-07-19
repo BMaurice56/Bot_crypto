@@ -4,7 +4,9 @@ import locale
 
 # symbol = sys.argv[1]
 symbol = "BTC"
-dodo = 60*59 + 28
+symbol_up_kucoin = "BTC3L-USDT"
+symbol_down_kucoin = "BTC3S-USDT"
+dodo = 60*59 + 50
 
 loaded_model, loaded_model_up, loaded_model_down = chargement_modele(symbol)
 
@@ -48,40 +50,106 @@ while True:
 
     if prix < prediction and prix_up < prediction_up and prix_down > prediction_down and prediction_down < 0.3:
         if btcup > 30:
-            pass
+            # On vérifie si il y a présence ou non d'ordre
+            stoploss = presence_position("stoploss", symbol_up_kucoin)
+            market = presence_position("market", symbol_up_kucoin)
+
+            # S'il y en aucun, on place un stoploss par sécurité
+            if stoploss == None and market == None:
+                création_stoploss(symbol_up_kucoin)
+
+            # Sinon s'il y a qu'un ordre limite market, on check si lorsqu'on place un stoploss
+            # si le prix du stoploss est supérieur ou non à l'ordre limite
+            elif stoploss == None and market != None:
+                prix_position = float(market['price'])
+
+                nouveau_prix = arrondi(
+                    prix_temps_reel_kucoin(symbol_up_kucoin) * price)
+
+                if prix_position < nouveau_prix:
+                    suppression_ordre("market", market['id'])
+                    création_stoploss(symbol_up_kucoin)
+                else:
+                    pass
+
+            # Sinon s'il y a un stoploss et un ordre market
+            # on regarde lequel on garde
+            elif stoploss != None and market != None:
+                if float(stoploss['price']) >= float(market['price']):
+                    suppression_ordre("market", market['id'])
+                else:
+                    suppression_ordre("stoploss")
+
+            else:
+                pass
+
         elif btcdown > 2:
             # Vente de la crypto descendante
-            achat_vente(btcdown, "BTC3S-USDT", False)
+            achat_vente(btcdown, symbol_down_kucoin, False)
 
             # Achat de la crypto montante
-            achat_vente(argent, "BTC3L-USDT", True)
+            achat_vente(argent, symbol_up_kucoin, True)
 
         else:
-            achat_vente(argent, "BTC3L-USDT", True)
+            achat_vente(argent, symbol_up_kucoin, True)
 
     elif prix > prediction and prix_up > prediction_up and prix_down < prediction_down:
         if btcdown > 2:
-            pass
+            # On vérifie si il y a présence ou non d'ordre
+            stoploss = presence_position("stoploss", symbol_down_kucoin)
+            market = presence_position("market", symbol_down_kucoin)
+
+            # S'il y en aucun, on place un stoploss par sécurité
+            if stoploss == None and market == None:
+                création_stoploss(symbol_down_kucoin)
+
+            # Sinon s'il y a qu'un ordre limite market, on check si lorsqu'on place un stoploss
+            # si le prix du stoploss est supérieur ou non à l'ordre limite
+            elif stoploss == None and market != None:
+                prix_position = float(market['price'])
+
+                nouveau_prix = arrondi(
+                    prix_temps_reel_kucoin(symbol_down_kucoin) * price)
+
+                if prix_position < nouveau_prix:
+                    suppression_ordre("market", market['id'])
+                    création_stoploss(symbol_down_kucoin)
+                else:
+                    pass
+
+            # Sinon s'il y a un stoploss et un ordre market
+            # on regarde lequel on garde
+            elif stoploss != None and market != None:
+                if float(stoploss['price']) >= float(market['price']):
+                    suppression_ordre("market", market['id'])
+                else:
+                    suppression_ordre("stoploss")
+
+            else:
+                pass
+
         elif btcup > 30:
             # Vente de la crypto montant
-            achat_vente(btcup, "BTC3L-USDT", False)
+            achat_vente(btcup, symbol_up_kucoin, False)
 
             # Achat de la crypto descendante
-            achat_vente(argent, "BTC3S-USDT", True)
+            achat_vente(argent, symbol_down_kucoin, True)
 
         else:
-            achat_vente(argent, "BTC3S-USDT", True)
+            achat_vente(argent, symbol_down_kucoin, True)
 
+    # Après le passage de l'achat/vente, on regarde combien on a au final
+    # Et après on lance la fonction qui remonte le stoploss
     btcup = montant_compte("BTC3L")
     btcdown = montant_compte("BTC3S")
 
     if btcup > 30:
-        remonter_stoploss("BTC3L-USDT", 30)
+        remonter_stoploss(symbol_up_kucoin, 30)
 
     elif btcdown > 2:
-        remonter_stoploss("BTC3S-USDT", 30)
+        remonter_stoploss(symbol_down_kucoin, 30)
 
     else:
         sleep(dodo)
 
-    sleep(28)
+    

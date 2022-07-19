@@ -14,6 +14,8 @@ import time
 import hmac
 import json
 
+stopPrice = 0.96
+price = 0.9575
 
 # Décorateurs
 
@@ -244,8 +246,11 @@ def arrondi(valeur: float or str, zero_apres_virgule=None) -> float:
     """
     Fonction qui prend en argument un décimal et renvoie ce décimal arrondi à 0,0001
     """
-
+    # On transforme la valeur reçu en objet décimal
     val = Decimal(str(valeur))
+
+    # S'il y a pas de nombre après la virgule spécifié, on change rien
+    # Puis on arrondi vers le bas le nombre que l'on renvoit sous forme d'un float
     if zero_apres_virgule != None:
         return float(val.quantize(Decimal(str(zero_apres_virgule)), ROUND_DOWN))
     return float(val.quantize(Decimal('0.0001'), ROUND_DOWN))
@@ -294,14 +299,19 @@ def montant_compte(symbol: str) -> float:
     Ex paramètre :
     symbol : USDT
     """
-
+    # On défini la terminaison de la requête
     endpoint = f"/api/v1/accounts?currency={symbol}&type=trade"
 
+    # On crée l'entête
     entête = headers('GET', endpoint)
 
+    # Puis on execute la requête que l'on retransforme en dictionnaire (car reçu au format str)
     argent = json.loads(requests.get(
         api + endpoint, headers=entête).content.decode('utf-8'))["data"]
 
+    # S'il le compte possède le symbol voulu, on renvoit le nombre
+    # Avec seulement 99,9% de sa quantité initiale car pour l'achat des cryptos
+    # -> aucun problème avec le nb de chiffres après la virgule et les frais de la platforme
     if argent != []:
         money = arrondi(float(argent[0]['available']) * 0.999)
         return money
@@ -316,13 +326,14 @@ def prix_temps_reel_kucoin(symbol: str) -> float:
     Ex paramètre : 
     symbol : BTC3S-USDT
     """
-
+    # On défini la terminaison de la requête
     endpoint = f"/api/v1/market/orderbook/level1?symbol={symbol}"
 
-    now = int(time.time() * 1000)
-
+    # On crée l'entête
     entête = headers('GET', endpoint)
 
+    # Puis on execute la requête que l'on retransforme en dictionnaire (car reçu au format str)
+    # Et on garde que le prix voulu
     argent = float(json.loads(requests.get(
         api + endpoint, headers=entête).content.decode('utf-8'))["data"]["price"])
 
@@ -358,10 +369,14 @@ def prise_position(info: dict) -> str:
 
             suppression_ordre("market", id_market)
 
+    # Besoin d'un id pour l'achat des cryptos
     id_position = randint(0, 100_000_000)
 
+    # Point de terminaison de la requête
     endpoint = "/api/v1/orders"
 
+    # Soit on achète tant de crypto avec de l'usdt
+    # Soit on vend tant de la crypto en question
     if info["achat_vente"] == True:
         achat = "buy"
         type_achat = "funds"
@@ -369,6 +384,7 @@ def prise_position(info: dict) -> str:
         achat = "sell"
         type_achat = "size"
 
+    # Définition de tous les paramètres nécessaires
     param = {"clientOid": id_position,
              "side": achat,
              "symbol": info["symbol"],
@@ -377,15 +393,20 @@ def prise_position(info: dict) -> str:
 
     param = json.dumps(param)
 
+    # Création de l'entête
     entête = headers('POST', endpoint, param)
 
+    # On prend la position sur le serveur
     prise_position = requests.post(api + endpoint, headers=entête, data=param)
 
+    # On attend 1 seconde pour être sur que l'achat a bient été effectué
     sleep(1)
 
+    # S'il on vient d'acheter, on place un stoploss
     if info["achat_vente"] == True:
         création_stoploss(info["symbol"])
 
+    # Puis on renvoie l'id de l'ordre d'achat placé pour le message sur discord
     return json.loads(prise_position.content.decode('utf-8'))["data"]["orderId"]
 
 
@@ -396,6 +417,7 @@ def presence_position(type_ordre: str, symbol: str) -> None or dict:
     Ex paramètre :
     type_ordre : market ou stoploss
     symbol : BTC3S-USDT
+
     Sortie de la fonction :
     {'id': 'vs9o2om0ejjhbdd5000qjne9', 'symbol': 'BTC3S-USDT', 'userId': '62b59916f4913f0001954877', 
     'status': 'NEW', 'type': 'limit', 'side': 'sell', 'price': '3.44060000000000000000', 'size': '14.06590000000000000000',
@@ -404,21 +426,42 @@ def presence_position(type_ordre: str, symbol: str) -> None or dict:
     'orderTime': 1656780007654000020, 'domainId': 'kucoin', 'tradeSource': 'USER', 'tradeType': 'TRADE', 
     'feeCurrency': 'USDT', 'takerFeeRate': '0.00100000000000000000', 'makerFeeRate': '0.00100000000000000000',
     'createdAt': 1656780007655, 'stop': 'loss', 'stopTriggerTime': None, 'stopPrice': '3.45800000000000000000'}
+
+    {'id': '62d6e3303896050001788d36', 'symbol': 'BTC3L-USDT', 'opType': 'DEAL', 'type': 'limit', 'side': 'sell', 
+    'price': '0.007', 'size': '6791.3015', 'funds': '0', 'dealFunds': '0', 'dealSize': '0', 'fee': '0', 
+    'feeCurrency': 'USDT', 'stp': '', 'stop': '', 'stopTriggered': False, 'stopPrice': '0', 'timeInForce': 'GTC', 
+    'postOnly': False, 'hidden': False, 'iceberg': False, 'visibleSize': '0', 'cancelAfter': 0, 'channel': 'IOS', 
+    'clientOid': None, 'remark': None, 'tags': None, 'isActive': True, 'cancelExist': False, 'createdAt': 1658250032352, 
+    'tradeType': 'TRADE'}
+
+    {'id': 'vs9o0ommsug8gqo1000mufin', 'symbol': 'BTC3L-USDT', 'userId': '62b59916f4913f0001954877', 'status': 'NEW', 
+    'type': 'limit', 'side': 'sell', 'price': '0.00550000000000000000', 'size': '6810.55620000000000000000', 'funds': None, 
+    'stp': None, 'timeInForce': 'GTC', 'cancelAfter': 0, 'postOnly': False, 'hidden': False, 'iceberg': False, 
+    'visibleSize': None, 'channel': 'IOS', 'clientOid': None, 'remark': None, 'tags': None, 'orderTime': 1658251168517790156, 
+    'domainId': 'kucoin', 'tradeSource': 'USER', 'tradeType': 'TRADE', 'feeCurrency': 'USDT', 
+    'takerFeeRate': '0.00100000000000000000', 'makerFeeRate': '0.00100000000000000000', 'createdAt': 1658251168518, 
+    'stop': 'loss', 'stopTriggerTime': None, 'stopPrice': '0.00580000000000000000'}
     """
+    # On crée le point de terminaison selon le type de marché
     if type_ordre == "market":
         endpoint = "/api/v1/orders?status=active"
 
     elif type_ordre == "stoploss":
         endpoint = "/api/v1/stop-order?status=active"
 
+    # On lui rajoute le symbol voulu
     endpoint += f"&symbol={symbol}"
 
+    # Création de l'entête
     entête = headers("GET", endpoint)
 
+    # On envoie la requête
     position = requests.get(api + endpoint, headers=entête)
 
+    # Puis on récupère le résultat et on le transforme en dictionnaire (car reçu au format str)
     resultat = json.loads(position.content.decode("utf-8"))['data']['items']
 
+    # S'il y a un ordre on renvoie les informations sur celui-ci
     if resultat == []:
         return None
     else:
@@ -439,12 +482,16 @@ def information_ordre(id_ordre: str) -> dict:
     "cancelAfter":-1,"channel":"API","clientOid":"30688036","remark":null,
     "tags":null,"isActive":false,"cancelExist":true,"createdAt":1656767871013,"tradeType":"TRADE"}
     """
+    # On crée le point de terminaison
     endpoint = f"/api/v1/orders/{id_ordre}"
 
+    # Création de l'entête
     entête = headers("GET", endpoint)
 
+    # On envoie la requête au serveur
     info_ordre = requests.get(api + endpoint, headers=entête)
 
+    # Puis on retourne les informations de l'ordre voulu
     return json.loads(info_ordre.content.decode('utf-8'))['data']
 
 
@@ -455,25 +502,28 @@ def remonter_stoploss(symbol: str, dodo: int) -> None:
     Ex paramètre :
     symbol : BTC3S-USDT
     """
-    for i in range(119):
-        prix = prix_temps_reel_kucoin(symbol)
-
+    # On execute 120 fois car cela fait en tout 60 min ce qui correspond au temps off du programme
+    for i in range(120):
         stoploss = presence_position("stoploss", symbol)
 
+        # S'il y a toujours le stoploss, on vérifie si celui-ci a les bons prix
         if stoploss != None:
+            # On calcule ce que donnerait le prix du nouveau stoploss
+            prix = prix_temps_reel_kucoin(symbol)
 
             stopPrice = arrondi(stoploss["stopPrice"])
 
-            nouveau_stopPrice = arrondi(prix * 0.97)
+            nouveau_stopPrice = arrondi(prix * stopPrice)
 
+            # S'il est supérieur à l'ancien prix, on enlève le stoploss et on en remet un nouveau
             if stopPrice < nouveau_stopPrice:
-
                 # On enlève le précédent ordre
                 suppression_ordre("stoploss")
 
                 # Puis on remet un nouveau stoploss
                 création_stoploss(symbol)
 
+        # Puis on attend 30 secondes avant de revérifier
         sleep(dodo)
 
 
@@ -484,40 +534,51 @@ def création_stoploss(symbol: str) -> None:
     Ex param :
     symbol : "BTC3L-USDT"
     """
+    # Besoin d'un id pour l'ordre
     id_stoploss = randint(0, 100_000_000)
 
+    # On inscrit l'id de l'ordre dans un fichier pour que ce soit plus pratique pour le remonter etc.2
     fichier = open("stoploss.txt", "w")
 
-    endpoint2 = "/api/v1/stop-order"
+    # Point de terminaison de la requête
+    endpoint = "/api/v1/stop-order"
 
+    # On enregistre le symbol dans une autre variable car après on doit séparer la paire
+    # Et garder que la crypto
     sb = symbol
 
     crypto = sb.split("-")[0]
 
+    # On récupère le montant du compte pour savoir combien de la crypto on doit vendre
     money = montant_compte(crypto)
 
+    # On récupère le prix en temps réel pour ensuite placer les prix du stoploss
     prix = prix_temps_reel_kucoin(symbol)
 
+    # Création des paramètres pour la requête
     param = {"clientOid": id_stoploss,
              "side": "sell",
              "symbol": symbol,
              'stop': "loss",
-             "stopPrice": str(arrondi(prix * 0.97)),
-             "price": str(arrondi(prix * 0.9675)),
+             "stopPrice": str(arrondi(prix * stopPrice)),
+             "price": str(arrondi(prix * price)),
              "size": str(arrondi(money))}
 
     param = json.dumps(param)
 
-    entête = headers('POST', endpoint2, param)
+    # Création de l'entête
+    entête = headers('POST', endpoint, param)
 
+    # On envoie la requête au serveur
     prise_position = requests.post(
-        api + endpoint2, headers=entête, data=param)
+        api + endpoint, headers=entête, data=param)
 
-    print(prise_position.content)
-
+    # Puis on vient écrire l'id du stoploss dans un fichier pour faciliter la remonter de celui-ci
+    # quand le cour de la crypto remonte
     fichier.write(json.loads(
         prise_position.content.decode('utf-8'))["data"]["orderId"])
 
+    # Et enfin par sécurité on ferme la connection avec le fichier
     fichier.close()
 
 
@@ -525,7 +586,12 @@ def création_stoploss(symbol: str) -> None:
 def suppression_ordre(type_ordre: str, id_ordre=None) -> None:
     """
     Fonction qui supprime un ordre selon qu'il soit un stoploss ou un simple ordre
+    Ex param :
+    type_ordre : stoploss ou market
+    id_ordre : None par défaut ou l'id de l'ordre en question à supprimer
     """
+    # Si c'est un stoploss, l'id de l'ordre doit être dans le fichier
+    # Et on l'efface de celui-ci
     if type_ordre == "stoploss":
         fichier = open("stoploss.txt", "r")
 
@@ -537,11 +603,14 @@ def suppression_ordre(type_ordre: str, id_ordre=None) -> None:
 
         fichier.close()
 
+    # Sinon si c'est un ordre market, on supprime l'ordre avec l'id fourni
     elif type_ordre == "market":
         endpoint = f"/api/v1/orders{id_ordre}"
 
+    # Création de l'entête
     entête = headers('DELETE', endpoint)
 
+    # Puis on vient envoyer la requête pour supprimer l'ordre du serveur
     supression_position = requests.delete(
         api + endpoint, headers=entête)
 
@@ -555,16 +624,20 @@ def achat_vente(montant: int or float, symbol: str, achat_ou_vente: bool) -> Non
     symbol : "BTC3S-USDT
     achat_vente : True ou False
     """
-
+    # On créer un dictionnaire avec toutes les informations nécessaires
     info = {"montant": montant,
             "symbol": symbol, "achat_vente": achat_ou_vente}
 
+    # On prend la position sur le serveur et on récupère l'id de l'ordre passé
     ordre = prise_position(info)
 
+    # On récupère le prix en temps réel de la crypto que l'on vient d'acheter
     prix = prix_temps_reel_kucoin(symbol)
 
+    # On récupère les informations de l'ordre sur le serveur
     data_ordre = information_ordre(ordre)
 
+    # Puis on vient envoyer un message sur le discord
     if achat_ou_vente == False:
         global argent
         argent = montant_compte('USDT')
