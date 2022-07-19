@@ -4,7 +4,7 @@ import locale
 
 # symbol = sys.argv[1]
 symbol = "BTC"
-dodo = 60*59 + 58
+dodo = 60*59 + 28
 
 loaded_model, loaded_model_up, loaded_model_down = chargement_modele(symbol)
 
@@ -47,7 +47,7 @@ while True:
     message_webhook_état_bot(msg)
 
     if prix < prediction and prix_up < prediction_up and prix_down > prediction_down and prediction_down < 0.3:
-        if btcup > 2:
+        if btcup > 30:
             pass
         elif btcdown > 2:
             # Vente de la crypto descendante
@@ -62,7 +62,7 @@ while True:
     elif prix > prediction and prix_up > prediction_up and prix_down < prediction_down:
         if btcdown > 2:
             pass
-        elif btcup > 2:
+        elif btcup > 30:
             # Vente de la crypto montant
             achat_vente(btcup, "BTC3L-USDT", False)
 
@@ -75,7 +75,7 @@ while True:
     btcup = montant_compte("BTC3L")
     btcdown = montant_compte("BTC3S")
 
-    if btcup > 2:
+    if btcup > 30:
         remonter_stoploss("BTC3L-USDT", 30)
 
     elif btcdown > 2:

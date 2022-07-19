@@ -352,30 +352,12 @@ def prise_position(info: dict) -> str:
         presence_market = presence_position("market", info["symbol"])
 
         if presence_market == None:
-
-            fichier = open("stoploss.txt", "r")
-
-            id_stls = fichier.read()
-
-            endpoint3 = f"/api/v1/stop-order/{id_stls}"
-
-            entête = headers('DELETE', endpoint3)
-
-            supression_position = requests.delete(
-                api + endpoint3, headers=entête)
-
-            fichier = open("stoploss.txt", "w")
-            fichier.close()
+            suppression_ordre("stoploss")
 
         else:
-            id_stls = presence_market['id']
+            id_market = presence_market['id']
 
-            endpoint3 = f"/api/v1/orders{id_stls}"
-
-            entête = headers('DELETE', endpoint3)
-
-            supression_position = requests.delete(
-                api + endpoint3, headers=entête)
+            suppression_ordre("market", id_market)
 
     id_position = randint(0, 100_000_000)
 
@@ -403,36 +385,7 @@ def prise_position(info: dict) -> str:
     sleep(1)
 
     if info["achat_vente"] == True:
-        id_stoploss = randint(0, 100_000_000)
-
-        fichier = open("stoploss.txt", "w")
-
-        endpoint2 = "/api/v1/stop-order"
-
-        symbol = info["symbol"].split("-")[0]
-
-        money = montant_compte(symbol)
-
-        prix = prix_temps_reel_kucoin(info["symbol"])
-
-        param = {"clientOid": id_stoploss,
-                 "side": "sell",
-                 "symbol": info["symbol"],
-                 'stop': "loss",
-                 "stopPrice": str(arrondi(prix * 0.99)),
-                 "price": str(arrondi(prix * 0.9875)),
-                 "size": str(arrondi(money))}
-
-        param = json.dumps(param)
-
-        entête = headers('POST', endpoint2, param)
-
-        prise_position = requests.post(
-            api + endpoint2, headers=entête, data=param)
-
-        fichier.write(ast.literal_eval(
-            prise_position.content.decode('utf-8'))["data"]["orderId"])
-        fichier.close()
+        création_stoploss(symbol)
 
     return ast.literal_eval(prise_position.content.decode('utf-8'))["data"]["orderId"]
 
@@ -512,58 +465,80 @@ def remonter_stoploss(symbol: str, dodo: int) -> None:
 
             stopPrice = arrondi(stoploss["stopPrice"])
 
-            nouveau_stopPrice = arrondi(prix * 0.99)
+            nouveau_stopPrice = arrondi(prix * 0.97)
 
             if stopPrice < nouveau_stopPrice:
 
                 # On enlève le précédent ordre
-                fichier = open("stoploss.txt", "r")
-
-                id_stls = fichier.read()
-
-                endpoint3 = f"/api/v1/stop-order/{id_stls}"
-
-                entête = headers('DELETE', endpoint3)
-
-                supression_position = requests.delete(
-                    api + endpoint3, headers=entête)
-
-                fichier.close()
-                ##################################################
+                suppression_ordre("stoploss")
 
                 # Puis on remet un nouveau stoploss
-                id_stoploss = randint(0, 100_000_000)
-
-                fichier = open("stoploss.txt", "w")
-
-                endpoint2 = "/api/v1/stop-order"
-
-                crypto = symbol.split("-")[0]
-
-                money = montant_compte(crypto)
-
-                prix = prix_temps_reel_kucoin(symbol)
-
-                param = {"clientOid": id_stoploss,
-                         "side": "sell",
-                         "symbol": symbol,
-                         'stop': "loss",
-                         "stopPrice": str(arrondi(prix * 0.99)),
-                         "price": str(arrondi(prix * 0.9875)),
-                         "size": str(arrondi(money))}
-
-                param = json.dumps(param)
-
-                entête = headers('POST', endpoint2, param)
-
-                prise_position = requests.post(
-                    api + endpoint2, headers=entête, data=param)
-
-                fichier.write(ast.literal_eval(
-                    prise_position.content.decode('utf-8'))["data"]["orderId"])
-                fichier.close()
+                création_stoploss(symbol)
 
         sleep(dodo)
+
+
+@connexion
+def création_stoploss(symbol: str) -> None:
+    """
+    Fonction qui crée un stoploss
+    """
+    id_stoploss = randint(0, 100_000_000)
+
+    fichier = open("stoploss.txt", "w")
+
+    endpoint2 = "/api/v1/stop-order"
+
+    symbol = info["symbol"].split("-")[0]
+
+    money = montant_compte(symbol)
+
+    prix = prix_temps_reel_kucoin(info["symbol"])
+
+    param = {"clientOid": id_stoploss,
+             "side": "sell",
+             "symbol": info["symbol"],
+             'stop': "loss",
+             "stopPrice": str(arrondi(prix * 0.97)),
+             "price": str(arrondi(prix * 0.9675)),
+             "size": str(arrondi(money))}
+
+    param = json.dumps(param)
+
+    entête = headers('POST', endpoint2, param)
+
+    prise_position = requests.post(
+        api + endpoint2, headers=entête, data=param)
+
+    fichier.write(ast.literal_eval(
+        prise_position.content.decode('utf-8'))["data"]["orderId"])
+
+    fichier.close()
+
+
+@connexion
+def suppression_ordre(type_ordre: str, id_ordre=None) -> None:
+    """
+    Fonction qui supprime un ordre selon qu'il soit un stoploss ou un simple ordre
+    """
+    if type_ordre == "stoploss":
+        fichier = open("stoploss.txt", "r")
+
+        id_stls = fichier.read()
+
+        endpoint = f"/api/v1/stop-order/{id_stls}"
+
+        fichier = open("stoploss.txt", "w")
+
+        fichier.close()
+
+    elif type_ordre == "market":
+        endpoint = f"/api/v1/orders{id_ordre}"
+
+    entête = headers('DELETE', endpoint)
+
+    supression_position = requests.delete(
+        api + endpoint3, headers=entête)
 
 
 @connexion
