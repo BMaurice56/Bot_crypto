@@ -474,6 +474,9 @@ def remonter_stoploss(symbol: str, dodo: int) -> None:
 
                 # Puis on remet un nouveau stoploss
                 création_stoploss(symbol)
+        
+        else:
+            création_stoploss(symbol)
 
         sleep(dodo)
 
@@ -542,7 +545,7 @@ def suppression_ordre(type_ordre: str, id_ordre=None) -> None:
     entête = headers('DELETE', endpoint)
 
     supression_position = requests.delete(
-        api + endpoint3, headers=entête)
+        api + endpoint, headers=entête)
 
 
 @connexion
