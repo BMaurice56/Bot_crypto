@@ -13,7 +13,6 @@ import pandas
 import time
 import hmac
 import json
-import ast
 
 
 # Décorateurs
@@ -475,9 +474,6 @@ def remonter_stoploss(symbol: str, dodo: int) -> None:
                 # Puis on remet un nouveau stoploss
                 création_stoploss(symbol)
 
-        else:
-            création_stoploss(symbol)
-
         sleep(dodo)
 
 
@@ -516,6 +512,8 @@ def création_stoploss(symbol: str) -> None:
 
     prise_position = requests.post(
         api + endpoint2, headers=entête, data=param)
+
+    print(prise_position.content)
 
     fichier.write(json.loads(
         prise_position.content.decode('utf-8'))["data"]["orderId"])

@@ -1,6 +1,7 @@
 from indices_techniques import *
 from données_serveur import *
 import sqlite3
+import ast
 
 
 def get_db(f):
