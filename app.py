@@ -18,6 +18,8 @@ while True:
     btcup = montant_compte("BTC3L")
     btcdown = montant_compte("BTC3S")
 
+    divergence = False
+
     date = datetime.now().strftime("%A %d %B %Y %H:%M:%S")
 
     datas = all_data(symbol)
@@ -138,18 +140,30 @@ while True:
         else:
             achat_vente(argent, symbol_down_kucoin, True)
 
+    else:
+        divergence = True
+
     # Après le passage de l'achat/vente, on regarde combien on a au final
     # Et après on lance la fonction qui remonte le stoploss
     btcup = montant_compte("BTC3L")
     btcdown = montant_compte("BTC3S")
 
-    if btcup > 30:
-        remonter_stoploss(symbol_up_kucoin, 30)
+    if divergence == False:
+        if btcup > 30:
+            remonter_stoploss(symbol_up_kucoin, 30, stopPrice, price)
 
-    elif btcdown > 2:
-        remonter_stoploss(symbol_down_kucoin, 30)
+        elif btcdown > 2:
+            remonter_stoploss(symbol_down_kucoin, 30, stopPrice, price)
+
+        else:
+            sleep(dodo)
 
     else:
-        sleep(dodo)
+        if btcup > 30:
+            remonter_stoploss(symbol_up_kucoin, 30, 0.99, 0.9875)
 
-    
+        elif btcdown > 2:
+            remonter_stoploss(symbol_down_kucoin, 30, 0.99, 0.9875)
+
+        else:
+            sleep(dodo)

@@ -14,8 +14,8 @@ import time
 import hmac
 import json
 
-stopPrice = 0.96
-price = 0.9575
+stopPrice = 0.97
+price = 0.9675
 
 # Décorateurs
 
@@ -404,7 +404,7 @@ def prise_position(info: dict) -> str:
 
     # S'il on vient d'acheter, on place un stoploss
     if info["achat_vente"] == True:
-        création_stoploss(info["symbol"])
+        création_stoploss(info["symbol"], stopPrice, price)
 
     # Puis on renvoie l'id de l'ordre d'achat placé pour le message sur discord
     return json.loads(prise_position.content.decode('utf-8'))["data"]["orderId"]
@@ -496,7 +496,7 @@ def information_ordre(id_ordre: str) -> dict:
 
 
 @connexion
-def remonter_stoploss(symbol: str, dodo: int) -> None:
+def remonter_stoploss(symbol: str, dodo: int, stopP : float, Pr : float) -> None:
     """
     Fonction qui remonte le stoploss s'il y a eu une augmentation par rapport au précédent stoploss
     Ex paramètre :
@@ -511,24 +511,24 @@ def remonter_stoploss(symbol: str, dodo: int) -> None:
             # On calcule ce que donnerait le prix du nouveau stoploss
             prix = prix_temps_reel_kucoin(symbol)
 
-            stopPrice = arrondi(stoploss["stopPrice"])
+            sp = arrondi(stoploss["stopPrice"])
 
-            nouveau_stopPrice = arrondi(prix * stopPrice)
+            nouveau_stopPrice = arrondi(prix * stopP)
 
             # S'il est supérieur à l'ancien prix, on enlève le stoploss et on en remet un nouveau
-            if stopPrice < nouveau_stopPrice:
+            if sp <= nouveau_stopPrice:
                 # On enlève le précédent ordre
                 suppression_ordre("stoploss")
 
                 # Puis on remet un nouveau stoploss
-                création_stoploss(symbol)
+                création_stoploss(symbol, stopP, Pr)
 
         # Puis on attend 30 secondes avant de revérifier
         sleep(dodo)
 
 
 @connexion
-def création_stoploss(symbol: str) -> None:
+def création_stoploss(symbol: str, stopP : float, Pr : float) -> None:
     """
     Fonction qui crée un stoploss
     Ex param :
@@ -560,8 +560,8 @@ def création_stoploss(symbol: str) -> None:
              "side": "sell",
              "symbol": symbol,
              'stop': "loss",
-             "stopPrice": str(arrondi(prix * stopPrice)),
-             "price": str(arrondi(prix * price)),
+             "stopPrice": str(arrondi(prix * stopP)),
+             "price": str(arrondi(prix * Pr)),
              "size": str(arrondi(money))}
 
     param = json.dumps(param)
