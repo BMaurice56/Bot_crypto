@@ -302,6 +302,8 @@ def lecture_fichier() -> str or None:
 
     elt = fichier.read()
 
+    fichier.close()
+
     if elt == "":
         return None
     return elt
@@ -630,7 +632,6 @@ def suppression_ordre(type_ordre: str, id_ordre=None) -> None:
     # Sinon si on veut supprimer un ordre stoploss manuellement, on fournit l'id et on le supprime
     elif type_ordre == "stoploss_manuel":
         endpoint = f"/api/v1/stop-order/{id_ordre}"
-        écriture_fichier()
 
     # Création de l'entête
     entête = headers('DELETE', endpoint)
