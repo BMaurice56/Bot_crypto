@@ -13,12 +13,16 @@ loaded_model, loaded_model_up, loaded_model_down = chargement_modele(symbol)
 # Définition de la zone pour l'horodatage car la date était en anglais avec le module datetime
 locale.setlocale(locale.LC_TIME, '')
 
+# Variable gloable qui permet de savoir s'il y a eu une divergence ou non juste avant
+divergence_stoploss = False
+
 while True:
     argent = montant_compte("USDT")
     btcup = montant_compte("BTC3L")
     btcdown = montant_compte("BTC3S")
 
     divergence = False
+    achat = False
 
     date = datetime.now().strftime("%A %d %B %Y %H:%M:%S")
 
@@ -52,38 +56,7 @@ while True:
 
     if prix < prediction and prix_up < prediction_up and prix_down > prediction_down and prediction_down < 0.3 and prediction_up - prix_up >= 0.05:
         if btcup > 30:
-            # On vérifie si il y a présence ou non d'ordre
-            stoploss = presence_position("stoploss", symbol_up_kucoin)
-            market = presence_position("market", symbol_up_kucoin)
-
-            # S'il y en aucun, on place un stoploss par sécurité
-            if stoploss == None and market == None:
-                création_stoploss(symbol_up_kucoin)
-
-            # Sinon s'il y a qu'un ordre limite market, on check si lorsqu'on place un stoploss
-            # si le prix du stoploss est supérieur ou non à l'ordre limite
-            elif stoploss == None and market != None:
-                prix_position = float(market['price'])
-
-                nouveau_prix = arrondi(
-                    prix_temps_reel_kucoin(symbol_up_kucoin) * price)
-
-                if prix_position < nouveau_prix:
-                    suppression_ordre("market", market['id'])
-                    création_stoploss(symbol_up_kucoin)
-                else:
-                    pass
-
-            # Sinon s'il y a un stoploss et un ordre market
-            # on regarde lequel on garde
-            elif stoploss != None and market != None:
-                if float(stoploss['price']) >= float(market['price']):
-                    suppression_ordre("market", market['id'])
-                else:
-                    suppression_ordre("stoploss")
-
-            else:
-                pass
+            continuation_prediction(symbol_up_kucoin)
 
         elif btcdown > 2:
             # Vente de la crypto descendante
@@ -92,43 +65,20 @@ while True:
             # Achat de la crypto montante
             achat_vente(argent, symbol_up_kucoin, True)
 
+            achat = True
+
+            divergence_stoploss = False
+
         else:
             achat_vente(argent, symbol_up_kucoin, True)
 
+            achat = True
+
+            divergence_stoploss = False
+
     elif prix > prediction and prix_up > prediction_up and prix_down < prediction_down:
         if btcdown > 2:
-            # On vérifie si il y a présence ou non d'ordre
-            stoploss = presence_position("stoploss", symbol_down_kucoin)
-            market = presence_position("market", symbol_down_kucoin)
-
-            # S'il y en aucun, on place un stoploss par sécurité
-            if stoploss == None and market == None:
-                création_stoploss(symbol_down_kucoin)
-
-            # Sinon s'il y a qu'un ordre limite market, on check si lorsqu'on place un stoploss
-            # si le prix du stoploss est supérieur ou non à l'ordre limite
-            elif stoploss == None and market != None:
-                prix_position = float(market['price'])
-
-                nouveau_prix = arrondi(
-                    prix_temps_reel_kucoin(symbol_down_kucoin) * price)
-
-                if prix_position < nouveau_prix:
-                    suppression_ordre("market", market['id'])
-                    création_stoploss(symbol_down_kucoin)
-                else:
-                    pass
-
-            # Sinon s'il y a un stoploss et un ordre market
-            # on regarde lequel on garde
-            elif stoploss != None and market != None:
-                if float(stoploss['price']) >= float(market['price']):
-                    suppression_ordre("market", market['id'])
-                else:
-                    suppression_ordre("stoploss")
-
-            else:
-                pass
+            continuation_prediction(symbol_down_kucoin)
 
         elif btcup > 30:
             # Vente de la crypto montant
@@ -137,11 +87,20 @@ while True:
             # Achat de la crypto descendante
             achat_vente(argent, symbol_down_kucoin, True)
 
+            achat = True
+
+            divergence_stoploss = False
+
         else:
             achat_vente(argent, symbol_down_kucoin, True)
 
+            achat = True
+
+            divergence_stoploss = False
+
     else:
         divergence = True
+        divergence_stoploss = True
 
     # Après le passage de l'achat/vente, on regarde combien on a au final
     # Et après on lance la fonction qui remonte le stoploss
@@ -150,13 +109,20 @@ while True:
 
     if divergence == False:
         if btcup > 30:
+            # S'il n'y a pas eu d'achat et divergence stoploss est a True,
+            # Alors on sort d'une divergence dont l'achat a été fait avant
+            if achat == False and divergence_stoploss == True:
+                stoploss_sortie_divergence(symbol_up_kucoin)
+
             remonter_stoploss(symbol_up_kucoin, 30, stopPrice, price)
 
         elif btcdown > 2:
-            remonter_stoploss(symbol_down_kucoin, 30, stopPrice, price)
+            # S'il n'y a pas eu d'achat et divergence stoploss est a True,
+            # Alors on sort d'une divergence dont l'achat a été fait avant
+            if achat == False and divergence_stoploss == True:
+                stoploss_sortie_divergence(symbol_down_kucoin)
 
-        else:
-            sleep(dodo)
+            remonter_stoploss(symbol_down_kucoin, 30, stopPrice, price)
 
     else:
         if btcup > 30:

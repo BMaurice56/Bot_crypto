@@ -496,7 +496,7 @@ def information_ordre(id_ordre: str) -> dict:
 
 
 @connexion
-def remonter_stoploss(symbol: str, dodo: int, stopP : float, Pr : float) -> None:
+def remonter_stoploss(symbol: str, dodo: int, stopP: float, Pr: float) -> None:
     """
     Fonction qui remonte le stoploss s'il y a eu une augmentation par rapport au précédent stoploss
     Ex paramètre :
@@ -528,7 +528,7 @@ def remonter_stoploss(symbol: str, dodo: int, stopP : float, Pr : float) -> None
 
 
 @connexion
-def création_stoploss(symbol: str, stopP : float, Pr : float) -> None:
+def création_stoploss(symbol: str, stopP: float, Pr: float) -> None:
     """
     Fonction qui crée un stoploss
     Ex param :
@@ -649,3 +649,73 @@ def achat_vente(montant: int or float, symbol: str, achat_ou_vente: bool) -> Non
     else:
         msg = f"Prise de position avec {montant} usdt au prix de {prix}$, il reste {montant_compte('USDT')} usdt"
         message_prise_position(msg, True)
+
+
+@connexion
+def continuation_prediction(symbol: str) -> None:
+    """
+    Fonction qui vérifie les stoploss lorsque que l'on achète pas et que l'on continue a attendre que ça monte ou descende
+    Ex param :
+    symbol : BTC3L-USDT
+    """
+    # On vérifie si il y a présence ou non d'ordre
+    stoploss = presence_position("stoploss", symbol)
+    market = presence_position("market", symbol)
+
+    # S'il y en aucun, on place un stoploss par sécurité
+    if stoploss == None and market == None:
+        création_stoploss(symbol)
+
+    # Sinon s'il y a qu'un ordre limite market, on check si lorsqu'on place un stoploss
+    # si le prix du stoploss est supérieur ou non à l'ordre limite
+    elif stoploss == None and market != None:
+        prix_position = float(market['price'])
+
+        nouveau_prix = arrondi(
+            prix_temps_reel_kucoin(symbol) * price)
+
+        if prix_position < nouveau_prix:
+            suppression_ordre("market", market['id'])
+            création_stoploss(symbol)
+        else:
+            pass
+
+    # Sinon s'il y a un stoploss et un ordre market
+    # on regarde lequel on garde
+    elif stoploss != None and market != None:
+        if float(stoploss['price']) >= float(market['price']):
+            suppression_ordre("market", market['id'])
+        else:
+            suppression_ordre("stoploss")
+
+    else:
+        pass
+
+
+@connexion
+def stoploss_sortie_divergence(symbol: str) -> None:
+    """
+    Fonction qui remet un nouveau stoploss si on passe d'un achat à une divergence puis une prédiction normale
+    Ex param :
+    symbol : BTC3S-USDT
+    """
+    # On repasse la variable a False car nous ne sommes plus dans un divergence
+    global divergence_stoploss
+    divergence_stoploss = False
+
+    # On regarde si le stoploss est la ou non
+    # Et donc s'il n'est plus la la présence de l'ordre en market
+    st = presence_position("stoploss", symbol)
+    market = presence_position("market", symbol)
+
+    # Si le stoploss est toujours la, on remet le nouveau avec les bons prix
+    if st != None and market == None:
+        suppression_ordre("stoploss")
+
+        création_stoploss(symbol, stopPrice, price)
+
+    # Sinon on vire l'ordre placé en market et on met un nouveau stoploss
+    elif market != None and st == None:
+        suppression_ordre("market", market['id'])
+
+        création_stoploss(symbol, stopPrice, price)
