@@ -14,8 +14,8 @@ import time
 import hmac
 import json
 
-stopPrice = 0.97
-price = 0.9675
+stopPrice = 0.96
+price = 0.9575
 
 # Décorateurs
 
@@ -502,8 +502,8 @@ def remonter_stoploss(symbol: str, dodo: int, stopP : float, Pr : float) -> None
     Ex paramètre :
     symbol : BTC3S-USDT
     """
-    # On execute 120 fois car cela fait en tout 60 min ce qui correspond au temps off du programme
-    for i in range(120):
+    # On execute 119 fois car il y a du décalage avec les requêtes et donc pour être au plus près de l'heure de pose
+    for i in range(119):
         stoploss = presence_position("stoploss", symbol)
 
         # S'il y a toujours le stoploss, on vérifie si celui-ci a les bons prix
@@ -516,7 +516,7 @@ def remonter_stoploss(symbol: str, dodo: int, stopP : float, Pr : float) -> None
             nouveau_stopPrice = arrondi(prix * stopP)
 
             # S'il est supérieur à l'ancien prix, on enlève le stoploss et on en remet un nouveau
-            if sp <= nouveau_stopPrice:
+            if sp < nouveau_stopPrice:
                 # On enlève le précédent ordre
                 suppression_ordre("stoploss")
 
@@ -575,6 +575,7 @@ def création_stoploss(symbol: str, stopP : float, Pr : float) -> None:
 
     # Puis on vient écrire l'id du stoploss dans un fichier pour faciliter la remonter de celui-ci
     # quand le cour de la crypto remonte
+    print(prise_position, prise_position.content.decode('utf-8'))
     fichier.write(json.loads(
         prise_position.content.decode('utf-8'))["data"]["orderId"])
 

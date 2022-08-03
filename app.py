@@ -6,7 +6,7 @@ import locale
 symbol = "BTC"
 symbol_up_kucoin = "BTC3L-USDT"
 symbol_down_kucoin = "BTC3S-USDT"
-dodo = 60*59 + 50
+dodo = 60*59 + 40
 
 loaded_model, loaded_model_up, loaded_model_down = chargement_modele(symbol)
 
@@ -50,7 +50,7 @@ while True:
 
     message_webhook_état_bot(msg)
 
-    if prix < prediction and prix_up < prediction_up and prix_down > prediction_down and prediction_down < 0.3:
+    if prix < prediction and prix_up < prediction_up and prix_down > prediction_down and prediction_down < 0.3 and prediction_up - prix_up >= 0.05:
         if btcup > 30:
             # On vérifie si il y a présence ou non d'ordre
             stoploss = presence_position("stoploss", symbol_up_kucoin)
