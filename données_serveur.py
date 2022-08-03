@@ -292,6 +292,34 @@ def headers(methode: str, endpoint: str, param=None) -> dict:
     return headers
 
 
+def lecture_fichier() -> str or None:
+    """
+    Fonction qui lit ce qu'il y a dans le fichier 
+    Et renvoie le contenu ou None s'il y a rien
+    """
+
+    fichier = open("stoploss.txt", "r")
+
+    elt = fichier.read()
+
+    if elt == "":
+        return None
+    return elt
+
+
+def écriture_fichier(str_to_write=None) -> None:
+    """
+    Fonction qui écrit ou écrase le fichier
+    """
+
+    fichier = open("stoploss.txt", "w")
+
+    if str_to_write != None:
+        fichier.write(str_to_write)
+
+    fichier.close()
+
+
 @connexion
 def montant_compte(symbol: str) -> float:
     """
@@ -537,9 +565,6 @@ def création_stoploss(symbol: str, stopP: float, Pr: float) -> None:
     # Besoin d'un id pour l'ordre
     id_stoploss = randint(0, 100_000_000)
 
-    # On inscrit l'id de l'ordre dans un fichier pour que ce soit plus pratique pour le remonter etc.2
-    fichier = open("stoploss.txt", "w")
-
     # Point de terminaison de la requête
     endpoint = "/api/v1/stop-order"
 
@@ -576,11 +601,9 @@ def création_stoploss(symbol: str, stopP: float, Pr: float) -> None:
     # Puis on vient écrire l'id du stoploss dans un fichier pour faciliter la remonter de celui-ci
     # quand le cour de la crypto remonte
     print(prise_position, prise_position.content.decode('utf-8'))
-    fichier.write(json.loads(
-        prise_position.content.decode('utf-8'))["data"]["orderId"])
 
-    # Et enfin par sécurité on ferme la connection avec le fichier
-    fichier.close()
+    écriture_fichier(json.loads(
+        prise_position.content.decode('utf-8'))["data"]["orderId"])
 
 
 @connexion
@@ -588,25 +611,26 @@ def suppression_ordre(type_ordre: str, id_ordre=None) -> None:
     """
     Fonction qui supprime un ordre selon qu'il soit un stoploss ou un simple ordre
     Ex param :
-    type_ordre : stoploss ou market
+    type_ordre : stoploss ou market ou stoploss_manuel
     id_ordre : None par défaut ou l'id de l'ordre en question à supprimer
     """
     # Si c'est un stoploss, l'id de l'ordre doit être dans le fichier
     # Et on l'efface de celui-ci
     if type_ordre == "stoploss":
-        fichier = open("stoploss.txt", "r")
-
-        id_stls = fichier.read()
+        id_stls = lecture_fichier()
 
         endpoint = f"/api/v1/stop-order/{id_stls}"
 
-        fichier = open("stoploss.txt", "w")
-
-        fichier.close()
+        écriture_fichier()
 
     # Sinon si c'est un ordre market, on supprime l'ordre avec l'id fourni
     elif type_ordre == "market":
         endpoint = f"/api/v1/orders{id_ordre}"
+
+    # Sinon si on veut supprimer un ordre stoploss manuellement, on fournit l'id et on le supprime
+    elif type_ordre == "stoploss_manuel":
+        endpoint = f"/api/v1/stop-order/{id_ordre}"
+        écriture_fichier()
 
     # Création de l'entête
     entête = headers('DELETE', endpoint)
@@ -719,3 +743,47 @@ def stoploss_sortie_divergence(symbol: str) -> None:
         suppression_ordre("market", market['id'])
 
         création_stoploss(symbol, stopPrice, price)
+
+
+@connexion
+def update_id_stoploss() -> None:
+    """
+    Fonction qui maintien à jour l'id du stoploss dans le fichier
+    S'il le stoploss a été executé alors on vire l'id du fichier
+    """
+    while True:
+        st_3S = presence_position("stoploss", "BTC3S-USDT")
+        st_3L = presence_position("stoploss", "BTC3L-USDT")
+
+        # S'il y a aucun stoploss, par sécurité on vide le fichier
+        if st_3L == None and st_3S == None:
+            écriture_fichier()
+
+        # Sinon par sécurité, on remet l'id du stoploss dans le fichier
+        elif st_3L != None and st_3S == None:
+            écriture_fichier(st_3L['id'])
+
+        # De même pour ici
+        elif st_3L == None and st_3S != None:
+            écriture_fichier(st_3S['id'])
+
+        # S'il y a deux stoploss, on regarde la présence de crypto
+        else:
+            btcup = montant_compte("BTC3L")
+            btcdown = montant_compte("BTC3S")
+
+            # S'il y a une crypto, on supprime l'ordre sur l'autre crypto
+            if btcup > 30:
+                suppression_ordre("stoploss_manuel", st_3S['id'])
+                écriture_fichier(st_3L['id'])
+
+            elif btcdown > 2:
+                suppression_ordre("stoploss_manuel", st_3L['id'])
+                écriture_fichier(st_3S['id'])
+
+            # Sinon on supprime les deux
+            else:
+                suppression_ordre("stoploss_manuel", st_3S['id'])
+                suppression_ordre("stoploss_manuel", st_3L['id'])
+
+        sleep(60)

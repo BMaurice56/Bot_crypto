@@ -16,6 +16,10 @@ locale.setlocale(locale.LC_TIME, '')
 # Variable gloable qui permet de savoir s'il y a eu une divergence ou non juste avant
 divergence_stoploss = False
 
+# On lance en parallèle la fonction qui maintien à jour l'id du stoploss dans le fichier
+p = Process(target=update_id_stoploss)
+p.start()
+
 while True:
     argent = montant_compte("USDT")
     btcup = montant_compte("BTC3L")
