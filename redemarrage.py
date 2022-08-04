@@ -14,5 +14,7 @@ for elt in processus:
 
 sleep(3)
 
+os.system("git pull")
+
 Popen("python3.10 bot_discord.py", shell=True)
 print("bot redémarré")
