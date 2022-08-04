@@ -786,5 +786,6 @@ def update_id_stoploss() -> None:
             else:
                 suppression_ordre("stoploss_manuel", st_3S['id'])
                 suppression_ordre("stoploss_manuel", st_3L['id'])
+                écriture_fichier()
 
         sleep(60)

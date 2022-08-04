@@ -1,6 +1,6 @@
 from keras.models import Sequential, model_from_json
-from time import perf_counter
 from keras.layers import Dense
+from time import perf_counter
 from database import *
 import sys
 
