@@ -6,7 +6,8 @@ import locale
 symbol = "BTC"
 symbol_up_kucoin = "BTC3L-USDT"
 symbol_down_kucoin = "BTC3S-USDT"
-dodo = 60*59 + 40
+dodo = 60*59 + 55
+dodo_remonter_stoploss = 29
 
 loaded_model, loaded_model_up, loaded_model_down = chargement_modele(symbol)
 
@@ -118,7 +119,8 @@ while True:
             if achat == False and divergence_stoploss == True:
                 stoploss_sortie_divergence(symbol_up_kucoin)
 
-            remonter_stoploss(symbol_up_kucoin, 30, stopPrice, price)
+            remonter_stoploss(symbol_up_kucoin,
+                              dodo_remonter_stoploss, stopPrice, price)
 
         elif btcdown > 2:
             # S'il n'y a pas eu d'achat et divergence stoploss est a True,
@@ -126,14 +128,17 @@ while True:
             if achat == False and divergence_stoploss == True:
                 stoploss_sortie_divergence(symbol_down_kucoin)
 
-            remonter_stoploss(symbol_down_kucoin, 30, stopPrice, price)
+            remonter_stoploss(symbol_down_kucoin,
+                              dodo_remonter_stoploss, stopPrice, price)
 
     else:
         if btcup > 30:
-            remonter_stoploss(symbol_up_kucoin, 30, 0.99, 0.9875)
+            remonter_stoploss(symbol_up_kucoin,
+                              dodo_remonter_stoploss, 0.99, 0.9875)
 
         elif btcdown > 2:
-            remonter_stoploss(symbol_down_kucoin, 30, 0.99, 0.9875)
+            remonter_stoploss(symbol_down_kucoin,
+                              dodo_remonter_stoploss, 0.99, 0.9875)
 
         else:
             sleep(dodo)

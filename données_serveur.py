@@ -1,11 +1,13 @@
+from tenacity import retry, retry_if_exception_type, stop_after_attempt
 from multiprocessing import Process, Manager
 from decimal import Decimal, ROUND_DOWN
+from indices_techniques import moyenne
+from time import sleep, perf_counter
 from subprocess import Popen, PIPE
 from binance.client import Client
 from message_discord import *
 from functools import wraps
 from random import randint
-from time import sleep
 import requests
 import hashlib
 import base64
@@ -13,6 +15,7 @@ import pandas
 import time
 import hmac
 import json
+import ccxt
 
 stopPrice = 0.96
 price = 0.9575
@@ -117,6 +120,7 @@ client = Client(api_key, api_secret)
 
 
 @connexion
+@retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
 def donnée(symbol: str, début: str, fin: str, longueur: int) -> pandas.DataFrame:
     """
     Fonction qui prend en argument un symbol de type "BTCEUR" ou encore "ETHEUR" etc...
@@ -153,6 +157,7 @@ def donnée(symbol: str, début: str, fin: str, longueur: int) -> pandas.DataFra
 
 
 @connexion
+@retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
 def prix_temps_reel(symbol: str) -> float:
     """
     Fonction qui récupère le prix en temps réel d'un symbol voulu
@@ -164,6 +169,7 @@ def prix_temps_reel(symbol: str) -> float:
 
 
 @connexion
+@retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
 def all_data(symbol: str) -> dict:
     """
     Fonction qui prend en argument un symbol
@@ -323,6 +329,7 @@ def écriture_fichier(str_to_write=None) -> None:
 
 
 @connexion
+@retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
 def montant_compte(symbol: str) -> float:
     """
     Fonction qui renvoie le montant que possède le compte selon le ou les symbols voulus
@@ -350,6 +357,7 @@ def montant_compte(symbol: str) -> float:
 
 
 @connexion
+@retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
 def prix_temps_reel_kucoin(symbol: str) -> float:
     """
     Fonction qui renvoie le prix de la crypto en temps réel
@@ -371,6 +379,7 @@ def prix_temps_reel_kucoin(symbol: str) -> float:
 
 
 @connexion
+@retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
 def prise_position(info: dict) -> str:
     """
     Fonction qui prend une position soit d'achat soit de vente et place un stoploss
@@ -441,6 +450,7 @@ def prise_position(info: dict) -> str:
 
 
 @connexion
+@retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
 def presence_position(type_ordre: str, symbol: str) -> None or dict:
     """
     Fonction qui renvoie les positions en cours sur une pair de crypto précis
@@ -499,6 +509,7 @@ def presence_position(type_ordre: str, symbol: str) -> None or dict:
 
 
 @connexion
+@retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
 def information_ordre(id_ordre: str) -> dict:
     """
     Fonction qui renvoie les informations sur un ordre passé
@@ -526,6 +537,7 @@ def information_ordre(id_ordre: str) -> dict:
 
 
 @connexion
+@retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
 def remonter_stoploss(symbol: str, dodo: int, stopP: float, Pr: float) -> None:
     """
     Fonction qui remonte le stoploss s'il y a eu une augmentation par rapport au précédent stoploss
@@ -558,6 +570,7 @@ def remonter_stoploss(symbol: str, dodo: int, stopP: float, Pr: float) -> None:
 
 
 @connexion
+@retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
 def création_stoploss(symbol: str, stopP: float, Pr: float) -> None:
     """
     Fonction qui crée un stoploss
@@ -609,6 +622,7 @@ def création_stoploss(symbol: str, stopP: float, Pr: float) -> None:
 
 
 @connexion
+@retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
 def suppression_ordre(type_ordre: str, id_ordre=None) -> None:
     """
     Fonction qui supprime un ordre selon qu'il soit un stoploss ou un simple ordre
@@ -642,6 +656,7 @@ def suppression_ordre(type_ordre: str, id_ordre=None) -> None:
 
 
 @connexion
+@retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
 def achat_vente(montant: int or float, symbol: str, achat_ou_vente: bool) -> None:
     """
     Fonction qui achète ou vente les cryptomonnaies
@@ -677,6 +692,7 @@ def achat_vente(montant: int or float, symbol: str, achat_ou_vente: bool) -> Non
 
 
 @connexion
+@retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
 def continuation_prediction(symbol: str) -> None:
     """
     Fonction qui vérifie les stoploss lorsque que l'on achète pas et que l'on continue a attendre que ça monte ou descende
@@ -718,6 +734,7 @@ def continuation_prediction(symbol: str) -> None:
 
 
 @connexion
+@retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
 def stoploss_sortie_divergence(symbol: str) -> None:
     """
     Fonction qui remet un nouveau stoploss si on passe d'un achat à une divergence puis une prédiction normale
@@ -747,6 +764,7 @@ def stoploss_sortie_divergence(symbol: str) -> None:
 
 
 @connexion
+@retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
 def update_id_stoploss() -> None:
     """
     Fonction qui maintien à jour l'id du stoploss dans le fichier
