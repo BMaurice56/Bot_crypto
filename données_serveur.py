@@ -7,6 +7,7 @@ from subprocess import Popen, PIPE
 from binance.client import Client
 from message_discord import *
 from functools import wraps
+from typing import Optional
 from random import randint
 import requests
 import hashlib
@@ -315,9 +316,11 @@ def lecture_fichier() -> str or None:
     return elt
 
 
-def écriture_fichier(str_to_write=None) -> None:
+def écriture_fichier(str_to_write: Optional[str] = None) -> None:
     """
     Fonction qui écrit ou écrase le fichier
+    Ex param :
+    str_to_write : id de l'ordre
     """
 
     fichier = open("stoploss.txt", "w")
@@ -623,7 +626,7 @@ def création_stoploss(symbol: str, stopP: float, Pr: float) -> None:
 
 @connexion
 @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
-def suppression_ordre(type_ordre: str, id_ordre=None) -> None:
+def suppression_ordre(type_ordre: str, id_ordre: Optional[str] = None) -> None:
     """
     Fonction qui supprime un ordre selon qu'il soit un stoploss ou un simple ordre
     Ex param :
@@ -669,21 +672,18 @@ def achat_vente(montant: int or float, symbol: str, achat_ou_vente: bool) -> Non
     info = {"montant": montant,
             "symbol": symbol, "achat_vente": achat_ou_vente}
 
-    # On prend la position sur le serveur et on récupère l'id de l'ordre passé
-    ordre = prise_position(info)
+    # On prend la position sur le serveur
+    prise_position(info)
 
     # On récupère le prix en temps réel de la crypto que l'on vient d'acheter
     prix = prix_temps_reel_kucoin(symbol)
-
-    # On récupère les informations de l'ordre sur le serveur
-    data_ordre = information_ordre(ordre)
 
     # Puis on vient envoyer un message sur le discord
     if achat_ou_vente == False:
         global argent
         argent = montant_compte('USDT')
 
-        msg = f"Vente de position au prix de {float(data_ordre['price'])}$, il reste {argent} usdt"
+        msg = f"Vente de position au prix de {prix}$, il reste {argent} usdt"
         message_prise_position(msg, False)
 
     else:

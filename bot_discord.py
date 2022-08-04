@@ -80,6 +80,10 @@ class Botcrypto(commands.Bot):
 
             statut : affiche le statut du bot discord et du bot crypto
 
+            vente : vend toutes les cryptomonnais du compte
+
+            montant : renvoie le montant des cryptos du compte
+
             """
 
             await ctx.send(commandes)
@@ -202,6 +206,61 @@ class Botcrypto(commands.Bot):
                 await ctx.send("Bot crypto lancé !")
             else:
                 await ctx.send("Bot crypto arrêté !")
+
+        @self.command(name="vente")
+        async def vente(ctx):
+            """
+            Fonction qui permet de vendre les cryptomonaies du bot à distance
+            Sans devoir accéder à la platforme
+            """
+            # On regarde le montant des deux cryptos
+            btcup = montant_compte("BTC3L")
+            btcdown = montant_compte("BTC3S")
+
+            # Et on vend la ou les cryptos en supprimant les ordres placés
+            if btcup > 30:
+                achat_vente(btcup, "BTC3L-USDT", False)
+
+                presence_market = presence_position("market", "BTC3L-USDT")
+
+                if presence_market == None:
+                    suppression_ordre("stoploss")
+
+                else:
+                    id_market = presence_market['id']
+
+                    suppression_ordre("market", id_market)
+
+                await ctx.send(f"{btcup} crypto up vendu !")
+
+            if btcdown > 2:
+                achat_vente(btcdown, "BTC3S-USDT", False)
+
+                presence_market = presence_position("market", "BTC3S-USDT")
+
+                if presence_market == None:
+                    suppression_ordre("stoploss")
+
+                else:
+                    id_market = presence_market['id']
+
+                    suppression_ordre("market", id_market)
+
+                await ctx.send(f"{btcdown} crypto down vendu !")
+
+            await montant(ctx)
+
+        @self.command(name="montant")
+        async def montant(ctx):
+            """
+            Fonction qui renvoie le montant du compte des cryptos
+            """
+
+            argent = montant_compte("USDT")
+            btcup = montant_compte("BTC3L")
+            btcdown = montant_compte("BTC3S")
+
+            await ctx.send(f"Le compte possède {argent} USDT, {btcup} crypto up, {btcdown} crypto down !")
 
     async def on_ready(self):
         """

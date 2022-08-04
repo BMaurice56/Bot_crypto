@@ -101,7 +101,7 @@ def chaikin_money_flow(donnée_cmf: pandas.DataFrame) -> float:
     return result
 
 
-def CCI(donnée_cci) -> float:
+def CCI(donnée_cci: pandas.DataFrame) -> float:
     """
     Fonction qui calcule le CCI (tente d'interpréter les signaux d'achat 
     et de vente et peut identifier les zones de surachat et de 
@@ -183,7 +183,7 @@ def aroon_oscilator(donnée_ao: pandas.DataFrame) -> float:
     return ao
 
 
-def williams_R(donnée_wr) -> float:
+def williams_R(donnée_wr: pandas.DataFrame) -> float:
     """
     Fonction qui calcule le williams R (indicateur technique de surachat 
     et de survente qui peut offrir des signaux potentiels d'achat et de vente)
@@ -363,7 +363,7 @@ def ADX(donnée_adx: pandas.DataFrame) -> list:
     return adx
 
 
-def KAMA(donnée_kama) -> list:
+def KAMA(donnée_kama: pandas.DataFrame) -> list:
     """
     Fonction qui calcule le KAMA (devient plus sensible pendant les périodes 
     où les mouvements de prix sont stables dans une certaine direction 
