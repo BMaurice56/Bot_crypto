@@ -7,6 +7,9 @@ fichier = open("crypto.txt", "r")
 text = fichier.read()
 listes_crypto = text.split(";")
 
+commande_bot_terminale = """ps -aux | grep "bot_discord.py"| awk -F " " '{ print $2 }' """
+commande_redemarrage_terminale = """ps -aux | grep "redemarrage.py"| awk -F " " '{ print $2 }' """
+
 
 class Botcrypto(commands.Bot):
 
@@ -36,14 +39,14 @@ class Botcrypto(commands.Bot):
 
         def arret_bot():
             """
-            Fonction qui arrête le bot et l'insertion des données dans la bdd
+            Fonction qui arrête le bot
             """
-            proc = Popen("""ps -aux | grep "bot_discord.py"| awk -F " " '{ print $2 }' """,
+            proc = Popen(commande_bot_terminale,
                          shell=True, stdout=PIPE, stderr=PIPE)
 
             sortie, autre = proc.communicate()
 
-            processus = sortie.decode('utf-8').split("\n")[1:-2]
+            processus = sortie.decode('utf-8').split("\n")[1:-1]
 
             for elt in processus:
                 os.system(f"kill -9 {elt}")
@@ -83,6 +86,8 @@ class Botcrypto(commands.Bot):
             vente : vend toutes les cryptomonnais du compte
 
             montant : renvoie le montant des cryptos du compte
+
+            redemarrage : redémarre le bot en mettant à jour les fichiers de celui-ci
 
             """
 
@@ -195,7 +200,7 @@ class Botcrypto(commands.Bot):
             """
             await ctx.send("Bot discord toujours en cours d'exécution !")
 
-            proc = Popen("""ps -aux | grep "/bin/python3" | grep "bot_discord.py"| awk -F " " '{ print $2 }' """,
+            proc = Popen(commande_bot_terminale,
                          shell=True, stdout=PIPE, stderr=PIPE)
 
             sortie, autre = proc.communicate()
@@ -248,6 +253,7 @@ class Botcrypto(commands.Bot):
 
                 await ctx.send(f"{btcdown} crypto down vendu !")
 
+            # Et on renvoie les nouveaux montants sur le discord
             await montant(ctx)
 
         @self.command(name="montant")
@@ -265,7 +271,7 @@ class Botcrypto(commands.Bot):
         @self.command(name="redemarrage")
         async def redemarrage(ctx):
             """
-            Fonction qui redemarre le bot discord
+            Fonction qui redemarre le bot discord et met à jour ses fichiers
             """
 
             Popen("python3.10 redemarrage.py", shell=True)
@@ -275,7 +281,8 @@ class Botcrypto(commands.Bot):
         Fonction qui affiche dans la console "Bot crypto est prêt" lorsqu'il est opérationnel 
         Et enlève des processus le code python redemarrage si le programme est redémarré
         """
-        proc = Popen("""ps -aux | grep "redemarrage.py"| awk -F " " '{ print $2 }' """,
+        # D'abord on tue le ou les processus de redémarrage
+        proc = Popen(commande_redemarrage_terminale,
                      shell=True, stdout=PIPE, stderr=PIPE)
 
         sortie, autre = proc.communicate()
