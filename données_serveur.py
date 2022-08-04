@@ -18,8 +18,8 @@ import hmac
 import json
 import ccxt
 
-stopPrice = 0.96
-price = 0.9575
+stopPrice = 0.97
+price = 0.9675
 
 # Décorateurs
 

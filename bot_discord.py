@@ -38,7 +38,7 @@ class Botcrypto(commands.Bot):
             """
             Fonction qui arrête le bot et l'insertion des données dans la bdd
             """
-            proc = Popen("""ps -aux | grep "/bin/python3" | grep "bot_discord.py"| awk -F " " '{ print $2 }' """,
+            proc = Popen("""ps -aux | grep "bot_discord.py"| awk -F " " '{ print $2 }' """,
                          shell=True, stdout=PIPE, stderr=PIPE)
 
             sortie, autre = proc.communicate()
@@ -262,10 +262,29 @@ class Botcrypto(commands.Bot):
 
             await ctx.send(f"Le compte possède {argent} USDT, {btcup} crypto up, {btcdown} crypto down !")
 
+        @self.command(name="redemarrage")
+        async def redemarrage(ctx):
+            """
+            Fonction qui redemarre le bot discord
+            """
+
+            Popen("python3.10 redemarrage.py", shell=True)
+
     async def on_ready(self):
         """
         Fonction qui affiche dans la console "Bot crypto est prêt" lorsqu'il est opérationnel 
+        Et enlève des processus le code python redemarrage si le programme est redémarré
         """
+        proc = Popen("""ps -aux | grep "redemarrage.py"| awk -F " " '{ print $2 }' """,
+                     shell=True, stdout=PIPE, stderr=PIPE)
+
+        sortie, autre = proc.communicate()
+
+        processus = sortie.decode('utf-8').split("\n")[:-1]
+
+        for elt in processus:
+            os.system(f"kill -9 {elt}")
+
         print(f"{self.user.display_name} est prêt")
 
 
