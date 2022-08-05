@@ -22,4 +22,4 @@ os.system("git pull")
 sleep(3)
 
 # Et enfin on redémarre le bot
-Popen("python3.10 bot_discord.py", shell=True)
+Popen("python3 bot_discord.py", shell=True)

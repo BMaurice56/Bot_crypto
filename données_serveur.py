@@ -120,7 +120,7 @@ api_secret = os.getenv("API_SECRET")
 client = Client(api_key, api_secret)
 
 
-@connexion
+#@connexion
 @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
 def donnée(symbol: str, début: str, fin: str, longueur: int) -> pandas.DataFrame:
     """
@@ -157,7 +157,7 @@ def donnée(symbol: str, début: str, fin: str, longueur: int) -> pandas.DataFra
     return data
 
 
-@connexion
+#@connexion
 @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
 def prix_temps_reel(symbol: str) -> float:
     """
@@ -169,7 +169,7 @@ def prix_temps_reel(symbol: str) -> float:
     return float(client.get_ticker(symbol=symbol)['lastPrice'])
 
 
-@connexion
+#@connexion
 @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
 def all_data(symbol: str) -> dict:
     """
@@ -331,7 +331,7 @@ def écriture_fichier(str_to_write: Optional[str] = None) -> None:
     fichier.close()
 
 
-@connexion
+#@connexion
 @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
 def montant_compte(symbol: str) -> float:
     """
@@ -359,7 +359,7 @@ def montant_compte(symbol: str) -> float:
         return 0
 
 
-@connexion
+#@connexion
 @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
 def prix_temps_reel_kucoin(symbol: str) -> float:
     """
@@ -381,7 +381,7 @@ def prix_temps_reel_kucoin(symbol: str) -> float:
     return argent
 
 
-@connexion
+#@connexion
 @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
 def prise_position(info: dict) -> str:
     """
@@ -452,7 +452,7 @@ def prise_position(info: dict) -> str:
     return json.loads(prise_position.content.decode('utf-8'))["data"]["orderId"]
 
 
-@connexion
+#@connexion
 @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
 def presence_position(type_ordre: str, symbol: str) -> None or dict:
     """
@@ -511,7 +511,7 @@ def presence_position(type_ordre: str, symbol: str) -> None or dict:
         return resultat[0]
 
 
-@connexion
+#@connexion
 @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
 def information_ordre(id_ordre: str) -> dict:
     """
@@ -539,7 +539,7 @@ def information_ordre(id_ordre: str) -> dict:
     return json.loads(info_ordre.content.decode('utf-8'))['data']
 
 
-@connexion
+#@connexion
 @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
 def remonter_stoploss(symbol: str, dodo: int, stopP: float, Pr: float) -> None:
     """
@@ -572,7 +572,7 @@ def remonter_stoploss(symbol: str, dodo: int, stopP: float, Pr: float) -> None:
         sleep(dodo)
 
 
-@connexion
+#@connexion
 @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
 def création_stoploss(symbol: str, stopP: float, Pr: float) -> None:
     """
@@ -624,7 +624,7 @@ def création_stoploss(symbol: str, stopP: float, Pr: float) -> None:
         prise_position.content.decode('utf-8'))["data"]["orderId"])
 
 
-@connexion
+#@connexion
 @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
 def suppression_ordre(type_ordre: str, id_ordre: Optional[str] = None) -> None:
     """
@@ -658,7 +658,7 @@ def suppression_ordre(type_ordre: str, id_ordre: Optional[str] = None) -> None:
         api + endpoint, headers=entête)
 
 
-@connexion
+#@connexion
 @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
 def achat_vente(montant: int or float, symbol: str, achat_ou_vente: bool) -> None:
     """
@@ -691,7 +691,7 @@ def achat_vente(montant: int or float, symbol: str, achat_ou_vente: bool) -> Non
         message_prise_position(msg, True)
 
 
-@connexion
+#@connexion
 @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
 def continuation_prediction(symbol: str) -> None:
     """
@@ -733,7 +733,7 @@ def continuation_prediction(symbol: str) -> None:
         pass
 
 
-@connexion
+#@connexion
 @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
 def stoploss_sortie_divergence(symbol: str) -> None:
     """
@@ -763,7 +763,7 @@ def stoploss_sortie_divergence(symbol: str) -> None:
         création_stoploss(symbol, stopPrice, price)
 
 
-@connexion
+#@connexion
 @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
 def update_id_stoploss() -> None:
     """
