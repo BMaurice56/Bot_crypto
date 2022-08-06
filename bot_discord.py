@@ -294,6 +294,8 @@ class Botcrypto(commands.Bot):
 
         print(f"{self.user.display_name} est prêt")
 
+        message_status_général("Bot démarré !")
+
 
 if __name__ == "__main__":
     os.system("clear")
