@@ -1,13 +1,8 @@
+from backports.zoneinfo import ZoneInfo
 from datetime import datetime
 from main import *
 import locale
 
-python_version = sys.version.split(" ")[0]
-
-if "3.8" in python_version:
-    from backports.zoneinfo import ZoneInfo
-else:
-    from zoneinfo import ZoneInfo
 
 # symbol = sys.argv[1]
 symbol = "BTC"
@@ -42,7 +37,7 @@ print(ancienne_date, date, (date - ancienne_date))
 
 # Si il y a bien eu 1 heure d'attente, on peut passer au prédiction
 # Sinon on attend jusqu'a l'heure prévu
-if (date - ancienne_date) < 3600:
+if date - ancienne_date < 3600:
     if etat[1] == "True":
         divergence_stoploss = True
 
