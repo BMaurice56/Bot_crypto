@@ -14,6 +14,5 @@ ancienne_date = int(ancienne_date.strftime("%s"))
 
 date = datetime.now(tz=ZoneInfo("Europe/Paris"))
 
-date = date.strftime("%s")
 
 print(date, ancienne_date)
