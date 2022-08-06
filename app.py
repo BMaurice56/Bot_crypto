@@ -31,6 +31,10 @@ ancienne_date = datetime.strptime(etat[0], "%A %d %B %Y %H:%M:%S")
 
 ancienne_date = int(ancienne_date.strftime("%s"))
 
+# Suite à un bug faisant que la conversion directe en seconde donnait -1
+# On transforme la date en format lisible (le même que d'habitude) -> format str
+# On retransforme la date en format date
+# Puis on vient enfin la mettre en seconde
 date = datetime.now(tz=ZoneInfo("Europe/Paris")
                     ).strftime("%A %d %B %Y %H:%M:%S")
 
