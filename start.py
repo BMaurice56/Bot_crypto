@@ -2,4 +2,4 @@
 # Utile sur le serveur vps
 from subprocess import Popen
 
-Popen("python3 bot_discord.py")
+Popen("python3 bot_discord.py", shell=True)
