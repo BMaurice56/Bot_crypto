@@ -38,15 +38,15 @@ ancienne_date = int(ancienne_date.strftime("%s"))
 
 date = int(datetime.now(tz=ZoneInfo("Europe/Paris")).strftime("%s"))
 
+print(ancienne_date, date, (date - ancienne_date))
+
 # Si il y a bien eu 1 heure d'attente, on peut passer au prédiction
 # Sinon on attend jusqu'a l'heure prévu
 if (date - ancienne_date) < 3600:
-    print("toto")
     if etat[1] == "True":
         divergence_stoploss = True
 
     temps_dodo = 3600 - (date - ancienne_date)
-    print(temps_dodo)
     sleep(temps_dodo)
 
 
