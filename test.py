@@ -1,6 +1,6 @@
 from main import *
 from datetime import datetime
-from zoneinfo import ZoneInfo
+from backports.zoneinfo import ZoneInfo
 import locale
 
 locale.setlocale(locale.LC_ALL, 'fr_FR.UTF-8')
