@@ -1,7 +1,13 @@
-from backports.zoneinfo import ZoneInfo
 from datetime import datetime
 from main import *
 import locale
+
+python_version = sys.version.split(" ")[0]
+
+if "3.8" in python_version:
+    from backports.zoneinfo import ZoneInfo
+else:
+    from zoneinfo import ZoneInfo
 
 # symbol = sys.argv[1]
 symbol = "BTC"
