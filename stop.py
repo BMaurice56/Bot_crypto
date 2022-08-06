@@ -2,6 +2,7 @@
 # Utile sur le serveur vps
 from bot_discord import commande_bot_terminale
 from subprocess import Popen, PIPE
+import os
 
 proc = Popen(commande_bot_terminale, shell=True, stdout=PIPE, stderr=PIPE)
 
