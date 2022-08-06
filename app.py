@@ -31,9 +31,12 @@ ancienne_date = datetime.strptime(etat[0], "%A %d %B %Y %H:%M:%S")
 
 ancienne_date = int(ancienne_date.strftime("%s"))
 
-date = int(datetime.now(tz=ZoneInfo("Europe/Paris")).strftime("%s"))
+date = datetime.now(tz=ZoneInfo("Europe/Paris")
+                    ).strftime("%A %d %B %Y %H:%M:%S")
 
-print(ancienne_date, date, (date - ancienne_date))
+date = datetime.strptime(date, "%A %d %B %Y %H:%M:%S")
+
+date = int(date.strftime("%s"))
 
 # Si il y a bien eu 1 heure d'attente, on peut passer au prédiction
 # Sinon on attend jusqu'a l'heure prévu
