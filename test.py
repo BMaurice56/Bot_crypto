@@ -12,6 +12,6 @@ ancienne_date = datetime.strptime(etat[0], "%A %d %B %Y %H:%M:%S")
 
 ancienne_date = int(ancienne_date.strftime("%s"))
 
-date = int(datetime.now(tz=ZoneInfo("Europe/Paris")))
+date = datetime.now(tz=ZoneInfo("Europe/Paris"))
 
 print(date, ancienne_date)
