@@ -1,4 +1,5 @@
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from main import *
 import locale
 
@@ -29,7 +30,7 @@ while True:
     divergence = False
     achat = False
 
-    date = datetime.now().strftime("%A %d %B %Y %H:%M:%S")
+    date = datetime.now(tz=ZoneInfo("Europe/Paris")).strftime("%A %d %B %Y %H:%M:%S")
 
     datas = all_data(symbol)
 
