@@ -14,7 +14,7 @@ symbol = "BTC"
 symbol_up_kucoin = "BTC3L-USDT"
 symbol_down_kucoin = "BTC3S-USDT"
 dodo = 60*59 + 55
-dodo_remonter_stoploss = 29
+dodo_remonter_stoploss = 29.5
 
 loaded_model, loaded_model_up, loaded_model_down = chargement_modele(symbol)
 
@@ -28,6 +28,28 @@ divergence_stoploss = False
 p = Process(target=update_id_stoploss)
 p.start()
 
+# On récupère l'état précédent du bot (Heure et divergence)
+etat = etat_bot(lecture).split(";")
+
+# Conversion de l'ancienne date sauvegarder et de la date actuelle en seconde
+ancienne_date = datetime.strptime(etat[0], "%A %d %B %Y %H:%M:%S")
+
+ancienne_date = int(ancienne_date.strftime("%s"))
+
+date = int(datetime.now(tz=ZoneInfo("Europe/Paris")).strftime("%s"))
+
+# Si il y a bien eu 1 heure d'attente, on peut passer au prédiction
+# Sinon on attend jusqu'a l'heure prévu
+if date - ancienne_date > 3600:
+    pass
+else:
+    if etat[-1] == "True":
+        divergence_stoploss = True
+
+    temps_dodo = 3600 - (date - ancienne_date)
+    sleep(temps_dodo)
+
+
 while True:
     argent = montant_compte("USDT")
     btcup = montant_compte("BTC3L")
@@ -36,7 +58,8 @@ while True:
     divergence = False
     achat = False
 
-    date = datetime.now(tz=ZoneInfo("Europe/Paris")).strftime("%A %d %B %Y %H:%M:%S")
+    date = datetime.now(tz=ZoneInfo("Europe/Paris")
+                        ).strftime("%A %d %B %Y %H:%M:%S")
 
     datas = all_data(symbol)
 
@@ -113,6 +136,12 @@ while True:
     else:
         divergence = True
         divergence_stoploss = True
+
+    # On enregistre l'état du bot (dernière heure et divergence)
+    # Pour que si le bot est arrêté et repart, qu'il soit au courant
+    # S'il doit attendre ou non et si on sort d'une divergence
+    state = date + ";" + str(divergence_stoploss)
+    etat_bot("écriture", state)
 
     # Après le passage de l'achat/vente, on regarde combien on a au final
     # Et après on lance la fonction qui remonte le stoploss

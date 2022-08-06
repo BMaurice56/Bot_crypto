@@ -111,3 +111,28 @@ def chargement_modele(symbol):
         loss='mean_squared_logarithmic_error', optimizer='adam')
 
     return loaded_model, loaded_model_up, loaded_model_down
+
+
+def etat_bot(lecture_ecriture: str, to_write: Optional[str] = None) -> str or None:
+    """
+    Fonction qui écrit ou lit dans un fichier l'état du bot (prédiction, heure)
+    Pour que quand le bot démarre, sait s'il doit attendre l'heure et si on sors d'une divergence
+    Ex param :
+    lecture_ecriture : lecture ou écriture
+    """
+
+    if lecture_ecriture == "lecture":
+        fichier = open("etat_bot.txt", "r")
+
+        elt = fichier.read()
+
+        fichier.close()
+
+        return elt
+
+    elif lecture_ecriture == "écriture":
+        fichier = open("etat_bot.txt", "w")
+
+        fichier.write(to_write)
+
+        fichier.close()
