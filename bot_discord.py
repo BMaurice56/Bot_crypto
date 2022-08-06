@@ -207,6 +207,8 @@ class Botcrypto(commands.Bot):
 
             processus = sortie.decode('utf-8').split("\n")[1:-2]
 
+            message_status_général(str(processus))
+
             if processus != []:
                 await ctx.send("Bot crypto lancé !")
             else:

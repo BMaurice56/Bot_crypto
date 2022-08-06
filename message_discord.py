@@ -33,7 +33,7 @@ def message_prise_position(message: str, prise_position: bool) -> None:
     webhook.execute()
 
 
-def message_webhook_état_bot(message: str) -> None:
+def message_état_bot(message: str) -> None:
     """
     Fonction qui envoie un message au serveur discord au travers d'un webhook sur le canal éta bot
     Envoie l'état en cours du bot
