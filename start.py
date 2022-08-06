@@ -9,5 +9,4 @@ os.system("git pull")
 
 sleep(3)
 
-#Popen("nohup python3 bot_discord.py >/dev/null 2>&1", shell=True)
-Popen("python3 bot_discord.py >/dev/null", shell=True)
+Popen("python3 bot_discord.py >/dev/null 2>&1", shell=True)
