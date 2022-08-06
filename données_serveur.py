@@ -547,8 +547,8 @@ def remonter_stoploss(symbol: str, dodo: int, stopP: float, Pr: float) -> None:
     Ex paramètre :
     symbol : BTC3S-USDT
     """
-    # On execute 119 fois car il y a du décalage avec les requêtes et donc pour être au plus près de l'heure de pose
-    for i in range(119):
+    # On execute 120 fois car 30 secondes * 120 = 60 minutes
+    for i in range(120):
         stoploss = presence_position("stoploss", symbol)
 
         # S'il y a toujours le stoploss, on vérifie si celui-ci a les bons prix
