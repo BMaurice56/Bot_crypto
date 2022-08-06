@@ -29,7 +29,7 @@ p = Process(target=update_id_stoploss)
 p.start()
 
 # On récupère l'état précédent du bot (Heure et divergence)
-etat = etat_bot(lecture).split(";")
+etat = etat_bot("lecture").split(";")
 
 # Conversion de l'ancienne date sauvegarder et de la date actuelle en seconde
 ancienne_date = datetime.strptime(etat[0], "%A %d %B %Y %H:%M:%S")
