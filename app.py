@@ -12,7 +12,7 @@ dodo_remonter_stoploss = 29
 loaded_model, loaded_model_up, loaded_model_down = chargement_modele(symbol)
 
 # Définition de la zone pour l'horodatage car la date était en anglais avec le module datetime
-locale.setlocale(locale.LC_TIME, '')
+locale.setlocale(locale.LC_ALL, 'fr_FR.UTF-8')
 
 # Variable gloable qui permet de savoir s'il y a eu une divergence ou non juste avant
 divergence_stoploss = False
