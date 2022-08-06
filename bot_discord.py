@@ -98,6 +98,7 @@ class Botcrypto(commands.Bot):
             """
             Fonction qui affiche le prix en temps réel de la crypto
             """
+            """
             await ctx.send("Quelles crypto ? BTCEUR ? ETHEUR ? BATBUSD ?")
 
             # Vérifie que le message n'est pas celui envoyé par le bot
@@ -109,8 +110,10 @@ class Botcrypto(commands.Bot):
 
             # Puis on vérifie que la cryptomonnaie existe bien
             crypto = msg.content
+            """
+            crypto = "BTC-USDT"
             if crypto in listes_crypto:
-                await ctx.send(f"Le prix de la crypto est de : {prix_temps_reel(crypto)}")
+                await ctx.send(f"Le prix de la crypto est de : {prix_temps_reel_kucoin(crypto)}")
             else:
                 await ctx.send("La cryptomonnaie n'existe pas")
 
