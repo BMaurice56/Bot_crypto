@@ -40,10 +40,8 @@ date = int(datetime.now(tz=ZoneInfo("Europe/Paris")).strftime("%s"))
 
 # Si il y a bien eu 1 heure d'attente, on peut passer au prédiction
 # Sinon on attend jusqu'a l'heure prévu
-if date - ancienne_date > 3600:
-    pass
-else:
-    if etat[-1] == "True":
+if date - ancienne_date < 3600:
+    if etat[1] == "True":
         divergence_stoploss = True
 
     temps_dodo = 3600 - (date - ancienne_date)
