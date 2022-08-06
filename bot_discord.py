@@ -46,7 +46,7 @@ class Botcrypto(commands.Bot):
 
             sortie, autre = proc.communicate()
 
-            processus = sortie.decode('utf-8').split("\n")[1:-1]
+            processus = sortie.decode('utf-8').split("\n")[2:-1]
 
             for elt in processus:
                 os.system(f"kill -9 {elt}")
