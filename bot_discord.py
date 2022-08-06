@@ -277,7 +277,7 @@ class Botcrypto(commands.Bot):
             Fonction qui redemarre le bot discord et met à jour ses fichiers
             """
 
-            Popen("python3 redemarrage.py >/dev/null 2>&1", shell=True)
+            Popen("nohup python3 redemarrage.py >/dev/null 2>&1", shell=True)
 
     async def on_ready(self):
         """
