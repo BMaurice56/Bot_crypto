@@ -205,7 +205,7 @@ class Botcrypto(commands.Bot):
 
             sortie, autre = proc.communicate()
 
-            processus = sortie.decode('utf-8').split("\n")[1:-2]
+            processus = sortie.decode('utf-8').split("\n")
 
             message_status_général(str(processus))
 
