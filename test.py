@@ -1,6 +1,6 @@
 from main import *
 from datetime import datetime
-from backports.zoneinfo import ZoneInfo
+from zoneinfo import ZoneInfo
 import locale
 
 locale.setlocale(locale.LC_ALL, 'fr_FR.UTF-8')
@@ -12,7 +12,7 @@ ancienne_date = datetime.strptime(etat[0], "%A %d %B %Y %H:%M:%S")
 
 ancienne_date = int(ancienne_date.strftime("%s"))
 
-date = datetime.strptime(str(datetime.now(tz=ZoneInfo("Europe/Paris"))), "%Y-%m-%d %H:%M:%S")
+date = datetime.now(tz=ZoneInfo("Europe/Paris"))
 
 date = date.strftime("%s")
 
