@@ -11,6 +11,9 @@ symbol_down_kucoin = "BTC3S-USDT"
 dodo = 60*59 + 55
 dodo_remonter_stoploss = 29.4
 
+stopPrice_divregence = 0.9950
+price_divergence = 0.9925
+
 loaded_model, loaded_model_up, loaded_model_down = chargement_modele(symbol)
 
 # Définition de la zone pour l'horodatage car la date était en anglais avec le module datetime
@@ -153,11 +156,11 @@ while True:
     else:
         if btcup > 30:
             remonter_stoploss(symbol_up_kucoin,
-                              dodo_remonter_stoploss, 0.99, 0.9875)
+                              dodo_remonter_stoploss, stopPrice_divregence, price_divergence)
 
         elif btcdown > 2:
             remonter_stoploss(symbol_down_kucoin,
-                              dodo_remonter_stoploss, 0.99, 0.9875)
+                              dodo_remonter_stoploss, stopPrice_divregence, price_divergence)
 
         else:
             sleep(dodo)
