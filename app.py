@@ -92,7 +92,7 @@ while True:
 
     if prix < prediction and prix_up < prediction_up and prix_down > prediction_down and prediction_down < 0.3 and prediction_up - prix_up >= 0.05:
         if btcup > 30:
-            continuation_prediction(symbol_up_kucoin)
+            continuation_prediction(symbol_up_kucoin, divergence_stoploss)
 
         elif btcdown > 2:
             # Vente de la crypto descendante
@@ -110,7 +110,7 @@ while True:
 
     elif prix > prediction and prix_up > prediction_up and prix_down < prediction_down:
         if btcdown > 2:
-            continuation_prediction(symbol_down_kucoin)
+            continuation_prediction(symbol_down_kucoin, divergence_stoploss)
 
         elif btcup > 30:
             # Vente de la crypto montant
