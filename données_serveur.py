@@ -249,7 +249,7 @@ kucoin_api_secret = os.getenv("KUCOIN_API_SECRET")
 kucoin_phrase_securite = os.getenv("KUCOIN_PHRASE_SECURITE")
 
 
-def arrondi(valeur: float or str, zero_apres_virgule=None) -> float:
+def arrondi(valeur: float or str, zero_apres_virgule: Optional[float] = None) -> float:
     """
     Fonction qui prend en argument un décimal et renvoie ce décimal arrondi à 0,0001
     """
@@ -263,23 +263,24 @@ def arrondi(valeur: float or str, zero_apres_virgule=None) -> float:
     return float(val.quantize(Decimal('0.0001'), ROUND_DOWN))
 
 
-def headers(methode: str, endpoint: str, param=None) -> dict:
+def headers(methode: str, endpoint: str, param: Optional[str] = None) -> dict:
     """
     Fonction qui fait l'entête de la requête http
     Ex paramètre :
     methode : 'GET'
     endpoint : 'api/v1/orders'
+    param : none ou dict sous forme json.dumps() -> str
     """
-    now = int(time.time() * 1000)
+    now = str(int(time.time() * 1000))
 
     if methode == 'GET':
-        str_to_sign = str(now) + 'GET' + endpoint
+        str_to_sign = now + 'GET' + endpoint
 
     elif methode == 'POST':
-        str_to_sign = str(now) + 'POST' + endpoint + param
+        str_to_sign = now + 'POST' + endpoint + param
 
     elif methode == 'DELETE':
-        str_to_sign = str(now) + 'DELETE' + endpoint
+        str_to_sign = now + 'DELETE' + endpoint
 
     signature = base64.b64encode(
         hmac.new(kucoin_api_secret.encode('utf-8'), str_to_sign.encode('utf-8'), hashlib.sha256).digest())
@@ -289,7 +290,7 @@ def headers(methode: str, endpoint: str, param=None) -> dict:
 
     headers = {
         "KC-API-SIGN": signature,
-        "KC-API-TIMESTAMP": str(now),
+        "KC-API-TIMESTAMP": now,
         "KC-API-KEY": kucoin_api_key,
         "KC-API-PASSPHRASE": passphrase,
         "KC-API-KEY-VERSION": "2",
@@ -454,7 +455,7 @@ def prise_position(info: dict) -> str:
 
 # @connexion
 @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
-def presence_position(type_ordre: str, symbol: str) -> None or dict:
+def presence_position(type_ordre: str, symbol: str) -> dict or None:
     """
     Fonction qui renvoie les positions en cours sur une pair de crypto précis
     Ex paramètre :
@@ -719,8 +720,6 @@ def continuation_prediction(symbol: str) -> None:
         if prix_position < nouveau_prix:
             suppression_ordre("market", market['id'])
             création_stoploss(symbol)
-        else:
-            pass
 
     # Sinon s'il y a un stoploss et un ordre market
     # on regarde lequel on garde
@@ -729,9 +728,6 @@ def continuation_prediction(symbol: str) -> None:
             suppression_ordre("market", market['id'])
         else:
             suppression_ordre("stoploss")
-
-    else:
-        pass
 
 
 # @connexion
