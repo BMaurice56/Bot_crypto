@@ -695,69 +695,91 @@ def achat_vente(montant: int or float, symbol: str, achat_ou_vente: bool) -> Non
 
 # @connexion
 @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
-def continuation_prediction(symbol: str) -> None:
+def continuation_prediction(symbol: str, divergence: bool) -> None:
     """
     Fonction qui vérifie les stoploss lorsque que l'on achète pas et que l'on continue a attendre que ça monte ou descende
     Ex param :
     symbol : BTC3L-USDT
+    divergence : True ou False
     """
     # On vérifie si il y a présence ou non d'ordre
     stoploss = presence_position("stoploss", symbol)
     market = presence_position("market", symbol)
 
-    # S'il y en aucun, on place un stoploss par sécurité
-    if stoploss == None and market == None:
-        création_stoploss(symbol)
+    if divergence == True:
+        global divergence_stoploss
+        divergence_stoploss = False
 
-    # Sinon s'il y a qu'un ordre limite market, on check si lorsqu'on place un stoploss
-    # si le prix du stoploss est supérieur ou non à l'ordre limite
-    elif stoploss == None and market != None:
-        prix_position = float(market['price'])
+        if stoploss != None:
+            # On récupère l'ancien stopPrice et le price
+            ancien_prix_stoploss = float(stoploss['stopPrice'])
+            ancien_prix = float(stoploss['price'])
 
-        nouveau_prix = arrondi(
-            prix_temps_reel_kucoin(symbol) * price)
+            # On calcule le nouveau stopPrice et price avec le stopPrice et price par défaut hors divergence
+            # Le prix qu'on aurait eu si on avait utiliser le stopPrice et price par défaut (0.97 et 0.9675)
+            nouveau_stopPrice = 97 * ancien_prix_stoploss / 99
+            nouveau_prix = 96.75 * ancien_prix / 98.75
 
-        if prix_position < nouveau_prix:
-            suppression_ordre("market", market['id'])
-            création_stoploss(symbol)
+            # On calcule en pourcentage le nouveau stopPrice et price selon le prix en cour de la crypto
+            # Puis on divise par 100 pour l'avoir en décimale
+            nv_stoprice_pourcentage = nouveau_stopPrice * \
+                100 / prix_temps_reel_kucoin(symbol) / 100
+            nv_prix_pourcentage = nouveau_prix * 100 / \
+                prix_temps_reel_kucoin(symbol) / 100
 
-    # Sinon s'il y a un stoploss et un ordre market
-    # on regarde lequel on garde
-    elif stoploss != None and market != None:
-        if float(stoploss['price']) >= float(market['price']):
-            suppression_ordre("market", market['id'])
+            # Si le prix a augmenté et donc le stopPrice calculé est plus faible
+            # Alors on place un stoploss directement avec les bonnes valeurs
+            if nv_stoprice_pourcentage <= stopPrice:
+                suppression_ordre("stoploss")
+                création_stoploss(symbol, stopPrice, price)
+            # Sinon on place le stoploss avec les valeurs calculé pour compenser la baisse du prix
+            # Mais pour garder le même prix final qu'on aurait eu avec le stopPrice et price de base
+            else:
+                suppression_ordre("stoploss")
+                création_stoploss(
+                    symbol, nv_stoprice_pourcentage, nv_prix_pourcentage)
+
         else:
-            suppression_ordre("stoploss")
+            # Comme on a que le price, on le récupère et calcul le stopPrice à partir de celui-ci
+            ancien_prix = float(market['price'])
 
+            ancien_prix_stoploss = 99 * ancien_prix / 98.75
 
-# @connexion
-@retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
-def stoploss_sortie_divergence(symbol: str) -> None:
-    """
-    Fonction qui remet un nouveau stoploss si on passe d'un achat à une divergence puis une prédiction normale
-    Ex param :
-    symbol : BTC3S-USDT
-    """
-    # On repasse la variable a False car nous ne sommes plus dans un divergence
-    global divergence_stoploss
-    divergence_stoploss = False
+            # On calcule le nouveau stopPrice et price avec le stopPrice et price par défaut hors divergence
+            # Le prix qu'on aurait eu si on avait utiliser le stopPrice et price par défaut (0.97 et 0.9675)
+            nouveau_stopPrice = 97 * ancien_prix_stoploss / 99
+            nouveau_prix = 96.75 * ancien_prix / 98.75
 
-    # On regarde si le stoploss est la ou non
-    # Et donc s'il n'est plus la la présence de l'ordre en market
-    st = presence_position("stoploss", symbol)
-    market = presence_position("market", symbol)
+            # On calcule en pourcentage le nouveau stopPrice et price selon le prix en cour de la crypto
+            # Puis on divise par 100 pour l'avoir en décimale
+            nv_stoprice_pourcentage = nouveau_stopPrice * \
+                100 / prix_temps_reel_kucoin(symbol) / 100
+            nv_prix_pourcentage = nouveau_prix * 100 / \
+                prix_temps_reel_kucoin(symbol) / 100
 
-    # Si le stoploss est toujours la, on remet le nouveau avec les bons prix
-    if st != None and market == None:
-        suppression_ordre("stoploss")
+            # Si le prix a augmenté et donc le stopPrice calculé est plus faible
+            # Alors on place un stoploss directement avec les bonnes valeurs
+            if nv_stoprice_pourcentage <= stopPrice:
+                suppression_ordre("market", market['id'])
+                création_stoploss(symbol, stopPrice, price)
+            # Sinon on place le stoploss avec les valeurs calculé pour compenser la baisse du prix
+            # Mais pour garder le même prix final qu'on aurait eu avec le stopPrice et price de base
+            else:
+                création_stoploss(
+                    symbol, nv_stoprice_pourcentage, nv_prix_pourcentage)
 
-        création_stoploss(symbol, stopPrice, price)
+    else:
+        # Sinon s'il y a qu'un ordre limite market, on check si lorsqu'on place un stoploss
+        # si le prix du stoploss est supérieur ou non à l'ordre limite
+        if market != None:
+            prix_position = float(market['price'])
 
-    # Sinon on vire l'ordre placé en market et on met un nouveau stoploss
-    elif market != None and st == None:
-        suppression_ordre("market", market['id'])
+            nouveau_prix = arrondi(
+                prix_temps_reel_kucoin(symbol) * price)
 
-        création_stoploss(symbol, stopPrice, price)
+            if prix_position < nouveau_prix:
+                suppression_ordre("market", market['id'])
+                création_stoploss(symbol, stopPrice, price)
 
 
 # @connexion
@@ -803,4 +825,4 @@ def update_id_stoploss() -> None:
                 suppression_ordre("stoploss_manuel", st_3L['id'])
                 écriture_fichier()
 
-        sleep(60)
+        sleep(30)

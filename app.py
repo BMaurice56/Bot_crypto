@@ -9,7 +9,7 @@ symbol = "BTC"
 symbol_up_kucoin = "BTC3L-USDT"
 symbol_down_kucoin = "BTC3S-USDT"
 dodo = 60*59 + 55
-dodo_remonter_stoploss = 29.5
+dodo_remonter_stoploss = 29.4
 
 loaded_model, loaded_model_up, loaded_model_down = chargement_modele(symbol)
 
@@ -58,7 +58,6 @@ while True:
     btcdown = montant_compte("BTC3S")
 
     divergence = False
-    achat = False
 
     date = datetime.now(tz=ZoneInfo("Europe/Paris")
                         ).strftime("%A %d %B %Y %H:%M:%S")
@@ -102,14 +101,10 @@ while True:
             # Achat de la crypto montante
             achat_vente(argent, symbol_up_kucoin, True)
 
-            achat = True
-
             divergence_stoploss = False
 
         else:
             achat_vente(argent, symbol_up_kucoin, True)
-
-            achat = True
 
             divergence_stoploss = False
 
@@ -124,14 +119,10 @@ while True:
             # Achat de la crypto descendante
             achat_vente(argent, symbol_down_kucoin, True)
 
-            achat = True
-
             divergence_stoploss = False
 
         else:
             achat_vente(argent, symbol_down_kucoin, True)
-
-            achat = True
 
             divergence_stoploss = False
 
@@ -152,20 +143,10 @@ while True:
 
     if divergence == False:
         if btcup > 30:
-            # S'il n'y a pas eu d'achat et divergence stoploss est a True,
-            # Alors on sort d'une divergence dont l'achat a été fait avant
-            if achat == False and divergence_stoploss == True:
-                stoploss_sortie_divergence(symbol_up_kucoin)
-
             remonter_stoploss(symbol_up_kucoin,
                               dodo_remonter_stoploss, stopPrice, price)
 
         elif btcdown > 2:
-            # S'il n'y a pas eu d'achat et divergence stoploss est a True,
-            # Alors on sort d'une divergence dont l'achat a été fait avant
-            if achat == False and divergence_stoploss == True:
-                stoploss_sortie_divergence(symbol_down_kucoin)
-
             remonter_stoploss(symbol_down_kucoin,
                               dodo_remonter_stoploss, stopPrice, price)
 
