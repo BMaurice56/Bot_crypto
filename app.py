@@ -10,6 +10,7 @@ symbol_up_kucoin = "BTC3L-USDT"
 symbol_down_kucoin = "BTC3S-USDT"
 dodo = 60*59 + 55
 dodo_remonter_stoploss = 29.4
+nb_boucle = 120
 
 stopPrice_divregence = 0.9950
 price_divergence = 0.9925
@@ -52,7 +53,18 @@ if date - ancienne_date < 3600:
         divergence_stoploss = True
 
     temps_dodo = 3600 - (date - ancienne_date)
-    sleep(temps_dodo)
+
+    boucle = int(temps_dodo / dodo_remonter_stoploss)
+
+    btcup = montant_compte("BTC3L")
+
+    if btcup > 30:
+        remonter_stoploss(symbol_up_kucoin, boucle,
+                          dodo_remonter_stoploss, stopPrice, price)
+
+    else:
+        remonter_stoploss(symbol_down_kucoin, boucle,
+                          dodo_remonter_stoploss, stopPrice, price)
 
 
 while True:
@@ -146,20 +158,20 @@ while True:
 
     if divergence == False:
         if btcup > 30:
-            remonter_stoploss(symbol_up_kucoin,
+            remonter_stoploss(symbol_up_kucoin, nb_boucle,
                               dodo_remonter_stoploss, stopPrice, price)
 
         elif btcdown > 2:
-            remonter_stoploss(symbol_down_kucoin,
+            remonter_stoploss(symbol_down_kucoin, nb_boucle,
                               dodo_remonter_stoploss, stopPrice, price)
 
     else:
         if btcup > 30:
-            remonter_stoploss(symbol_up_kucoin,
+            remonter_stoploss(symbol_up_kucoin, nb_boucle,
                               dodo_remonter_stoploss, stopPrice_divregence, price_divergence)
 
         elif btcdown > 2:
-            remonter_stoploss(symbol_down_kucoin,
+            remonter_stoploss(symbol_down_kucoin, nb_boucle,
                               dodo_remonter_stoploss, stopPrice_divregence, price_divergence)
 
         else:
