@@ -542,14 +542,14 @@ def information_ordre(id_ordre: str) -> dict:
 
 # @connexion
 @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
-def remonter_stoploss(symbol: str, dodo: int, stopP: float, Pr: float) -> None:
+def remonter_stoploss(symbol: str, nb_boucle: int, dodo: int, stopP: float, Pr: float) -> None:
     """
     Fonction qui remonte le stoploss s'il y a eu une augmentation par rapport au précédent stoploss
     Ex paramètre :
     symbol : BTC3S-USDT
     """
     # On execute 120 fois car 30 secondes * 120 = 60 minutes
-    for i in range(120):
+    for i in range(nb_boucle):
         stoploss = presence_position("stoploss", symbol)
 
         # S'il y a toujours le stoploss, on vérifie si celui-ci a les bons prix
@@ -678,7 +678,7 @@ def achat_vente(montant: int or float, symbol: str, achat_ou_vente: bool) -> Non
     prise_position(info)
 
     # On récupère le prix en temps réel de la crypto que l'on vient d'acheter
-    prix = prix_temps_reel_kucoin(symbol)
+    prix = prix_temps_reel_kucoin("BTC-USDT")
 
     # Puis on vient envoyer un message sur le discord
     if achat_ou_vente == False:
