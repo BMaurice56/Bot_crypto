@@ -689,7 +689,7 @@ def achat_vente(montant: int or float, symbol: str, achat_ou_vente: bool) -> Non
         message_prise_position(msg, False)
 
     else:
-        msg = f"Prise de position avec {montant} usdt au prix de {prix}$, il reste {montant_compte('USDT')} usdt"
+        msg = f"Prise de position avec {montant} usdt au prix de {prix}$, il reste {montant_compte('USDT')} usdt, crypto : {symbol}"
         message_prise_position(msg, True)
 
 

@@ -113,6 +113,8 @@ while True:
             # Vente de la crypto descendante
             achat_vente(btcdown, symbol_down_kucoin, False)
 
+            sleep(1)
+
             # Achat de la crypto montante
             achat_vente(argent, symbol_up_kucoin, True)
 
@@ -131,6 +133,8 @@ while True:
         elif btcup > 30:
             # Vente de la crypto montant
             achat_vente(btcup, symbol_up_kucoin, False)
+
+            sleep(1)
 
             # Achat de la crypto descendante
             achat_vente(argent, symbol_down_kucoin, True)
