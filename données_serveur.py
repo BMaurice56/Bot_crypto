@@ -444,8 +444,8 @@ def prise_position(info: dict) -> str:
 
     # S'il on vient d'acheter, on place un stoploss
     if info["achat_vente"] == True:
-        # On attend 3 seconde pour être sur que l'achat a bient été effectué
-        sleep(3)
+        # On attend 1 seconde pour être sur que l'achat a bient été effectué
+        sleep(1)
 
         création_stoploss(info["symbol"], stopPrice, price)
 
