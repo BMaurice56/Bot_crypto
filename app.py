@@ -105,7 +105,7 @@ while True:
 
     message_état_bot(msg)
 
-    if prix < prediction and prix_up < prediction_up and prix_down > prediction_down and prediction_down < 0.3 and prediction_up - prix_up >= 0.05:
+    if prix < prediction and prix_up < prediction_up and prix_down > prediction_down and prediction_down < 0.3 and prediction_up - prix_up >= 0.045:
         if btcup > 30:
             continuation_prediction(symbol_up_kucoin, divergence_stoploss)
 
@@ -113,7 +113,7 @@ while True:
             # Vente de la crypto descendante
             achat_vente(btcdown, symbol_down_kucoin, False)
 
-            sleep(1)
+            sleep(3)
 
             # Achat de la crypto montante
             achat_vente(argent, symbol_up_kucoin, True)
@@ -134,7 +134,7 @@ while True:
             # Vente de la crypto montant
             achat_vente(btcup, symbol_up_kucoin, False)
 
-            sleep(1)
+            sleep(3)
 
             # Achat de la crypto descendante
             achat_vente(argent, symbol_down_kucoin, True)

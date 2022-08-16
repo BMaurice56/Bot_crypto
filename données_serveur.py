@@ -442,11 +442,11 @@ def prise_position(info: dict) -> str:
     # On prend la position sur le serveur
     prise_position = requests.post(api + endpoint, headers=entête, data=param)
 
-    # On attend 1 seconde pour être sur que l'achat a bient été effectué
-    sleep(1)
-
     # S'il on vient d'acheter, on place un stoploss
     if info["achat_vente"] == True:
+        # On attend 3 seconde pour être sur que l'achat a bient été effectué
+        sleep(3)
+
         création_stoploss(info["symbol"], stopPrice, price)
 
     # Puis on renvoie l'id de l'ordre d'achat placé pour le message sur discord
