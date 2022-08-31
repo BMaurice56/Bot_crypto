@@ -125,8 +125,7 @@ while True:
 
             divergence_stoploss = False
 
-    # elif prix > prediction and prix_up > prediction_up and prix_down < prediction_down:
-    else:
+    elif prix > prediction and prix_up > prediction_up and prix_down < prediction_down:
         if btcdown > 2:
             continuation_prediction(symbol_down_kucoin, divergence_stoploss)
 
@@ -145,11 +144,11 @@ while True:
             achat_vente(argent, symbol_down_kucoin, True)
 
             divergence_stoploss = False
-    """
+
     else:
         divergence = True
         divergence_stoploss = True
-    """
+
     # On enregistre l'état du bot (dernière heure et divergence)
     # Pour que si le bot est arrêté et repart, qu'il soit au courant
     # S'il doit attendre ou non et si on sort d'une divergence
