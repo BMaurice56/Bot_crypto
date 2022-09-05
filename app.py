@@ -105,6 +105,7 @@ while True:
 
     message_état_bot(msg)
 
+    """
     if prix < prediction and prix_up < prediction_up and prix_down > prediction_down and prediction_down < 0.3 and prediction_up - prix_up >= 0.045:
         if btcup > 30:
             continuation_prediction(symbol_up_kucoin, divergence_stoploss)
@@ -180,3 +181,7 @@ while True:
 
         else:
             sleep(dodo)
+
+    """
+
+    sleep(dodo)
