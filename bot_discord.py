@@ -26,7 +26,6 @@ class Botcrypto(commands.Bot):
                 runpy.run_path("app.py")
             except:
                 erreur = traceback.format_exc()
-                message_status_général("grosse bite")
                 if len(erreur) > 2000:
                     while len(erreur) >= 2000:
                         message_status_général(erreur[:2000])
@@ -35,10 +34,9 @@ class Botcrypto(commands.Bot):
                         message_status_général(erreur)
                 else:
                     message_status_général(erreur)
-                
-                message_status_général("grosse bite 2")
+
+                message_status_général("Le bot s'est arrêté !")
                 arret_bot()
-                message_status_général("Le bot s'est arrêté")
 
         def arret_bot():
             """
