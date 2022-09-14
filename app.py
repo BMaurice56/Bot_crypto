@@ -3,7 +3,6 @@ from datetime import datetime
 from main import *
 import locale
 
-raise Exception("tototototototototo")
 # symbol = sys.argv[1]
 symbol = "BTC"
 symbol_up_kucoin = "BTC3L-USDT"
