@@ -889,7 +889,7 @@ def ordre_vente_seuil(symbol: str) -> None:
     if symbol == "BTC3L-USDT":
         zero_apres_virgule = '0.000001'
 
-    nv_prix = arrondi(str(prix * 1.0375))
+    nv_prix = arrondi(str(prix * 1.0375), zero_apres_virgule)
 
     # Besoin d'un id pour l'achat des cryptos
     id_position = randint(0, 100_000_000)
