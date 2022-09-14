@@ -450,8 +450,6 @@ def prise_position(info: dict) -> str:
         création_stoploss(info["symbol"], stopPrice, price)
         ordre_vente_seuil(info["symbol"])
 
-    # Puis on renvoie l'id de l'ordre d'achat placé pour le message sur discord
-    return json.loads(prise_position.content.decode('utf-8'))["data"]["orderId"]
 
 
 # @connexion
