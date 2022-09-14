@@ -27,6 +27,9 @@ divergence_stoploss = False
 p = Process(target=update_id_stoploss)
 p.start()
 
+p2 = Process(target=update_id_ordre_limite)
+p2.start()
+
 # On récupère l'état précédent du bot (Heure et divergence)
 etat = etat_bot("lecture").split(";")
 
@@ -53,7 +56,8 @@ if date - ancienne_date < 3600:
         divergence_stoploss = True
 
     temps_dodo = 3600 - (date - ancienne_date)
-
+    sleep(temps_dodo)
+    """
     boucle = int(temps_dodo / dodo_remonter_stoploss)
 
     btcup = montant_compte("BTC3L")
@@ -65,6 +69,7 @@ if date - ancienne_date < 3600:
     else:
         remonter_stoploss(symbol_down_kucoin, boucle,
                           dodo_remonter_stoploss, stopPrice, price)
+    """
 
 
 while True:
@@ -105,7 +110,6 @@ while True:
 
     message_état_bot(msg)
 
-    """
     if prix < prediction and prix_up < prediction_up and prix_down > prediction_down and prediction_down < 0.3 and prediction_up - prix_up >= 0.045:
         if btcup > 30:
             continuation_prediction(symbol_up_kucoin, divergence_stoploss)
@@ -156,11 +160,11 @@ while True:
     state = date + ";" + str(divergence_stoploss)
     etat_bot("écriture", state)
 
+    """
     # Après le passage de l'achat/vente, on regarde combien on a au final
     # Et après on lance la fonction qui remonte le stoploss
     btcup = montant_compte("BTC3L")
     btcdown = montant_compte("BTC3S")
-
     if divergence == False:
         if btcup > 30:
             remonter_stoploss(symbol_up_kucoin, nb_boucle,

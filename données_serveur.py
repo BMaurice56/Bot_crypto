@@ -251,7 +251,7 @@ kucoin_phrase_securite = os.getenv("KUCOIN_PHRASE_SECURITE")
 
 def arrondi(valeur: float or str, zero_apres_virgule: Optional[float] = None) -> float:
     """
-    Fonction qui prend en argument un décimal et renvoie ce décimal arrondi à 0,0001
+    Fonction qui prend en argument un décimal et renvoie ce décimal arrondi à 0,00001
     """
     # On transforme la valeur reçu en objet décimal
     val = Decimal(str(valeur))
@@ -260,7 +260,7 @@ def arrondi(valeur: float or str, zero_apres_virgule: Optional[float] = None) ->
     # Puis on arrondi vers le bas le nombre que l'on renvoit sous forme d'un float
     if zero_apres_virgule != None:
         return float(val.quantize(Decimal(str(zero_apres_virgule)), ROUND_DOWN))
-    return float(val.quantize(Decimal('0.0001'), ROUND_DOWN))
+    return float(val.quantize(Decimal('0.00001'), ROUND_DOWN))
 
 
 def headers(methode: str, endpoint: str, param: Optional[str] = None) -> dict:
@@ -300,13 +300,13 @@ def headers(methode: str, endpoint: str, param: Optional[str] = None) -> dict:
     return headers
 
 
-def lecture_fichier() -> str or None:
+def lecture_fichier(nom_fichier: str) -> str or None:
     """
     Fonction qui lit ce qu'il y a dans le fichier 
     Et renvoie le contenu ou None s'il y a rien
     """
 
-    fichier = open("stoploss.txt", "r")
+    fichier = open(f"{nom_fichier}.txt", "r")
 
     elt = fichier.read()
 
@@ -317,14 +317,14 @@ def lecture_fichier() -> str or None:
     return elt
 
 
-def écriture_fichier(str_to_write: Optional[str] = None) -> None:
+def écriture_fichier(nom_fichier: str, str_to_write: Optional[str] = None) -> None:
     """
     Fonction qui écrit ou écrase le fichier
     Ex param :
     str_to_write : id de l'ordre
     """
 
-    fichier = open("stoploss.txt", "w")
+    fichier = open(f"{nom_fichier}.txt", "w")
 
     if str_to_write != None:
         fichier.write(str_to_write)
@@ -448,6 +448,7 @@ def prise_position(info: dict) -> str:
         sleep(1)
 
         création_stoploss(info["symbol"], stopPrice, price)
+        ordre_vente_seuil(info["symbol"])
 
     # Puis on renvoie l'id de l'ordre d'achat placé pour le message sur discord
     return json.loads(prise_position.content.decode('utf-8'))["data"]["orderId"]
@@ -622,7 +623,7 @@ def création_stoploss(symbol: str, stopP: float, Pr: float) -> None:
     message_état_bot(
         f"{str(prise_position)}, {str(prise_position.content.decode('utf-8'))}, stopPrice : {stopP}, price : {Pr}")
 
-    écriture_fichier(json.loads(
+    écriture_fichier("stoploss", json.loads(
         prise_position.content.decode('utf-8'))["data"]["orderId"])
 
 
@@ -638,11 +639,11 @@ def suppression_ordre(type_ordre: str, id_ordre: Optional[str] = None) -> None:
     # Si c'est un stoploss, l'id de l'ordre doit être dans le fichier
     # Et on l'efface de celui-ci
     if type_ordre == "stoploss":
-        id_stls = lecture_fichier()
+        id_stls = lecture_fichier("stoploss")
 
         endpoint = f"/api/v1/stop-order/{id_stls}"
 
-        écriture_fichier()
+        écriture_fichier("stoploss")
 
     # Sinon si c'est un ordre market, on supprime l'ordre avec l'id fourni
     elif type_ordre == "market":
@@ -795,15 +796,15 @@ def update_id_stoploss() -> None:
 
         # S'il y a aucun stoploss, par sécurité on vide le fichier
         if st_3L == None and st_3S == None:
-            écriture_fichier()
+            écriture_fichier("stoploss")
 
         # Sinon par sécurité, on remet l'id du stoploss dans le fichier
         elif st_3L != None and st_3S == None:
-            écriture_fichier(st_3L['id'])
+            écriture_fichier("stoploss", st_3L['id'])
 
         # De même pour ici
         elif st_3L == None and st_3S != None:
-            écriture_fichier(st_3S['id'])
+            écriture_fichier("stoploss", st_3S['id'])
 
         # S'il y a deux stoploss, on regarde la présence de crypto
         else:
@@ -813,16 +814,95 @@ def update_id_stoploss() -> None:
             # S'il y a une crypto, on supprime l'ordre sur l'autre crypto
             if btcup > 30:
                 suppression_ordre("stoploss_manuel", st_3S['id'])
-                écriture_fichier(st_3L['id'])
+                écriture_fichier("stoploss", st_3L['id'])
 
             elif btcdown > 2:
                 suppression_ordre("stoploss_manuel", st_3L['id'])
-                écriture_fichier(st_3S['id'])
+                écriture_fichier("stoploss", st_3S['id'])
 
             # Sinon on supprime les deux
             else:
                 suppression_ordre("stoploss_manuel", st_3S['id'])
                 suppression_ordre("stoploss_manuel", st_3L['id'])
-                écriture_fichier()
+                écriture_fichier("stoploss")
 
-        sleep(30)
+        sleep(20)
+
+
+# @connexion
+@retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
+def update_id_ordre_limite() -> None:
+    """
+    Fonction qui maintien à jour l'id de l'ordre limite dans le fichier
+    S'il l'ordre a été executé alors on vire l'id du fichier
+    """
+    while True:
+        st_3S = presence_position("market", "BTC3S-USDT")
+        st_3L = presence_position("market", "BTC3L-USDT")
+
+        # S'il y a aucun stoploss, par sécurité on vide le fichier
+        if st_3L == None and st_3S == None:
+            écriture_fichier("ordre_limit")
+
+        # Sinon par sécurité, on remet l'id du stoploss dans le fichier
+        elif st_3L != None and st_3S == None:
+            écriture_fichier("ordre_limit", st_3L['id'])
+
+        # De même pour ici
+        elif st_3L == None and st_3S != None:
+            écriture_fichier("ordre_limit", st_3S['id'])
+
+        # S'il y a deux stoploss, on regarde la présence de crypto
+        else:
+            btcup = montant_compte("BTC3L")
+            btcdown = montant_compte("BTC3S")
+
+            # S'il y a une crypto, on supprime l'ordre sur l'autre crypto
+            if btcup > 30:
+                suppression_ordre("market", st_3S['id'])
+                écriture_fichier("ordre_limit", st_3L['id'])
+
+            elif btcdown > 2:
+                suppression_ordre("market", st_3L['id'])
+                écriture_fichier("ordre_limit", st_3S['id'])
+
+            # Sinon on supprime les deux
+            else:
+                suppression_ordre("market", st_3S['id'])
+                suppression_ordre("market", st_3L['id'])
+                écriture_fichier("ordre_limit")
+
+        sleep(20)
+
+
+# @connexion
+@retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
+def ordre_vente_seuil(symbol: str) -> None:
+    """
+    Fonction qui place l'ordre limite de vente
+    """
+
+    prix = prix_temps_reel_kucoin(symbol)
+
+    nv_prix = arrondi(str(prix * 1.0125))
+
+    # Besoin d'un id pour l'achat des cryptos
+    id_position = randint(0, 100_000_000)
+
+    # Point de terminaison de la requête
+    endpoint = "/api/v1/orders"
+
+    # Définition de tous les paramètres nécessaires
+    param = {"clientOid": id_position,
+             "side": "sell",
+             "symbol": symbol,
+             "price": str(nv_prix),
+             "size": str(montant_compte(symbol.split("-")[0]))}
+
+    param = json.dumps(param)
+
+    # Création de l'entête
+    entête = headers('POST', endpoint, param)
+
+    # On prend la position sur le serveur
+    prise_position = requests.post(api + endpoint, headers=entête, data=param)

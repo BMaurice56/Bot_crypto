@@ -279,6 +279,27 @@ class Botcrypto(commands.Bot):
 
             Popen("nohup python3 redemarrage.py >/dev/null 2>&1", shell=True)
 
+        @self.command(name="message")
+        async def message(ctx):
+            """
+            Fonction qui permet d'enregistrer l'état du bot, des prédictions ainsi que le prix des cryptos
+            """
+
+            messages = await ctx.channel.history().flatten()
+
+            ls = []
+
+            for each_message in messages:
+                toto = each_message.embeds
+                if len(toto) > 0:
+                    toto2 = str(toto[0].fields[0])[36:-14]
+                    ls.append(toto2)
+
+            fichier = open("message_discord.txt", "w")
+
+            for elt in ls:
+                fichier.write(elt)
+
     async def on_ready(self):
         """
         Fonction qui affiche dans la console "Bot crypto est prêt" lorsqu'il est opérationnel 
