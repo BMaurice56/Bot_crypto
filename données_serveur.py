@@ -448,8 +448,10 @@ def prise_position(info: dict) -> str:
         sleep(1)
 
         création_stoploss(info["symbol"], stopPrice, price)
-        ordre_vente_seuil(info["symbol"])
 
+        sleep(1)
+
+        ordre_vente_seuil(info["symbol"])
 
 
 # @connexion
