@@ -260,7 +260,7 @@ def arrondi(valeur: float or str, zero_apres_virgule: Optional[float] = None) ->
     # Puis on arrondi vers le bas le nombre que l'on renvoit sous forme d'un float
     if zero_apres_virgule != None:
         return float(val.quantize(Decimal(str(zero_apres_virgule)), ROUND_DOWN))
-    return float(val.quantize(Decimal('0.00001'), ROUND_DOWN))
+    return float(val.quantize(Decimal('0.0001'), ROUND_DOWN))
 
 
 def headers(methode: str, endpoint: str, param: Optional[str] = None) -> dict:
@@ -884,7 +884,12 @@ def ordre_vente_seuil(symbol: str) -> None:
 
     prix = prix_temps_reel_kucoin(symbol)
 
-    nv_prix = arrondi(str(prix * 1.0125))
+    zero_apres_virgule = "0.0001"
+
+    if symbol == "BTC3L-USDT":
+        zero_apres_virgule = '0.000001'
+
+    nv_prix = arrondi(str(prix * 1.0375))
 
     # Besoin d'un id pour l'achat des cryptos
     id_position = randint(0, 100_000_000)

@@ -91,12 +91,30 @@ print("succes :", succes)
 print("fail :", fail)
 print(succes / fail)
 """
+
 from main import *
 
-toto = prix_temps_reel_kucoin("BTC3S-USDT")
+toto = prix_temps_reel_kucoin("BTC3L-USDT")
 print(toto)
-toto = arrondi(str(toto * 1.0125))
+toto = arrondi(str(toto * 1.0375),'0.000001')
 
 print(toto)
 
-print(20_025 * 100 / 20_000 - 100)
+print((20_025 * 100 / 20_000 - 100)*3)
+print((20_075 * 100 / 20_000 - 100))
+
+"""
+from main import *
+
+entete = headers("GET", "/api/v1/symbols")
+
+toto = requests.get(api + "/api/v1/symbols", headers=entete)
+
+toto2 = json.loads(toto.content)
+
+toto = toto2["data"]
+
+for elt in toto:
+    if elt["symbol"] == "BTC3L-USDT" or elt["symbol"] == "BTC3S-USDT":
+        print(elt)
+"""
