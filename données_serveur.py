@@ -403,14 +403,14 @@ def prise_position(info: dict) -> str:
     # si celui-ci a placé un ordre mais que cet ordre n'a pas été exécuté
     if info["achat_vente"] == False:
         presence_market = presence_position("market", info["symbol"])
+        presence_stoploss = presence_position("stoploss", info["symbol"])
 
-        if presence_market == None:
+        if presence_market != None:
+            for elt in presence_market:
+                suppression_ordre("market", elt["id"])
+
+        if presence_stoploss != None:
             suppression_ordre("stoploss")
-
-        else:
-            id_market = presence_market['id']
-
-            suppression_ordre("market", id_market)
 
     # Besoin d'un id pour l'achat des cryptos
     id_position = randint(0, 100_000_000)
@@ -510,7 +510,7 @@ def presence_position(type_ordre: str, symbol: str) -> dict or None:
     if resultat == []:
         return None
     else:
-        return resultat[0]
+        return resultat
 
 
 # @connexion
@@ -551,7 +551,7 @@ def remonter_stoploss(symbol: str, nb_boucle: int, dodo: int, stopP: float, Pr: 
     """
     # On execute 120 fois car 30 secondes * 120 = 60 minutes
     for i in range(nb_boucle):
-        stoploss = presence_position("stoploss", symbol)
+        stoploss = presence_position("stoploss", symbol)[0]
 
         # S'il y a toujours le stoploss, on vérifie si celui-ci a les bons prix
         if stoploss != None:
@@ -704,8 +704,8 @@ def continuation_prediction(symbol: str, divergence: bool) -> None:
     divergence : True ou False
     """
     # On vérifie si il y a présence ou non d'ordre
-    stoploss = presence_position("stoploss", symbol)
-    market = presence_position("market", symbol)
+    stoploss = presence_position("stoploss", symbol)[0]
+    market = presence_position("market", symbol)[0]
 
     if divergence == True:
         global divergence_stoploss
@@ -782,6 +782,48 @@ def continuation_prediction(symbol: str, divergence: bool) -> None:
                 suppression_ordre("market", market['id'])
                 création_stoploss(symbol, stopPrice, price)
 
+# @connexion
+
+
+@retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
+def ordre_vente_seuil(symbol: str) -> None:
+    """
+    Fonction qui place l'ordre limite de vente
+    """
+
+    prix = prix_temps_reel_kucoin(symbol)
+
+    zero_apres_virgule = "0.0001"
+
+    if symbol == "BTC3L-USDT":
+        zero_apres_virgule = '0.000001'
+
+    nv_prix = arrondi(str(prix * 1.0375), zero_apres_virgule)
+
+    # Besoin d'un id pour l'achat des cryptos
+    id_position = randint(0, 100_000_000)
+
+    # Point de terminaison de la requête
+    endpoint = "/api/v1/orders"
+
+    # Définition de tous les paramètres nécessaires
+    param = {"clientOid": id_position,
+             "side": "sell",
+             "symbol": symbol,
+             "price": str(nv_prix),
+             "size": str(montant_compte(symbol.split("-")[0]))}
+
+    param = json.dumps(param)
+
+    # Création de l'entête
+    entête = headers('POST', endpoint, param)
+
+    # On prend la position sur le serveur
+    prise_position = requests.post(api + endpoint, headers=entête, data=param)
+
+
+# Fonction qui tourne en continue
+
 
 # @connexion
 @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
@@ -791,8 +833,8 @@ def update_id_stoploss() -> None:
     S'il le stoploss a été executé alors on vire l'id du fichier
     """
     while True:
-        st_3S = presence_position("stoploss", "BTC3S-USDT")
-        st_3L = presence_position("stoploss", "BTC3L-USDT")
+        st_3S = presence_position("stoploss", "BTC3S-USDT")[0]
+        st_3L = presence_position("stoploss", "BTC3L-USDT")[0]
 
         # S'il y a aucun stoploss, par sécurité on vide le fichier
         if st_3L == None and st_3S == None:
@@ -837,20 +879,20 @@ def update_id_ordre_limite() -> None:
     S'il l'ordre a été executé alors on vire l'id du fichier
     """
     while True:
-        st_3S = presence_position("market", "BTC3S-USDT")
-        st_3L = presence_position("market", "BTC3L-USDT")
+        sl_3S = presence_position("market", "BTC3S-USDT")[0]
+        sl_3L = presence_position("market", "BTC3L-USDT")[0]
 
         # S'il y a aucun stoploss, par sécurité on vide le fichier
-        if st_3L == None and st_3S == None:
+        if sl_3L == None and sl_3S == None:
             écriture_fichier("ordre_limit")
 
         # Sinon par sécurité, on remet l'id du stoploss dans le fichier
-        elif st_3L != None and st_3S == None:
-            écriture_fichier("ordre_limit", st_3L['id'])
+        elif sl_3L != None and sl_3S == None:
+            écriture_fichier("ordre_limit", sl_3L['id'])
 
         # De même pour ici
-        elif st_3L == None and st_3S != None:
-            écriture_fichier("ordre_limit", st_3S['id'])
+        elif sl_3L == None and sl_3S != None:
+            écriture_fichier("ordre_limit", sl_3S['id'])
 
         # S'il y a deux stoploss, on regarde la présence de crypto
         else:
@@ -859,17 +901,17 @@ def update_id_ordre_limite() -> None:
 
             # S'il y a une crypto, on supprime l'ordre sur l'autre crypto
             if btcup > 30:
-                suppression_ordre("market", st_3S['id'])
-                écriture_fichier("ordre_limit", st_3L['id'])
+                suppression_ordre("market", sl_3S['id'])
+                écriture_fichier("ordre_limit", sl_3L['id'])
 
             elif btcdown > 2:
-                suppression_ordre("market", st_3L['id'])
-                écriture_fichier("ordre_limit", st_3S['id'])
+                suppression_ordre("market", sl_3L['id'])
+                écriture_fichier("ordre_limit", sl_3S['id'])
 
             # Sinon on supprime les deux
             else:
-                suppression_ordre("market", st_3S['id'])
-                suppression_ordre("market", st_3L['id'])
+                suppression_ordre("market", sl_3S['id'])
+                suppression_ordre("market", sl_3L['id'])
                 écriture_fichier("ordre_limit")
 
         sleep(20)
@@ -877,37 +919,98 @@ def update_id_ordre_limite() -> None:
 
 # @connexion
 @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
-def ordre_vente_seuil(symbol: str) -> None:
+def suppression_ordre_inutile() -> None:
     """
-    Fonction qui place l'ordre limite de vente
+    Fonction qui supprime tous les ordres qui trainent et qui n'ont pas été exécutés
     """
+    while True:
+        sl_3L = presence_position("market", "BTC3L-USDT")
+        len_sl_3L = len(sl_3L)
 
-    prix = prix_temps_reel_kucoin(symbol)
+        st_3L = presence_position("stoploss", "BTC3L-USDT")
+        len_st_3L = len(st_3L)
 
-    zero_apres_virgule = "0.0001"
+        sl_3S = presence_position("market", "BTC3S-USDT")
+        len_sl_3S = len(sl_3S)
 
-    if symbol == "BTC3L-USDT":
-        zero_apres_virgule = '0.000001'
+        st_3S = presence_position("stoploss", "BTC3S-USDT")
+        len_st_3S = len(st_3S)
 
-    nv_prix = arrondi(str(prix * 1.0375), zero_apres_virgule)
+        btcup = montant_compte("BTC3L")
+        btcdown = montant_compte("BTC3S")
 
-    # Besoin d'un id pour l'achat des cryptos
-    id_position = randint(0, 100_000_000)
+        # Si on possède au moins une crypto, on regardre s'il y a bien qu'un seul ordre à chaque fois
+        # S'il y en a en plus, on supprime
+        if btcup > 30:
+            if len_sl_3L > 1:
+                sl_plus_a_jour = int(sl_3L[0]["createdAt"])
+                id_sl = sl_3L[0]["id"]
 
-    # Point de terminaison de la requête
-    endpoint = "/api/v1/orders"
+                for elt in sl_3L:
+                    if int(elt["createdAt"]) >= sl_plus_a_jour:
+                        id_sl = elt["id"]
+                        sl_plus_a_jour = int(elt["createdAt"])
 
-    # Définition de tous les paramètres nécessaires
-    param = {"clientOid": id_position,
-             "side": "sell",
-             "symbol": symbol,
-             "price": str(nv_prix),
-             "size": str(montant_compte(symbol.split("-")[0]))}
+                for element in sl_3L:
+                    if element["id"] != id_sl:
+                        suppression_ordre("market", id_sl)
 
-    param = json.dumps(param)
+            if len_st_3L > 1:
+                st_plus_a_jour = int(st_3L[0]["createdAt"])
+                id_st = st_3L[0]["id"]
 
-    # Création de l'entête
-    entête = headers('POST', endpoint, param)
+                for elt in st_3L:
+                    if int(elt["createdAt"]) >= st_plus_a_jour:
+                        id_st = elt["id"]
+                        st_plus_a_jour = int(elt["createdAt"])
 
-    # On prend la position sur le serveur
-    prise_position = requests.post(api + endpoint, headers=entête, data=param)
+                for element in st_3L:
+                    if element["id"] != id_st:
+                        suppression_ordre("stoploss_manuel", id_st)
+
+        elif btcdown > 2:
+            if len_sl_3S > 1:
+                sl_plus_a_jour = int(sl_3S[0]["createdAt"])
+                id_sl = sl_3S[0]["id"]
+
+                for elt in sl_3S:
+                    if int(elt["createdAt"]) >= sl_plus_a_jour:
+                        id_sl = elt["id"]
+                        sl_plus_a_jour = int(elt["createdAt"])
+
+                for element in sl_3S:
+                    if element["id"] != id_sl:
+                        suppression_ordre("market", id_sl)
+
+            if len_st_3S > 1:
+                st_plus_a_jour = int(st_3S[0]["createdAt"])
+                id_st = st_3S[0]["id"]
+
+                for elt in st_3S:
+                    if int(elt["createdAt"]) >= st_plus_a_jour:
+                        id_st = elt["id"]
+                        st_plus_a_jour = int(elt["createdAt"])
+
+                for element in st_3S:
+                    if element["id"] != id_st:
+                        suppression_ordre("stoploss_manuel", id_st)
+
+        # Sinon vue qu'il n'y a pas de crypto, s'il y a des ordres, on les supprimes
+        else:
+            if sl_3L != None:
+                for elt in sl_3L:
+                    suppression_ordre("market", elt["id"])
+
+            if st_3L != None:
+                for elt in st_3L:
+                    suppression_ordre("stoploss_manuel", elt["id"])
+
+            if sl_3S != None:
+                for elt in sl_3S:
+                    suppression_ordre("market", elt["id"])
+
+            if st_3S != None:
+                for elt in st_3S:
+                    suppression_ordre("stoploss_manuel", elt["id"])
+
+        sleep(10)

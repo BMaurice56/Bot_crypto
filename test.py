@@ -92,17 +92,6 @@ print("fail :", fail)
 print(succes / fail)
 """
 
-from main import *
-
-toto = prix_temps_reel_kucoin("BTC3L-USDT")
-print(toto)
-toto = arrondi(str(toto * 1.0375),'0.000001')
-
-print(toto)
-
-print((20_025 * 100 / 20_000 - 100)*3)
-print((20_075 * 100 / 20_000 - 100))
-
 """
 from main import *
 

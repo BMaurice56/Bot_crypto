@@ -29,6 +29,9 @@ p.start()
 p2 = Process(target=update_id_ordre_limite)
 p2.start()
 
+p3 = Process(target=suppression_ordre_inutile)
+p3.start()
+
 # On récupère l'état précédent du bot (Heure et divergence)
 etat = etat_bot("lecture").split(";")
 
