@@ -230,30 +230,10 @@ class Botcrypto(commands.Bot):
             if btcup > 30:
                 achat_vente(btcup, "BTC3L-USDT", False)
 
-                presence_market = presence_position("market", "BTC3L-USDT")
-
-                if presence_market == None:
-                    suppression_ordre("stoploss")
-
-                else:
-                    id_market = presence_market['id']
-
-                    suppression_ordre("market", id_market)
-
                 await ctx.send(f"{btcup} crypto up vendu !")
 
             if btcdown > 2:
                 achat_vente(btcdown, "BTC3S-USDT", False)
-
-                presence_market = presence_position("market", "BTC3S-USDT")
-
-                if presence_market == None:
-                    suppression_ordre("stoploss")
-
-                else:
-                    id_market = presence_market['id']
-
-                    suppression_ordre("market", id_market)
 
                 await ctx.send(f"{btcdown} crypto down vendu !")
 
