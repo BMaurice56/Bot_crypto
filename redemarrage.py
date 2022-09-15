@@ -13,13 +13,8 @@ processus = sortie.decode('utf-8').split("\n")[:-1]
 for elt in processus:
     os.system(f"kill -9 {elt}")
 
-# Puis on dort quelques secondes pour être sur
-sleep(3)
-
 # On met à jour les fichiers
 os.system("git pull")
-
-sleep(3)
 
 # Et enfin on redémarre le bot
 Popen("nohup python3 bot_discord.py >/dev/null 2>&1", shell=True)
