@@ -618,13 +618,14 @@ def création_stoploss(symbol: str, stopP: float, Pr: float) -> None:
     prise_position = requests.post(
         api + endpoint, headers=entête, data=param)
 
+    content = json.loads(prise_position.content.decode('utf-8'))
+
+    if content["code"] != "200000":
+        message_état_bot(f"{str(content)}, stopPrice : {stopP}, price : {Pr}")
+
     # Puis on vient écrire l'id du stoploss dans un fichier pour faciliter la remonter de celui-ci
     # quand le cour de la crypto remonte
-    message_état_bot(
-        f"{str(prise_position)}, {str(prise_position.content.decode('utf-8'))}, stopPrice : {stopP}, price : {Pr}")
-
-    écriture_fichier("stoploss", json.loads(
-        prise_position.content.decode('utf-8'))["data"]["orderId"])
+    écriture_fichier("stoploss", content["data"]["orderId"])
 
 
 # @connexion
