@@ -253,6 +253,11 @@ def arrondi(valeur: float or str, zero_apres_virgule: Optional[float] = None) ->
     """
     Fonction qui prend en argument un décimal et renvoie ce décimal arrondi à 0,00001
     """
+
+    # S'il y a une virgule si le montant dépasse 10 000, on la vire
+    if "," in valeur:
+        valeur.replace(",", "")
+
     # On transforme la valeur reçu en objet décimal
     val = Decimal(str(valeur))
 
