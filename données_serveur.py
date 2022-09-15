@@ -253,11 +253,6 @@ def arrondi(valeur: float or str, zero_apres_virgule: Optional[float] = None) ->
     """
     Fonction qui prend en argument un décimal et renvoie ce décimal arrondi à 0,00001
     """
-
-    # S'il y a une virgule si le montant dépasse 10 000, on la vire
-    if "," in valeur:
-        valeur.replace(",", "")
-
     # On transforme la valeur reçu en objet décimal
     val = Decimal(str(valeur))
 
@@ -359,7 +354,7 @@ def montant_compte(symbol: str) -> float:
     # Avec seulement 99,9% de sa quantité initiale car pour l'achat des cryptos
     # -> aucun problème avec le nb de chiffres après la virgule et les frais de la platforme
     if argent != []:
-        money = arrondi(float(argent[0]['available']) * 0.999)
+        money = arrondi(float(argent[0]['balance']) * 0.999)
         return money
     else:
         return 0
