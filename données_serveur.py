@@ -834,8 +834,14 @@ def update_id_stoploss() -> None:
     S'il le stoploss a été executé alors on vire l'id du fichier
     """
     while True:
-        st_3S = presence_position("stoploss", "BTC3S-USDT")[0]
-        st_3L = presence_position("stoploss", "BTC3L-USDT")[0]
+        st_3S = presence_position("stoploss", "BTC3S-USDT")
+        st_3L = presence_position("stoploss", "BTC3L-USDT")
+
+        if st_3S != None:
+            st_3S = st_3S[0]
+
+        if st_3L != None:
+            st_3L = st_3L[0]
 
         # S'il y a aucun stoploss, par sécurité on vide le fichier
         if st_3L == None and st_3S == None:
@@ -880,8 +886,14 @@ def update_id_ordre_limite() -> None:
     S'il l'ordre a été executé alors on vire l'id du fichier
     """
     while True:
-        sl_3S = presence_position("market", "BTC3S-USDT")[0]
-        sl_3L = presence_position("market", "BTC3L-USDT")[0]
+        sl_3S = presence_position("market", "BTC3S-USDT")
+        sl_3L = presence_position("market", "BTC3L-USDT")
+
+        if sl_3S != None:
+            sl_3S = sl_3S[0]
+
+        if sl_3L != None:
+            sl_3L = sl_3L[0]
 
         # S'il y a aucun stoploss, par sécurité on vide le fichier
         if sl_3L == None and sl_3S == None:
