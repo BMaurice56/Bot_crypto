@@ -479,7 +479,7 @@ def suppression_ordre() -> None:
     """
     id_ordre = lecture_fichier()
 
-    endpoint = f"/api/v1/orders{id_ordre}"
+    endpoint = f"/api/v1/orders/{id_ordre}"
 
     # Création de l'entête
     entête = headers('DELETE', endpoint)
