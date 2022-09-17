@@ -25,10 +25,10 @@ p2 = Process(target=stoploss_manuel, args=[symbol_stoploss, prix_stoploss])
 
 
 # On récupère l'état précédent du bot (Heure et divergence)
-etat = etat_bot("lecture").split(";")
+etat = etat_bot("lecture")
 
 # Conversion de l'ancienne date sauvegarder et de la date actuelle en seconde
-ancienne_date = datetime.strptime(etat[0], "%A %d %B %Y %H:%M:%S")
+ancienne_date = datetime.strptime("%A %d %B %Y %H:%M:%S")
 
 ancienne_date = int(ancienne_date.strftime("%s"))
 
@@ -151,7 +151,6 @@ while True:
     # On enregistre l'état du bot (dernière heure et divergence)
     # Pour que si le bot est arrêté et repart, qu'il soit au courant
     # S'il doit attendre ou non
-    state = date + ";" + str(divergence_stoploss)
-    etat_bot("écriture", state)
+    etat_bot("écriture", date)
 
     sleep(dodo)
