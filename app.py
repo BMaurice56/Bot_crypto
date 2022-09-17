@@ -99,7 +99,8 @@ while True:
             pass
 
         elif btcdown > 5:
-            p2.kill()
+            if p2.is_alive() == True:
+                p2.kill()
 
             # Vente de la crypto descendante
             achat_vente(btcdown, symbol_down_kucoin, False)
@@ -118,6 +119,9 @@ while True:
             symbol_stoploss = symbol_up_kucoin
             prix_stoploss = prix * 0.97
 
+            if p2.is_alive() == True:
+                p2.kill()
+
             p2.start()
 
             achat_vente(argent, symbol_up_kucoin, True)
@@ -127,7 +131,8 @@ while True:
             pass
 
         elif btcup > 50:
-            p2.kill()
+            if p2.is_alive() == True:
+                p2.kill()
 
             # Vente de la crypto montant
             achat_vente(btcup, symbol_up_kucoin, False)
@@ -145,6 +150,9 @@ while True:
         else:
             symbol_stoploss = symbol_down_kucoin
             prix_stoploss = prix * 1.03
+
+            if p2.is_alive() == True:
+                p2.kill()
 
             p2.start()
 
