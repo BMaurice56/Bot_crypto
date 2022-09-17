@@ -18,8 +18,6 @@ import hmac
 import json
 import ccxt
 
-stopPrice = 0.97
-price = 0.9675
 
 # Décorateurs
 
@@ -300,13 +298,13 @@ def headers(methode: str, endpoint: str, param: Optional[str] = None) -> dict:
     return headers
 
 
-def lecture_fichier(nom_fichier: str) -> str or None:
+def lecture_fichier() -> str or None:
     """
     Fonction qui lit ce qu'il y a dans le fichier 
     Et renvoie le contenu ou None s'il y a rien
     """
 
-    fichier = open(f"{nom_fichier}.txt", "r")
+    fichier = open("ordre_limit.txt", "r")
 
     elt = fichier.read()
 
@@ -317,14 +315,14 @@ def lecture_fichier(nom_fichier: str) -> str or None:
     return elt
 
 
-def écriture_fichier(nom_fichier: str, str_to_write: Optional[str] = None) -> None:
+def écriture_fichier(str_to_write: Optional[str] = None) -> None:
     """
     Fonction qui écrit ou écrase le fichier
     Ex param :
     str_to_write : id de l'ordre
     """
 
-    fichier = open(f"{nom_fichier}.txt", "w")
+    fichier = open(f"ordre_limit.txt", "w")
 
     if str_to_write != None:
         fichier.write(str_to_write)
@@ -399,18 +397,9 @@ def prise_position(info: dict) -> str:
     Sortie de la fonction :
     "vs9o2om08lvqav06000s2u7e"
     """
-    # Lorsque l'on vend, on vérifie s'il y a toujours le stoploss ou
-    # si celui-ci a placé un ordre mais que cet ordre n'a pas été exécuté
+    # Lorsque l'on vend, on enlève l'ordre limit car soit il a été exécuté, soit il est toujours là
     if info["achat_vente"] == False:
-        presence_market = presence_position("market", info["symbol"])
-        presence_stoploss = presence_position("stoploss", info["symbol"])
-
-        if presence_market != None:
-            for elt in presence_market:
-                suppression_ordre("market", elt["id"])
-
-        if presence_stoploss != None:
-            suppression_ordre("stoploss")
+        suppression_ordre()
 
     # Besoin d'un id pour l'achat des cryptos
     id_position = randint(0, 100_000_000)
@@ -442,60 +431,29 @@ def prise_position(info: dict) -> str:
     # On prend la position sur le serveur
     prise_position = requests.post(api + endpoint, headers=entête, data=param)
 
-    # S'il on vient d'acheter, on place un stoploss
+    # S'il on vient d'acheter, on place un ordre limit
     if info["achat_vente"] == True:
-        # On attend 1 seconde pour être sur que l'achat a bient été effectué
-        sleep(1)
-
-        création_stoploss(info["symbol"], stopPrice, price)
-
-        sleep(1)
-
         ordre_vente_seuil(info["symbol"])
 
 
 # @connexion
 @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
-def presence_position(type_ordre: str, symbol: str) -> dict or None:
+def presence_position(symbol: str) -> dict or None:
     """
     Fonction qui renvoie les positions en cours sur une pair de crypto précis
     Ex paramètre :
-    type_ordre : market ou stoploss
     symbol : BTC3S-USDT
 
     Sortie de la fonction :
-    {'id': 'vs9o2om0ejjhbdd5000qjne9', 'symbol': 'BTC3S-USDT', 'userId': '62b59916f4913f0001954877', 
-    'status': 'NEW', 'type': 'limit', 'side': 'sell', 'price': '3.44060000000000000000', 'size': '14.06590000000000000000',
-    'funds': None, 'stp': None, 'timeInForce': 'GTC', 'cancelAfter': -1, 'postOnly': False, 'hidden': False, 
-    'iceberg': False, 'visibleSize': None, 'channel': 'API', 'clientOid': '94598129', 'remark': None, 'tags': None, 
-    'orderTime': 1656780007654000020, 'domainId': 'kucoin', 'tradeSource': 'USER', 'tradeType': 'TRADE', 
-    'feeCurrency': 'USDT', 'takerFeeRate': '0.00100000000000000000', 'makerFeeRate': '0.00100000000000000000',
-    'createdAt': 1656780007655, 'stop': 'loss', 'stopTriggerTime': None, 'stopPrice': '3.45800000000000000000'}
-
     {'id': '62d6e3303896050001788d36', 'symbol': 'BTC3L-USDT', 'opType': 'DEAL', 'type': 'limit', 'side': 'sell', 
     'price': '0.007', 'size': '6791.3015', 'funds': '0', 'dealFunds': '0', 'dealSize': '0', 'fee': '0', 
     'feeCurrency': 'USDT', 'stp': '', 'stop': '', 'stopTriggered': False, 'stopPrice': '0', 'timeInForce': 'GTC', 
     'postOnly': False, 'hidden': False, 'iceberg': False, 'visibleSize': '0', 'cancelAfter': 0, 'channel': 'IOS', 
     'clientOid': None, 'remark': None, 'tags': None, 'isActive': True, 'cancelExist': False, 'createdAt': 1658250032352, 
     'tradeType': 'TRADE'}
-
-    {'id': 'vs9o0ommsug8gqo1000mufin', 'symbol': 'BTC3L-USDT', 'userId': '62b59916f4913f0001954877', 'status': 'NEW', 
-    'type': 'limit', 'side': 'sell', 'price': '0.00550000000000000000', 'size': '6810.55620000000000000000', 'funds': None, 
-    'stp': None, 'timeInForce': 'GTC', 'cancelAfter': 0, 'postOnly': False, 'hidden': False, 'iceberg': False, 
-    'visibleSize': None, 'channel': 'IOS', 'clientOid': None, 'remark': None, 'tags': None, 'orderTime': 1658251168517790156, 
-    'domainId': 'kucoin', 'tradeSource': 'USER', 'tradeType': 'TRADE', 'feeCurrency': 'USDT', 
-    'takerFeeRate': '0.00100000000000000000', 'makerFeeRate': '0.00100000000000000000', 'createdAt': 1658251168518, 
-    'stop': 'loss', 'stopTriggerTime': None, 'stopPrice': '0.00580000000000000000'}
     """
-    # On crée le point de terminaison selon le type de marché
-    if type_ordre == "market":
-        endpoint = "/api/v1/orders?status=active"
-
-    elif type_ordre == "stoploss":
-        endpoint = "/api/v1/stop-order?status=active"
-
-    # On lui rajoute le symbol voulu
-    endpoint += f"&symbol={symbol}"
+    # On crée le point de terminaison
+    endpoint = f"/api/v1/orders?status=active&symbol={symbol}"
 
     # Création de l'entête
     entête = headers("GET", endpoint)
@@ -510,149 +468,18 @@ def presence_position(type_ordre: str, symbol: str) -> dict or None:
     if resultat == []:
         return None
     else:
-        return resultat
+        return resultat[0]
 
 
 # @connexion
 @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
-def information_ordre(id_ordre: str) -> dict:
-    """
-    Fonction qui renvoie les informations sur un ordre passé
-    Ex param :
-    id_ordre : vs9o2om08lvqav06000s2u7e
-    Sortie de la fonction :
-    {"id":"vs9o2om08lvqav06000s2u7e","symbol":"BTC3S-USDT","opType":"DEAL",
-    "type":"limit","side":"sell","price":"3.4136","size":"14.4306","funds":null,"dealFunds":"0",
-    "dealSize":"0","fee":"0","feeCurrency":"USDT","stp":null,"stop":"loss","stopTriggered":false,
-    "stopPrice":"3.4309","timeInForce":"GTC","postOnly":false,"hidden":false,"iceberg":false,"visibleSize":null,
-    "cancelAfter":-1,"channel":"API","clientOid":"30688036","remark":null,
-    "tags":null,"isActive":false,"cancelExist":true,"createdAt":1656767871013,"tradeType":"TRADE"}
-    """
-    # On crée le point de terminaison
-    endpoint = f"/api/v1/orders/{id_ordre}"
-
-    # Création de l'entête
-    entête = headers("GET", endpoint)
-
-    # On envoie la requête au serveur
-    info_ordre = requests.get(api + endpoint, headers=entête)
-
-    # Puis on retourne les informations de l'ordre voulu
-    return json.loads(info_ordre.content.decode('utf-8'))['data']
-
-
-# @connexion
-@retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
-def remonter_stoploss(symbol: str, nb_boucle: int, dodo: int, stopP: float, Pr: float) -> None:
-    """
-    Fonction qui remonte le stoploss s'il y a eu une augmentation par rapport au précédent stoploss
-    Ex paramètre :
-    symbol : BTC3S-USDT
-    """
-    # On execute 120 fois car 30 secondes * 120 = 60 minutes
-    for i in range(nb_boucle):
-        stoploss = presence_position("stoploss", symbol)[0]
-
-        # S'il y a toujours le stoploss, on vérifie si celui-ci a les bons prix
-        if stoploss != None:
-            # On calcule ce que donnerait le prix du nouveau stoploss
-            prix = prix_temps_reel_kucoin(symbol)
-
-            sp = arrondi(stoploss["stopPrice"])
-
-            nouveau_stopPrice = arrondi(prix * stopP)
-
-            # S'il est supérieur à l'ancien prix, on enlève le stoploss et on en remet un nouveau
-            if sp < nouveau_stopPrice:
-                # On enlève le précédent ordre
-                suppression_ordre("stoploss")
-
-                # Puis on remet un nouveau stoploss
-                création_stoploss(symbol, stopP, Pr)
-
-        # Puis on attend 30 secondes avant de revérifier
-        sleep(dodo)
-
-
-# @connexion
-@retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
-def création_stoploss(symbol: str, stopP: float, Pr: float) -> None:
-    """
-    Fonction qui crée un stoploss
-    Ex param :
-    symbol : "BTC3L-USDT"
-    """
-    # Besoin d'un id pour l'ordre
-    id_stoploss = randint(0, 100_000_000)
-
-    # Point de terminaison de la requête
-    endpoint = "/api/v1/stop-order"
-
-    # On enregistre le symbol dans une autre variable car après on doit séparer la paire
-    # Et garder que la crypto
-    sb = symbol
-
-    crypto = sb.split("-")[0]
-
-    # On récupère le montant du compte pour savoir combien de la crypto on doit vendre
-    money = montant_compte(crypto)
-
-    # On récupère le prix en temps réel pour ensuite placer les prix du stoploss
-    prix = prix_temps_reel_kucoin(symbol)
-
-    # Création des paramètres pour la requête
-    param = {"clientOid": id_stoploss,
-             "side": "sell",
-             "symbol": symbol,
-             'stop': "loss",
-             "stopPrice": str(arrondi(prix * stopP)),
-             "price": str(arrondi(prix * Pr)),
-             "size": str(arrondi(money))}
-
-    param = json.dumps(param)
-
-    # Création de l'entête
-    entête = headers('POST', endpoint, param)
-
-    # On envoie la requête au serveur
-    prise_position = requests.post(
-        api + endpoint, headers=entête, data=param)
-
-    content = json.loads(prise_position.content.decode('utf-8'))
-
-    if content["code"] != "200000":
-        message_état_bot(f"{str(content)}, stopPrice : {stopP}, price : {Pr}")
-
-    # Puis on vient écrire l'id du stoploss dans un fichier pour faciliter la remonter de celui-ci
-    # quand le cour de la crypto remonte
-    écriture_fichier("stoploss", content["data"]["orderId"])
-
-
-# @connexion
-@retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
-def suppression_ordre(type_ordre: str, id_ordre: Optional[str] = None) -> None:
+def suppression_ordre() -> None:
     """
     Fonction qui supprime un ordre selon qu'il soit un stoploss ou un simple ordre
-    Ex param :
-    type_ordre : stoploss ou market ou stoploss_manuel
-    id_ordre : None par défaut ou l'id de l'ordre en question à supprimer
     """
-    # Si c'est un stoploss, l'id de l'ordre doit être dans le fichier
-    # Et on l'efface de celui-ci
-    if type_ordre == "stoploss":
-        id_stls = lecture_fichier("stoploss")
+    id_ordre = lecture_fichier()
 
-        endpoint = f"/api/v1/stop-order/{id_stls}"
-
-        écriture_fichier("stoploss")
-
-    # Sinon si c'est un ordre market, on supprime l'ordre avec l'id fourni
-    elif type_ordre == "market":
-        endpoint = f"/api/v1/orders{id_ordre}"
-
-    # Sinon si on veut supprimer un ordre stoploss manuellement, on fournit l'id et on le supprime
-    elif type_ordre == "stoploss_manuel":
-        endpoint = f"/api/v1/stop-order/{id_ordre}"
+    endpoint = f"/api/v1/orders{id_ordre}"
 
     # Création de l'entête
     entête = headers('DELETE', endpoint)
@@ -660,6 +487,8 @@ def suppression_ordre(type_ordre: str, id_ordre: Optional[str] = None) -> None:
     # Puis on vient envoyer la requête pour supprimer l'ordre du serveur
     supression_position = requests.delete(
         api + endpoint, headers=entête)
+
+    écriture_fichier()
 
 
 # @connexion
@@ -683,109 +512,19 @@ def achat_vente(montant: int or float, symbol: str, achat_ou_vente: bool) -> Non
     prix = prix_temps_reel_kucoin("BTC-USDT")
 
     # Puis on vient envoyer un message sur le discord
-    if achat_ou_vente == False:
+    if achat_ou_vente == True:
+        msg = f"Prise de position avec {montant} usdt au prix de {prix}$, il reste {montant_compte('USDT')} usdt, crypto : {symbol}"
+        message_prise_position(msg, True)
+
+    else:
         global argent
         argent = montant_compte('USDT')
 
         msg = f"Vente de position au prix de {prix}$, il reste {argent} usdt"
         message_prise_position(msg, False)
 
-    else:
-        msg = f"Prise de position avec {montant} usdt au prix de {prix}$, il reste {montant_compte('USDT')} usdt, crypto : {symbol}"
-        message_prise_position(msg, True)
-
 
 # @connexion
-@retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
-def continuation_prediction(symbol: str, divergence: bool) -> None:
-    """
-    Fonction qui vérifie les stoploss lorsque que l'on achète pas et que l'on continue a attendre que ça monte ou descende
-    Ex param :
-    symbol : BTC3L-USDT
-    divergence : True ou False
-    """
-    # On vérifie si il y a présence ou non d'ordre
-    stoploss = presence_position("stoploss", symbol)[0]
-    market = presence_position("market", symbol)[0]
-
-    if divergence == True:
-        global divergence_stoploss
-        divergence_stoploss = False
-
-        if stoploss != None:
-            # On récupère l'ancien stopPrice et le price
-            ancien_prix_stoploss = float(stoploss['stopPrice'])
-            ancien_prix = float(stoploss['price'])
-
-            # On calcule le nouveau stopPrice et price avec le stopPrice et price par défaut hors divergence
-            # Le prix qu'on aurait eu si on avait utiliser le stopPrice et price par défaut (0.97 et 0.9675)
-            nouveau_stopPrice = 97 * ancien_prix_stoploss / 99
-            nouveau_prix = 96.75 * ancien_prix / 98.75
-
-            # On calcule en pourcentage le nouveau stopPrice et price selon le prix en cour de la crypto
-            # Puis on divise par 100 pour l'avoir en décimale
-            nv_stoprice_pourcentage = nouveau_stopPrice * \
-                100 / prix_temps_reel_kucoin(symbol) / 100
-            nv_prix_pourcentage = nouveau_prix * 100 / \
-                prix_temps_reel_kucoin(symbol) / 100
-
-            # Si le prix a augmenté et donc le stopPrice calculé est plus faible
-            # Alors on place un stoploss directement avec les bonnes valeurs
-            if nv_stoprice_pourcentage <= stopPrice:
-                suppression_ordre("stoploss")
-                création_stoploss(symbol, stopPrice, price)
-            # Sinon on place le stoploss avec les valeurs calculé pour compenser la baisse du prix
-            # Mais pour garder le même prix final qu'on aurait eu avec le stopPrice et price de base
-            else:
-                suppression_ordre("stoploss")
-                création_stoploss(
-                    symbol, nv_stoprice_pourcentage, nv_prix_pourcentage)
-
-        else:
-            # Comme on a que le price, on le récupère et calcul le stopPrice à partir de celui-ci
-            ancien_prix = float(market['price'])
-
-            ancien_prix_stoploss = 99 * ancien_prix / 98.75
-
-            # On calcule le nouveau stopPrice et price avec le stopPrice et price par défaut hors divergence
-            # Le prix qu'on aurait eu si on avait utiliser le stopPrice et price par défaut (0.97 et 0.9675)
-            nouveau_stopPrice = 97 * ancien_prix_stoploss / 99
-            nouveau_prix = 96.75 * ancien_prix / 98.75
-
-            # On calcule en pourcentage le nouveau stopPrice et price selon le prix en cour de la crypto
-            # Puis on divise par 100 pour l'avoir en décimale
-            nv_stoprice_pourcentage = nouveau_stopPrice * \
-                100 / prix_temps_reel_kucoin(symbol) / 100
-            nv_prix_pourcentage = nouveau_prix * 100 / \
-                prix_temps_reel_kucoin(symbol) / 100
-
-            # Si le prix a augmenté et donc le stopPrice calculé est plus faible
-            # Alors on place un stoploss directement avec les bonnes valeurs
-            if nv_stoprice_pourcentage <= stopPrice:
-                suppression_ordre("market", market['id'])
-                création_stoploss(symbol, stopPrice, price)
-            # Sinon on place le stoploss avec les valeurs calculé pour compenser la baisse du prix
-            # Mais pour garder le même prix final qu'on aurait eu avec le stopPrice et price de base
-            else:
-                création_stoploss(
-                    symbol, nv_stoprice_pourcentage, nv_prix_pourcentage)
-
-    else:
-        # Sinon s'il y a qu'un ordre limite market, on check si lorsqu'on place un stoploss
-        # si le prix du stoploss est supérieur ou non à l'ordre limite
-        if market != None:
-            prix_position = float(market['price'])
-
-            nouveau_prix = arrondi(
-                prix_temps_reel_kucoin(symbol) * price)
-
-            if prix_position < nouveau_prix:
-                suppression_ordre("market", market['id'])
-                création_stoploss(symbol, stopPrice, price)
-
-# @connexion
-
-
 @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
 def ordre_vente_seuil(symbol: str) -> None:
     """
@@ -799,7 +538,7 @@ def ordre_vente_seuil(symbol: str) -> None:
     if symbol == "BTC3L-USDT":
         zero_apres_virgule = '0.000001'
 
-    nv_prix = arrondi(str(prix * 1.0375), zero_apres_virgule)
+    nv_prix = arrondi(str(prix * 1.0250), zero_apres_virgule)
 
     # Besoin d'un id pour l'achat des cryptos
     id_position = randint(0, 100_000_000)
@@ -807,12 +546,14 @@ def ordre_vente_seuil(symbol: str) -> None:
     # Point de terminaison de la requête
     endpoint = "/api/v1/orders"
 
+    montant = montant_compte(symbol.split("-")[0])
+
     # Définition de tous les paramètres nécessaires
     param = {"clientOid": id_position,
              "side": "sell",
              "symbol": symbol,
              "price": str(nv_prix),
-             "size": str(montant_compte(symbol.split("-")[0]))}
+             "size": str(montant)}
 
     param = json.dumps(param)
 
@@ -822,60 +563,46 @@ def ordre_vente_seuil(symbol: str) -> None:
     # On prend la position sur le serveur
     prise_position = requests.post(api + endpoint, headers=entête, data=param)
 
+    content = json.loads(prise_position.content.decode('utf-8'))
 
-# Fonction qui tourne en continue
+    if content["code"] != "200000":
+        message_état_bot(f"{str(content)}")
+
+    # Puis on vient écrire l'id de l'ordre dans un fichier pour faciliter la suppresion de celui-ci
+    écriture_fichier(content["data"]["orderId"])
 
 
 # @connexion
 @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
-def update_id_stoploss() -> None:
+def stoploss_manuel(symbol: str, prix_stop: float) -> None:
     """
-    Fonction qui maintien à jour l'id du stoploss dans le fichier
-    S'il le stoploss a été executé alors on vire l'id du fichier
+    Fonction qui fait office de stoploss mais de façon manuel
     """
     while True:
-        st_3S = presence_position("stoploss", "BTC3S-USDT")
-        st_3L = presence_position("stoploss", "BTC3L-USDT")
+        prix = prix_temps_reel_kucoin("BTC-USDT")
 
-        if st_3S != None:
-            st_3S = st_3S[0]
+        if symbol == "BTC3L-USDT":
 
-        if st_3L != None:
-            st_3L = st_3L[0]
+            if prix <= prix_stop:
 
-        # S'il y a aucun stoploss, par sécurité on vide le fichier
-        if st_3L == None and st_3S == None:
-            écriture_fichier("stoploss")
+                montant = montant_compte(symbol.split("-")[0])
 
-        # Sinon par sécurité, on remet l'id du stoploss dans le fichier
-        elif st_3L != None and st_3S == None:
-            écriture_fichier("stoploss", st_3L['id'])
+                achat_vente(montant, symbol, False)
 
-        # De même pour ici
-        elif st_3L == None and st_3S != None:
-            écriture_fichier("stoploss", st_3S['id'])
+                break
 
-        # S'il y a deux stoploss, on regarde la présence de crypto
-        else:
-            btcup = montant_compte("BTC3L")
-            btcdown = montant_compte("BTC3S")
+        elif symbol == "BTC3S-USDT":
+            if prix >= prix_stop:
 
-            # S'il y a une crypto, on supprime l'ordre sur l'autre crypto
-            if btcup > 30:
-                suppression_ordre("stoploss_manuel", st_3S['id'])
-                écriture_fichier("stoploss", st_3L['id'])
+                montant = montant_compte(symbol.split("-")[0])
 
-            elif btcdown > 2:
-                suppression_ordre("stoploss_manuel", st_3L['id'])
-                écriture_fichier("stoploss", st_3S['id'])
+                achat_vente(montant, symbol, False)
 
-            # Sinon on supprime les deux
-            else:
-                suppression_ordre("stoploss_manuel", st_3S['id'])
-                suppression_ordre("stoploss_manuel", st_3L['id'])
-                écriture_fichier("stoploss")
+                break
 
-        sleep(20)
+        sleep(5)
+
+# Fonction qui tourne en continue
 
 
 # @connexion
@@ -886,144 +613,19 @@ def update_id_ordre_limite() -> None:
     S'il l'ordre a été executé alors on vire l'id du fichier
     """
     while True:
-        sl_3S = presence_position("market", "BTC3S-USDT")
-        sl_3L = presence_position("market", "BTC3L-USDT")
-
-        if sl_3S != None:
-            sl_3S = sl_3S[0]
-
-        if sl_3L != None:
-            sl_3L = sl_3L[0]
+        sl_3S = presence_position("BTC3S-USDT")
+        sl_3L = presence_position("BTC3L-USDT")
 
         # S'il y a aucun stoploss, par sécurité on vide le fichier
         if sl_3L == None and sl_3S == None:
-            écriture_fichier("ordre_limit")
+            écriture_fichier()
 
         # Sinon par sécurité, on remet l'id du stoploss dans le fichier
-        elif sl_3L != None and sl_3S == None:
-            écriture_fichier("ordre_limit", sl_3L['id'])
+        elif sl_3L != None:
+            écriture_fichier(sl_3L['id'])
 
         # De même pour ici
-        elif sl_3L == None and sl_3S != None:
-            écriture_fichier("ordre_limit", sl_3S['id'])
-
-        # S'il y a deux stoploss, on regarde la présence de crypto
-        else:
-            btcup = montant_compte("BTC3L")
-            btcdown = montant_compte("BTC3S")
-
-            # S'il y a une crypto, on supprime l'ordre sur l'autre crypto
-            if btcup > 30:
-                suppression_ordre("market", sl_3S['id'])
-                écriture_fichier("ordre_limit", sl_3L['id'])
-
-            elif btcdown > 2:
-                suppression_ordre("market", sl_3L['id'])
-                écriture_fichier("ordre_limit", sl_3S['id'])
-
-            # Sinon on supprime les deux
-            else:
-                suppression_ordre("market", sl_3S['id'])
-                suppression_ordre("market", sl_3L['id'])
-                écriture_fichier("ordre_limit")
+        elif sl_3S != None:
+            écriture_fichier(sl_3S['id'])
 
         sleep(20)
-
-
-# @connexion
-@retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
-def suppression_ordre_inutile() -> None:
-    """
-    Fonction qui supprime tous les ordres qui trainent et qui n'ont pas été exécutés
-    """
-    while True:
-        sl_3L = presence_position("market", "BTC3L-USDT")
-        len_sl_3L = len(sl_3L)
-
-        st_3L = presence_position("stoploss", "BTC3L-USDT")
-        len_st_3L = len(st_3L)
-
-        sl_3S = presence_position("market", "BTC3S-USDT")
-        len_sl_3S = len(sl_3S)
-
-        st_3S = presence_position("stoploss", "BTC3S-USDT")
-        len_st_3S = len(st_3S)
-
-        btcup = montant_compte("BTC3L")
-        btcdown = montant_compte("BTC3S")
-
-        # Si on possède au moins une crypto, on regardre s'il y a bien qu'un seul ordre à chaque fois
-        # S'il y en a en plus, on supprime
-        if btcup > 30:
-            if len_sl_3L > 1:
-                sl_plus_a_jour = int(sl_3L[0]["createdAt"])
-                id_sl = sl_3L[0]["id"]
-
-                for elt in sl_3L:
-                    if int(elt["createdAt"]) >= sl_plus_a_jour:
-                        id_sl = elt["id"]
-                        sl_plus_a_jour = int(elt["createdAt"])
-
-                for element in sl_3L:
-                    if element["id"] != id_sl:
-                        suppression_ordre("market", id_sl)
-
-            if len_st_3L > 1:
-                st_plus_a_jour = int(st_3L[0]["createdAt"])
-                id_st = st_3L[0]["id"]
-
-                for elt in st_3L:
-                    if int(elt["createdAt"]) >= st_plus_a_jour:
-                        id_st = elt["id"]
-                        st_plus_a_jour = int(elt["createdAt"])
-
-                for element in st_3L:
-                    if element["id"] != id_st:
-                        suppression_ordre("stoploss_manuel", id_st)
-
-        elif btcdown > 2:
-            if len_sl_3S > 1:
-                sl_plus_a_jour = int(sl_3S[0]["createdAt"])
-                id_sl = sl_3S[0]["id"]
-
-                for elt in sl_3S:
-                    if int(elt["createdAt"]) >= sl_plus_a_jour:
-                        id_sl = elt["id"]
-                        sl_plus_a_jour = int(elt["createdAt"])
-
-                for element in sl_3S:
-                    if element["id"] != id_sl:
-                        suppression_ordre("market", id_sl)
-
-            if len_st_3S > 1:
-                st_plus_a_jour = int(st_3S[0]["createdAt"])
-                id_st = st_3S[0]["id"]
-
-                for elt in st_3S:
-                    if int(elt["createdAt"]) >= st_plus_a_jour:
-                        id_st = elt["id"]
-                        st_plus_a_jour = int(elt["createdAt"])
-
-                for element in st_3S:
-                    if element["id"] != id_st:
-                        suppression_ordre("stoploss_manuel", id_st)
-
-        # Sinon vue qu'il n'y a pas de crypto, s'il y a des ordres, on les supprimes
-        else:
-            if sl_3L != None:
-                for elt in sl_3L:
-                    suppression_ordre("market", elt["id"])
-
-            if st_3L != None:
-                for elt in st_3L:
-                    suppression_ordre("stoploss_manuel", elt["id"])
-
-            if sl_3S != None:
-                for elt in sl_3S:
-                    suppression_ordre("market", elt["id"])
-
-            if st_3S != None:
-                for elt in st_3S:
-                    suppression_ordre("stoploss_manuel", elt["id"])
-
-        sleep(10)
