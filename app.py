@@ -58,8 +58,6 @@ while True:
     btcup = montant_compte("BTC3L")
     btcdown = montant_compte("BTC3S")
 
-    divergence = False
-
     date = datetime.now(tz=ZoneInfo("Europe/Paris")
                         ).strftime("%A %d %B %Y %H:%M:%S")
 

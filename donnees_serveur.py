@@ -322,7 +322,7 @@ def écriture_fichier(str_to_write: Optional[str] = None) -> None:
     str_to_write : id de l'ordre
     """
 
-    fichier = open(f"ordre_limit.txt", "w")
+    fichier = open("ordre_limit.txt", "w")
 
     if str_to_write != None:
         fichier.write(str_to_write)
