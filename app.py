@@ -48,7 +48,7 @@ date = int(date.strftime("%s"))
 if date - ancienne_date < 3600:
     btcup = montant_compte("BTC3L")
     btcdown = montant_compte("BTC3S")
-    if btcup > 30 or btcdown > 2:
+    if btcup > 50 or btcdown > 5:
         symbol_stoploss = etat[1]
         prix_stoploss = float(etat[2])
 
@@ -96,10 +96,10 @@ while True:
 
     if prix < prediction and prix_up < prediction_up and prix_down > prediction_down and prediction_down < 0.3 and prediction_up - prix_up >= 0.045:
 
-        if btcup > 30:
+        if btcup > 50:
             pass
 
-        elif btcdown > 2:
+        elif btcdown > 5:
             p2.kill()
 
             # Vente de la crypto descendante
@@ -124,10 +124,10 @@ while True:
             achat_vente(argent, symbol_up_kucoin, True)
 
     elif prix > prediction and prix_up > prediction_up and prix_down < prediction_down:
-        if btcdown > 2:
+        if btcdown > 5:
             pass
 
-        elif btcup > 30:
+        elif btcup > 50:
             p2.kill()
 
             # Vente de la crypto montant
