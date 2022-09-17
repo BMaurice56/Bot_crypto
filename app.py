@@ -25,10 +25,10 @@ p2 = Process(target=stoploss_manuel, args=[symbol_stoploss, prix_stoploss])
 
 
 # On récupère l'état précédent du bot (Heure et divergence)
-etat = etat_bot("lecture")
+etat = etat_bot("lecture").split(";")
 
 # Conversion de l'ancienne date sauvegarder et de la date actuelle en seconde
-ancienne_date = datetime.strptime("%A %d %B %Y %H:%M:%S")
+ancienne_date = datetime.strptime(etat[0], "%A %d %B %Y %H:%M:%S")
 
 ancienne_date = int(ancienne_date.strftime("%s"))
 
@@ -46,8 +46,13 @@ date = int(date.strftime("%s"))
 # Si il y a bien eu 1 heure d'attente, on peut passer au prédiction
 # Sinon on attend jusqu'a l'heure prévu
 if date - ancienne_date < 3600:
-    if etat[1] == "True":
-        divergence_stoploss = True
+    btcup = montant_compte("BTC3L")
+    btcdown = montant_compte("BTC3S")
+    if btcup > 30 or btcdown > 2:
+        symbol_stoploss = etat[1]
+        prix_stoploss = float(etat[2])
+
+        p2.start()
 
     temps_dodo = 3600 - (date - ancienne_date)
     sleep(temps_dodo)
@@ -149,6 +154,7 @@ while True:
     # On enregistre l'état du bot (dernière heure et divergence)
     # Pour que si le bot est arrêté et repart, qu'il soit au courant
     # S'il doit attendre ou non
-    etat_bot("écriture", date)
+    state = date + ";" + symbol_stoploss + ";" + str(prix_stoploss)
+    etat_bot("écriture", state)
 
     sleep(dodo)
