@@ -94,8 +94,7 @@ while True:
 
     message_état_bot(msg)
 
-    if prix < prediction and prix_up < prediction_up and prix_down > prediction_down and prediction_down < 0.3 and prediction_up - prix_up >= 0.045:
-
+    if prix < prediction and prix_up < prediction_up and prix_down > prediction_down and prediction_down <= 0.03 and prediction_up - prix_up >= 0.045:
         if btcup > 50:
             pass
 
