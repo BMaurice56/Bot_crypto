@@ -58,10 +58,31 @@ if date - ancienne_date < 3600:
     sleep(temps_dodo)
 
 
+compteur_position_heure = 0
+
+
 while True:
+    compteur_position_heure += 1
+
     argent = montant_compte("USDT")
     btcup = montant_compte("BTC3L")
     btcdown = montant_compte("BTC3S")
+
+    # Si l'on a plus de trois heures avec la même position qui ne s'est pas exécutés
+    # Alors on vend pour repartir de plus belle
+    if compteur_position_heure >= 3:
+        if p2.is_alive() == True:
+            p2.kill()
+
+        if btcup > 50:
+            achat_vente(btcup, symbol_up_kucoin, False)
+
+        if btcdown > 5:
+            achat_vente(btcdown, symbol_down_kucoin, False)
+
+        argent = montant_compte("USDT")
+        btcup = montant_compte("BTC3L")
+        btcdown = montant_compte("BTC3S")
 
     date = datetime.now(tz=ZoneInfo("Europe/Paris")
                         ).strftime("%A %d %B %Y %H:%M:%S")
@@ -115,6 +136,8 @@ while True:
             # Achat de la crypto montante
             achat_vente(argent, symbol_up_kucoin, True)
 
+            compteur_position_heure = 0
+
         else:
             symbol_stoploss = symbol_up_kucoin
             prix_stoploss = prix * 0.97
@@ -125,6 +148,8 @@ while True:
             p2.start()
 
             achat_vente(argent, symbol_up_kucoin, True)
+
+            compteur_position_heure = 0
 
     elif prix > prediction and prix_up > prediction_up and prix_down < prediction_down:
         if btcdown > 5:
@@ -147,6 +172,8 @@ while True:
             # Achat de la crypto descendante
             achat_vente(argent, symbol_down_kucoin, True)
 
+            compteur_position_heure = 0
+
         else:
             symbol_stoploss = symbol_down_kucoin
             prix_stoploss = prix * 1.03
@@ -157,6 +184,8 @@ while True:
             p2.start()
 
             achat_vente(argent, symbol_down_kucoin, True)
+
+            compteur_position_heure = 0
 
     # On enregistre l'état du bot (dernière heure et divergence)
     # Pour que si le bot est arrêté et repart, qu'il soit au courant
