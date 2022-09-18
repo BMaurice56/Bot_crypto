@@ -71,6 +71,8 @@ while True:
     # Si l'on a plus de trois heures avec la même position qui ne s'est pas exécutés
     # Alors on vend pour repartir de plus belle
     if compteur_position_heure >= 3:
+        compteur_position_heure = 0
+
         if p2.is_alive() == True:
             p2.kill()
 
