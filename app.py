@@ -62,6 +62,8 @@ compteur_position_heure = 0
 
 
 while True:
+    t1 = perf_counter()
+
     compteur_position_heure += 1
 
     argent = montant_compte("USDT")
@@ -200,4 +202,6 @@ while True:
     state = date + ";" + symbol_stoploss + ";" + str(prix_stoploss)
     etat_bot("écriture", state)
 
-    sleep(dodo)
+    t2 = perf_counter()
+
+    sleep(dodo - int(t2 - t1))
