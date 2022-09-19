@@ -204,4 +204,4 @@ while True:
 
     t2 = perf_counter()
 
-    sleep(dodo - int(t2 - t1))
+    sleep(dodo - int(t2 - t1) - 2)
