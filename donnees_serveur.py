@@ -246,7 +246,7 @@ kucoin_api_key = os.getenv("KUCOIN_API_KEY")
 kucoin_api_secret = os.getenv("KUCOIN_API_SECRET")
 kucoin_phrase_securite = os.getenv("KUCOIN_PHRASE_SECURITE")
 
-pourcentage_gain = 0.0275
+pourcentage_gain = 0.0300
 
 
 def arrondi(valeur: float or str, zero_apres_virgule: Optional[float] = None) -> float:
