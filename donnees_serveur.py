@@ -246,6 +246,8 @@ kucoin_api_key = os.getenv("KUCOIN_API_KEY")
 kucoin_api_secret = os.getenv("KUCOIN_API_SECRET")
 kucoin_phrase_securite = os.getenv("KUCOIN_PHRASE_SECURITE")
 
+pourcentage_gain = 0.0275
+
 
 def arrondi(valeur: float or str, zero_apres_virgule: Optional[float] = None) -> float:
     """
@@ -538,7 +540,7 @@ def ordre_vente_seuil(symbol: str) -> None:
     if symbol == "BTC3L-USDT":
         zero_apres_virgule = '0.000001'
 
-    nv_prix = arrondi(str(prix * 1.0250), zero_apres_virgule)
+    nv_prix = arrondi(str(prix * (1 + pourcentage_gain)), zero_apres_virgule)
 
     # Besoin d'un id pour l'achat des cryptos
     id_position = randint(0, 100_000_000)
@@ -579,6 +581,13 @@ def stoploss_manuel(symbol: str, prix_stop: float) -> None:
     Fonction qui fait office de stoploss mais de façon manuel
     """
     while True:
+        # On vérifie s'il y a toujours une crypto, s'il elle a été vendu on peut arrêter la fonction
+        btcup = montant_compte("BTC3L")
+        btcdown = montant_compte("BTC3S")
+
+        if btcup < 50 and btcdown < 5:
+            break
+
         prix = prix_temps_reel_kucoin("BTC-USDT")
 
         if symbol == "BTC3L-USDT":
