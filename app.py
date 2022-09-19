@@ -73,7 +73,8 @@ while True:
     if compteur_position_heure >= 3:
         compteur_position_heure = 0
 
-        if p2.is_alive() == True:
+        statut_p2 = p2.is_alive()
+        if statut_p2 == True:
             p2.kill()
 
         if btcup > 50:
@@ -122,7 +123,8 @@ while True:
             pass
 
         elif btcdown > 5:
-            if p2.is_alive() == True:
+            statut_p2 = p2.is_alive()
+            if statut_p2 == True:
                 p2.kill()
 
             # Vente de la crypto descendante
@@ -133,32 +135,34 @@ while True:
             symbol_stoploss = symbol_up_kucoin
             prix_stoploss = prix * 0.97
 
-            p2.start()
-
             # Achat de la crypto montante
             achat_vente(argent, symbol_up_kucoin, True)
 
             compteur_position_heure = 0
 
-        else:
-            symbol_stoploss = symbol_up_kucoin
-            prix_stoploss = prix * 0.97
+            p2.start()
 
-            if p2.is_alive() == True:
+        else:
+            statut_p2 = p2.is_alive()
+            if statut_p2 == True:
                 p2.kill()
 
-            p2.start()
+            symbol_stoploss = symbol_up_kucoin
+            prix_stoploss = prix * 0.97
 
             achat_vente(argent, symbol_up_kucoin, True)
 
             compteur_position_heure = 0
+
+            p2.start()
 
     elif prix > prediction and prix_up > prediction_up and prix_down < prediction_down:
         if btcdown > 5:
             pass
 
         elif btcup > 50:
-            if p2.is_alive() == True:
+            statut_p2 = p2.is_alive()
+            if statut_p2 == True:
                 p2.kill()
 
             # Vente de la crypto montant
@@ -167,8 +171,6 @@ while True:
             symbol_stoploss = symbol_down_kucoin
             prix_stoploss = prix * 1.03
 
-            p2.start()
-
             argent = montant_compte("USDT")
 
             # Achat de la crypto descendante
@@ -176,18 +178,21 @@ while True:
 
             compteur_position_heure = 0
 
+            p2.start()
+
         else:
             symbol_stoploss = symbol_down_kucoin
             prix_stoploss = prix * 1.03
 
-            if p2.is_alive() == True:
+            statut_p2 = p2.is_alive()
+            if statut_p2 == True:
                 p2.kill()
-
-            p2.start()
 
             achat_vente(argent, symbol_down_kucoin, True)
 
             compteur_position_heure = 0
+
+            p2.start()
 
     # On enregistre l'état du bot (dernière heure et divergence)
     # Pour que si le bot est arrêté et repart, qu'il soit au courant
