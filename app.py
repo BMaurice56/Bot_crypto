@@ -7,7 +7,7 @@ import locale
 symbol = "BTC"
 symbol_up_kucoin = "BTC3L-USDT"
 symbol_down_kucoin = "BTC3S-USDT"
-dodo = 60*59 + 55
+dodo = 60*60
 
 loaded_model, loaded_model_up, loaded_model_down = chargement_modele(symbol)
 
