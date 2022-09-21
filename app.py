@@ -48,7 +48,7 @@ date = int(date.strftime("%s"))
 if date - ancienne_date < 3600:
     btcup = montant_compte("BTC3L")
     btcdown = montant_compte("BTC3S")
-    if btcup > 50 or btcdown > 5:
+    if btcup > minimum_crypto_up or btcdown > minimum_crypto_down:
         symbol_stoploss = etat[1]
         prix_stoploss = float(etat[2])
 
@@ -98,10 +98,10 @@ while True:
     message_état_bot(msg)
     if compteur_position < 2:
         if prix < prediction and prix_up < prediction_up and prix_down > prediction_down and prediction_down <= 0.03 and prediction_up - prix_up >= 0.045:
-            if btcup > 50:
+            if btcup > minimum_crypto_up:
                 pass
 
-            elif btcdown > 5:
+            elif btcdown > minimum_crypto_down:
                 statut_p2 = p2.is_alive()
                 if statut_p2 == True:
                     p2.kill()
@@ -140,10 +140,10 @@ while True:
                 compteur_position += 1
 
         elif prix > prediction and prix_up > prediction_up and prix_down < prediction_down:
-            if btcdown > 5:
+            if btcdown > minimum_crypto_down:
                 pass
 
-            elif btcup > 50:
+            elif btcup > minimum_crypto_up:
                 statut_p2 = p2.is_alive()
                 if statut_p2 == True:
                     p2.kill()

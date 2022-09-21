@@ -248,6 +248,9 @@ kucoin_phrase_securite = os.getenv("KUCOIN_PHRASE_SECURITE")
 
 pourcentage_gain = 0.0300
 
+minimum_crypto_up = 5000
+minimum_crypto_down = 50
+
 
 def arrondi(valeur: float or str, zero_apres_virgule: Optional[float] = None) -> float:
     """
@@ -392,7 +395,7 @@ def prise_position(info: dict) -> str:
     Renvoie l'id de la position prise
     Ex paramètres :
     info : {
-    "montant" : "50",
+    "montant" : "20",
     "symbol" : "BTC3S-USDT",
     "achat_vente" : "True" (pour achat)
     }
@@ -499,7 +502,7 @@ def achat_vente(montant: int or float, symbol: str, achat_ou_vente: bool) -> Non
     """
     Fonction qui achète ou vente les cryptomonnaies
     Ex param :
-    montant : 50
+    montant : 200
     symbol : "BTC3S-USDT
     achat_vente : True ou False
     """
@@ -585,7 +588,7 @@ def stoploss_manuel(symbol: str, prix_stop: float) -> None:
         btcup = montant_compte("BTC3L")
         btcdown = montant_compte("BTC3S")
 
-        if btcup < 50 and btcdown < 5:
+        if btcup < minimum_crypto_up and btcdown < minimum_crypto_down:
             break
 
         prix = prix_temps_reel_kucoin("BTC-USDT")
@@ -609,7 +612,7 @@ def stoploss_manuel(symbol: str, prix_stop: float) -> None:
 
                 break
 
-        sleep(5)
+        sleep(50)
 
 # Fonction qui tourne en continue
 

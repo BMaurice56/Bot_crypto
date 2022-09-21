@@ -227,12 +227,12 @@ class Botcrypto(commands.Bot):
             btcdown = montant_compte("BTC3S")
 
             # Et on vend la ou les cryptos en supprimant les ordres placés
-            if btcup > 50:
+            if btcup > minimum_crypto_up:
                 achat_vente(btcup, "BTC3L-USDT", False)
 
                 await ctx.send(f"{btcup} crypto up vendu !")
 
-            if btcdown > 5:
+            if btcdown > minimum_crypto_down:
                 achat_vente(btcdown, "BTC3S-USDT", False)
 
                 await ctx.send(f"{btcdown} crypto down vendu !")
