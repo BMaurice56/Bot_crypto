@@ -59,6 +59,9 @@ if date - ancienne_date < 3600:
 
 compteur_position = 0
 
+pourcentage_stoploss_up = 0.98
+pourcentage_stoploss_down = 1.02
+
 while True:
     t1 = perf_counter()
 
@@ -112,7 +115,7 @@ while True:
                 argent = montant_compte("USDT")
 
                 symbol_stoploss = symbol_up_kucoin
-                prix_stoploss = prix * 0.97
+                prix_stoploss = prix * pourcentage_stoploss_up
 
                 # Achat de la crypto montante
                 achat_vente(argent, symbol_up_kucoin, True)
@@ -129,7 +132,7 @@ while True:
                     p2.kill()
 
                 symbol_stoploss = symbol_up_kucoin
-                prix_stoploss = prix * 0.97
+                prix_stoploss = prix * pourcentage_stoploss_up
 
                 achat_vente(argent, symbol_up_kucoin, True)
 
@@ -152,7 +155,7 @@ while True:
                 achat_vente(btcup, symbol_up_kucoin, False)
 
                 symbol_stoploss = symbol_down_kucoin
-                prix_stoploss = prix * 1.03
+                prix_stoploss = prix * pourcentage_stoploss_down
 
                 argent = montant_compte("USDT")
 
@@ -167,7 +170,7 @@ while True:
 
             else:
                 symbol_stoploss = symbol_down_kucoin
-                prix_stoploss = prix * 1.03
+                prix_stoploss = prix * pourcentage_stoploss_down
 
                 statut_p2 = p2.is_alive()
                 if statut_p2 == True:
