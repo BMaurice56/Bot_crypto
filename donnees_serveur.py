@@ -249,7 +249,7 @@ kucoin_phrase_securite = os.getenv("KUCOIN_PHRASE_SECURITE")
 pourcentage_gain = 0.0300
 
 minimum_crypto_up = 5000
-minimum_crypto_down = 50
+minimum_crypto_down = 40
 
 
 def arrondi(valeur: float or str, zero_apres_virgule: Optional[float] = None) -> float:
@@ -597,22 +597,18 @@ def stoploss_manuel(symbol: str, prix_stop: float) -> None:
 
             if prix <= prix_stop:
 
-                montant = montant_compte(symbol.split("-")[0])
-
-                achat_vente(montant, symbol, False)
+                achat_vente(btcup, symbol, False)
 
                 break
 
         elif symbol == "BTC3S-USDT":
             if prix >= prix_stop:
 
-                montant = montant_compte(symbol.split("-")[0])
-
-                achat_vente(montant, symbol, False)
+                achat_vente(btcdown, symbol, False)
 
                 break
 
-        sleep(50)
+        sleep(5)
 
 # Fonction qui tourne en continue
 
