@@ -11,6 +11,7 @@ adr_webhook_prise_position = os.getenv("ADR_WEBHOOK_PRISE_POSITION")
 adr_webhook_état_bot = os.getenv("ADR_WEBHOOK_ETAT_BOT")
 adr_webhook_général = os.getenv("ADR_WEBHOOK_GENERAL")
 
+nom = "Jimmy"
 
 def message_prise_position(message: str, prise_position: bool) -> None:
     """
@@ -21,7 +22,7 @@ def message_prise_position(message: str, prise_position: bool) -> None:
     prise_position : True pour un achat et False pour une vente
     """
     webhook = DiscordWebhook(
-        url=adr_webhook_prise_position, username="Bot crypto")
+        url=adr_webhook_prise_position, username=nom)
 
     if prise_position == True:
         embed = DiscordEmbed(title='Prise de position', color="03b2f8")
@@ -41,7 +42,7 @@ def message_état_bot(message: str) -> None:
     message : "Bot toujours en cours d'execution ..."
     """
     webhook = DiscordWebhook(
-        url=adr_webhook_état_bot, username="Bot crypto")
+        url=adr_webhook_état_bot, username=nom)
 
     embed = DiscordEmbed(title='Etat du bot !', color="03b2f8")
     embed.add_embed_field(name="Message :", value=message)
@@ -56,6 +57,6 @@ def message_status_général(message: str) -> None:
     message : "Bot crypto est lancé"
     """
     webhook = DiscordWebhook(
-        url=adr_webhook_général, username="Bot crypto", content=message)
+        url=adr_webhook_général, username=nom, content=message)
 
     webhook.execute()
