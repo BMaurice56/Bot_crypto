@@ -150,15 +150,25 @@ class Botcrypto(commands.Bot):
             else:
                 await ctx.send("La cryptomonnaie n'existe pas")
             """
-            message_status_général("ok")
-            if statut_bot_crypto == False:
-                statut_bot_crypto = True
-                process = Process(target=lancement_bot)
-                process.start()
-                
+            try:
+                if statut_bot_crypto == False:
+                    statut_bot_crypto = True
+                    process = Process(target=lancement_bot)
+                    process.start()
 
-            else:
-                await ctx.send("Le bot est déjà lancé !")
+                else:
+                    await ctx.send("Le bot est déjà lancé !")
+            except:
+
+                erreur = traceback.format_exc()
+                if len(erreur) > 2000:
+                    while len(erreur) >= 2000:
+                        message_status_général(erreur[:2000])
+                        erreur = erreur[2000:]
+                    if erreur != "":
+                        message_status_général(erreur)
+                else:
+                    message_status_général(erreur)
 
         @self.command(name="stop")
         async def stop(ctx):
