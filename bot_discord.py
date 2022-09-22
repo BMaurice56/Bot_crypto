@@ -154,6 +154,7 @@ class Botcrypto(commands.Bot):
                 statut_bot_crypto = True
                 process = Process(target=lancement_bot)
                 process.start()
+                message_status_général("ok")
 
             else:
                 await ctx.send("Le bot est déjà lancé !")
