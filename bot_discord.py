@@ -10,6 +10,9 @@ listes_crypto = text.split(";")
 commande_bot_terminale = """ps -aux | grep "bot_discord.py"| awk -F " " '{ print $2 }' """
 commande_redemarrage_terminale = """ps -aux | grep "redemarrage.py"| awk -F " " '{ print $2 }' """
 
+# Variable qui permet de savoir si le bot est déjà lancé ou non
+statut_bot_crypto = False
+
 
 class Botcrypto(commands.Bot):
 
@@ -35,6 +38,7 @@ class Botcrypto(commands.Bot):
                 else:
                     message_status_général(erreur)
 
+                statut_bot_crypto = False
                 message_status_général("Le bot s'est arrêté !")
                 arret_bot()
 
@@ -138,15 +142,21 @@ class Botcrypto(commands.Bot):
             # Puis on vérifie que la cryptomonnaie existe bien
             crypto = msg.content
             """
+            """
             crypto = 'BTC'
             if crypto in ['BTC', 'BNB']:
                 sys.argv = ['', crypto]
+            
+            else:
+                await ctx.send("La cryptomonnaie n'existe pas")
+            """
+            if statut_bot_crypto == False:
+                statut_bot_crypto = True
                 process = Process(target=lancement_bot)
-
                 process.start()
 
             else:
-                await ctx.send("La cryptomonnaie n'existe pas")
+                await ctx.send("Le bot est déjà lancé !")
 
         @self.command(name="stop")
         async def stop(ctx):

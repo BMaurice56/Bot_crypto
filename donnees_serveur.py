@@ -405,6 +405,7 @@ def prise_position(info: dict) -> str:
     # Lorsque l'on vend, on enlève l'ordre limit car soit il a été exécuté, soit il est toujours là
     if info["achat_vente"] == False:
         suppression_ordre()
+        sleep(1)
 
     # Besoin d'un id pour l'achat des cryptos
     id_position = randint(0, 100_000_000)
@@ -522,7 +523,6 @@ def achat_vente(montant: int or float, symbol: str, achat_ou_vente: bool) -> Non
         message_prise_position(msg, True)
 
     else:
-        global argent
         argent = montant_compte('USDT')
 
         msg = f"Vente de position au prix de {prix}$, il reste {argent} usdt"
