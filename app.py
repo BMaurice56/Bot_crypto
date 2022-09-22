@@ -9,6 +9,7 @@ symbol_up_kucoin = "BTC3L-USDT"
 symbol_down_kucoin = "BTC3S-USDT"
 dodo = 60*60
 
+# Chargement des modèles d'ia pour les prédictions
 loaded_model, loaded_model_up, loaded_model_down = chargement_modele(symbol)
 
 # Définition de la zone pour l'horodatage car la date était en anglais avec le module datetime
@@ -22,6 +23,7 @@ p.start()
 symbol_stoploss = ""
 prix_stoploss = 0.0
 
+# Création de la variable avec le processuss de stoploss manuel
 p2 = Process(target=stoploss_manuel, args=[symbol_stoploss, prix_stoploss])
 
 # On récupère l'état précédent du bot (Heure et divergence)
@@ -44,10 +46,11 @@ date = datetime.strptime(date, "%A %d %B %Y %H:%M:%S")
 date = int(date.strftime("%s"))
 
 # Si il y a bien eu 1 heure d'attente, on peut passer au prédiction
-# Sinon on attend jusqu'a l'heure prévu
+# Sinon on attend jusqu'a l'heure prévu tout en relancent le stoploss manuel si présence de crypto
 if date - ancienne_date < 3600:
     btcup = montant_compte("BTC3L")
     btcdown = montant_compte("BTC3S")
+
     if btcup > minimum_crypto_up or btcdown > minimum_crypto_down:
         symbol_stoploss = etat[1]
         prix_stoploss = float(etat[2])
@@ -57,13 +60,21 @@ if date - ancienne_date < 3600:
     temps_dodo = 3600 - (date - ancienne_date)
     sleep(temps_dodo)
 
+# Permet de voir où on est dans le schéma cyclique 1, 2 succes puis échec
 compteur_position = 0
 
+# Variable pour modifier le pourcentage de variation de la crypto sur le marché de base
 pourcentage_stoploss_up = 0.98
 pourcentage_stoploss_down = 1.02
 
+# Liste qui garde en mémoire les précédentes valeurs et si achat ou non
+historique = []
+dernier_achat_symbol = ""
+
 while True:
     t1 = perf_counter()
+
+    variable_achat_vente = False
 
     argent = montant_compte("USDT")
     btcup = montant_compte("BTC3L")
@@ -126,6 +137,9 @@ while True:
 
                 compteur_position += 1
 
+                variable_achat_vente = True
+                dernier_achat_symbol = symbol_up_kucoin
+
             else:
                 statut_p2 = p2.is_alive()
                 if statut_p2 == True:
@@ -141,6 +155,9 @@ while True:
                 p2.start()
 
                 compteur_position += 1
+
+                variable_achat_vente = True
+                dernier_achat_symbol = symbol_up_kucoin
 
         elif prix > prediction and prix_up > prediction_up and prix_down < prediction_down:
             if btcdown > minimum_crypto_down:
@@ -168,6 +185,9 @@ while True:
 
                 compteur_position += 1
 
+                variable_achat_vente = True
+                dernier_achat_symbol = symbol_down_kucoin
+
             else:
                 symbol_stoploss = symbol_down_kucoin
                 prix_stoploss = prix * pourcentage_stoploss_down
@@ -184,8 +204,26 @@ while True:
 
                 compteur_position += 1
 
+                variable_achat_vente = True
+                dernier_achat_symbol = symbol_down_kucoin
+
+        elif len(historique) == 8:
+            if (prix > prediction or prix_up > prediction_up or prix_down < prediction_down) and historique[0] > prix:
+                if historique[-2] == False and historique[-1] == symbol_up_kucoin and btcup > minimum_crypto_up:
+                    achat_vente(btcup, symbol_up_kucoin, False)
+
+            elif (prix < prediction or prix_up < prediction_up or prix_down > prediction_down) and historique[0] < prix:
+                if historique[-2] == False and historique[-1] == symbol_down_kucoin and btcdown > minimum_crypto_down:
+                    achat_vente(btcdown, symbol_up_kucoin, False)
     else:
         compteur_position = 0
+
+    if variable_achat_vente == True:
+        historique = [prix, prediction, prix_up,
+                      prediction_up, prix_down, prediction_down, True, dernier_achat_symbol]
+    else:
+        historique = [prix, prediction, prix_up,
+                      prediction_up, prix_down, prediction_down, False, dernier_achat_symbol]
 
     # On enregistre l'état du bot (dernière heure et divergence)
     # Pour que si le bot est arrêté et repart, qu'il soit au courant
