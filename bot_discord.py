@@ -150,11 +150,12 @@ class Botcrypto(commands.Bot):
             else:
                 await ctx.send("La cryptomonnaie n'existe pas")
             """
+            message_status_général("ok")
             if statut_bot_crypto == False:
                 statut_bot_crypto = True
                 process = Process(target=lancement_bot)
                 process.start()
-                message_status_général("ok")
+                
 
             else:
                 await ctx.send("Le bot est déjà lancé !")
