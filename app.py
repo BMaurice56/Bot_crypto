@@ -209,21 +209,17 @@ while True:
 
         elif len(historique) == 8:
             if (prix > prediction or prix_up > prediction_up or prix_down < prediction_down) and historique[0] > prix:
-                if historique[-2] == False and historique[-1] == symbol_up_kucoin and btcup > minimum_crypto_up:
+                if variable_achat_vente == False and historique[-1] == symbol_up_kucoin and btcup > minimum_crypto_up:
                     achat_vente(btcup, symbol_up_kucoin, False)
 
             elif (prix < prediction or prix_up < prediction_up or prix_down > prediction_down) and historique[0] < prix:
-                if historique[-2] == False and historique[-1] == symbol_down_kucoin and btcdown > minimum_crypto_down:
+                if variable_achat_vente == False and historique[-1] == symbol_down_kucoin and btcdown > minimum_crypto_down:
                     achat_vente(btcdown, symbol_up_kucoin, False)
     else:
         compteur_position = 0
 
-    if variable_achat_vente == True:
-        historique = [prix, prediction, prix_up,
-                      prediction_up, prix_down, prediction_down, True, dernier_achat_symbol]
-    else:
-        historique = [prix, prediction, prix_up,
-                      prediction_up, prix_down, prediction_down, False, dernier_achat_symbol]
+    historique = [prix, prediction, prix_up,
+                  prediction_up, prix_down, prediction_down, dernier_achat_symbol]
 
     # On enregistre l'état du bot (dernière heure et divergence)
     # Pour que si le bot est arrêté et repart, qu'il soit au courant
