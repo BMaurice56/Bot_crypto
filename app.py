@@ -208,11 +208,11 @@ while True:
                 dernier_achat_symbol = symbol_down_kucoin
 
         elif len(historique) > 0:
-            if (prix > prediction or prix_up > prediction_up or prix_down < prediction_down) and historique[0] >= prix:
+            if (prix > prediction or prix_up > prediction_up or prix_down < prediction_down):
                 if variable_achat_vente == False and historique[-1] == symbol_up_kucoin and btcup > minimum_crypto_up:
                     achat_vente(btcup, symbol_up_kucoin, False)
 
-            elif (prix < prediction or prix_up < prediction_up or prix_down > prediction_down) and historique[0] <= prix:
+            elif (prix < prediction or prix_up < prediction_up or prix_down > prediction_down):
                 if variable_achat_vente == False and historique[-1] == symbol_down_kucoin and btcdown > minimum_crypto_down:
                     achat_vente(btcdown, symbol_up_kucoin, False)
     else:
