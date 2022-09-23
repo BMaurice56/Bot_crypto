@@ -167,6 +167,10 @@ class Botcrypto(commands.Bot):
             Tue le processus du bot ainsi que les processus qui chargent la bdd si ce n'est pas fini
             """
             arret_bot()
+
+            global statut_bot_crypto
+            statut_bot_crypto = False
+            
             await ctx.send("Bot arrêté")
 
         @self.command(name="liste")
