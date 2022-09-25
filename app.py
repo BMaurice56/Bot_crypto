@@ -69,7 +69,6 @@ pourcentage_stoploss_down = 1.02
 
 # Liste qui garde en mémoire les précédentes valeurs et si achat ou non
 historique = []
-dernier_achat_symbol = ""
 
 while True:
     t1 = perf_counter()
@@ -138,7 +137,6 @@ while True:
                 compteur_position += 1
 
                 variable_achat_vente = True
-                dernier_achat_symbol = symbol_up_kucoin
 
             else:
                 statut_p2 = p2.is_alive()
@@ -157,7 +155,6 @@ while True:
                 compteur_position += 1
 
                 variable_achat_vente = True
-                dernier_achat_symbol = symbol_up_kucoin
 
         elif prix > prediction and prix_up > prediction_up and prix_down < prediction_down:
             if btcdown > minimum_crypto_down:
@@ -186,7 +183,6 @@ while True:
                 compteur_position += 1
 
                 variable_achat_vente = True
-                dernier_achat_symbol = symbol_down_kucoin
 
             else:
                 symbol_stoploss = symbol_down_kucoin
@@ -205,21 +201,20 @@ while True:
                 compteur_position += 1
 
                 variable_achat_vente = True
-                dernier_achat_symbol = symbol_down_kucoin
 
         elif len(historique) > 0:
-            if (prix > prediction or prix_up > prediction_up or prix_down < prediction_down):
-                if variable_achat_vente == False and historique[-1] == symbol_up_kucoin and btcup > minimum_crypto_up:
+            if prix > prediction or prix_up > prediction_up or prix_down < prediction_down:
+                if variable_achat_vente == False and btcup > minimum_crypto_up:
                     achat_vente(btcup, symbol_up_kucoin, False)
 
-            elif (prix < prediction or prix_up < prediction_up or prix_down > prediction_down):
-                if variable_achat_vente == False and historique[-1] == symbol_down_kucoin and btcdown > minimum_crypto_down:
+            elif prix < prediction or prix_up < prediction_up or prix_down > prediction_down:
+                if variable_achat_vente == False and btcdown > minimum_crypto_down:
                     achat_vente(btcdown, symbol_up_kucoin, False)
     else:
         compteur_position = 0
 
     historique = [prix, prediction, prix_up,
-                  prediction_up, prix_down, prediction_down, dernier_achat_symbol]
+                  prediction_up, prix_down, prediction_down]
 
     # On enregistre l'état du bot (dernière heure et divergence)
     # Pour que si le bot est arrêté et repart, qu'il soit au courant
@@ -229,4 +224,4 @@ while True:
 
     t2 = perf_counter()
 
-    sleep(dodo - int(t2 - t1) - 2)
+    sleep(dodo - int(t2 - t1) - 1)
