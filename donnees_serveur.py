@@ -246,7 +246,7 @@ kucoin_api_key = os.getenv("KUCOIN_API_KEY")
 kucoin_api_secret = os.getenv("KUCOIN_API_SECRET")
 kucoin_phrase_securite = os.getenv("KUCOIN_PHRASE_SECURITE")
 
-pourcentage_gain = 0.0250
+pourcentage_gain = 0.0200
 
 minimum_crypto_up = 5000
 minimum_crypto_down = 40
