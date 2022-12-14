@@ -19,6 +19,23 @@ class Botcrypto(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix="!")
 
+        def arret_bot():
+            """
+            Fonction qui arrête le bot
+            """
+            proc = Popen(commande_bot_terminale,
+                         shell=True, stdout=PIPE, stderr=PIPE)
+
+            sortie, autre = proc.communicate()
+
+            processus = sortie.decode('utf-8').split("\n")[2:-1]
+
+            for elt in processus:
+                os.system(f"kill -9 {elt}")
+
+            global statut_bot_crypto
+            statut_bot_crypto = False
+
         def lancement_bot():
             """
             Fonction qui permet de lancer le bot
@@ -42,20 +59,6 @@ class Botcrypto(commands.Bot):
                 statut_bot_crypto = False
                 message_status_général("Le bot s'est arrêté !")
                 arret_bot()
-
-        def arret_bot():
-            """
-            Fonction qui arrête le bot
-            """
-            proc = Popen(commande_bot_terminale,
-                         shell=True, stdout=PIPE, stderr=PIPE)
-
-            sortie, autre = proc.communicate()
-
-            processus = sortie.decode('utf-8').split("\n")[2:-1]
-
-            for elt in processus:
-                os.system(f"kill -9 {elt}")
 
         @self.command(name="del")
         async def delete(ctx):
@@ -170,7 +173,7 @@ class Botcrypto(commands.Bot):
 
             global statut_bot_crypto
             statut_bot_crypto = False
-            
+
             await ctx.send("Bot arrêté")
 
         @self.command(name="liste")
