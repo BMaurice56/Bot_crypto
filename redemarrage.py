@@ -1,6 +1,5 @@
 from bot_discord import commande_bot_terminale
 from subprocess import Popen, PIPE
-from time import sleep
 import os
 
 # D'abord on arrête tous les processus du bot
