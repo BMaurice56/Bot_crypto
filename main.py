@@ -136,3 +136,15 @@ def etat_bot(lecture_ecriture: str, to_write: Optional[str] = None) -> str or No
         fichier.write(to_write)
 
         fichier.close()
+
+
+def kill_process(p: Process):
+    """
+    Fonction qui tue le processus passé en argument
+    """
+    # Etat du processus
+    statut = p.is_alive()
+
+    # S'il est en vie, on le tue
+    if statut == True:
+        p.kill()

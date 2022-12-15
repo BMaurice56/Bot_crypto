@@ -60,15 +60,10 @@ if date - ancienne_date < 3600:
     temps_dodo = 3600 - (date - ancienne_date)
     sleep(temps_dodo)
 
-# Permet de voir où on est dans le schéma cyclique 1, 2 succes puis échec
-compteur_position = 0
-
 # Variable pour modifier le pourcentage de variation de la crypto sur le marché de base
+# Sert pour le stoploss : si variation supérieur à ces deux bornes, on vend la crypto
 pourcentage_stoploss_up = 0.98
 pourcentage_stoploss_down = 1.02
-
-# Liste qui garde en mémoire les précédentes valeurs et si achat ou non
-historique = []
 
 while True:
     t1 = perf_counter()
@@ -109,131 +104,85 @@ while True:
     msg = état + "\n" + infos + "\n" + up + "\n" + down
 
     message_état_bot(msg)
-    if compteur_position < 2:
-        if prix < prediction and prix_up < prediction_up and prix_down > prediction_down and prediction_down <= 0.03 and prediction_up - prix_up >= 0.045:
-            if btcup > minimum_crypto_up:
-                pass
 
-            elif btcdown > minimum_crypto_down:
-                # Si le processus du stoploss est toujours en vie
-                # On l'arrête avant d'en créer un nouveau
-                statut_p2 = p2.is_alive()
-                if statut_p2 == True:
-                    p2.kill()
+    if prix < prediction and prix_up < prediction_up and prix_down > prediction_down and prediction_down <= 0.03 and prediction_up - prix_up >= 0.045:
+        if btcup > minimum_crypto_up:
+            pass
 
+        else:
+            # Si le processus du stoploss est toujours en vie
+            # On l'arrête avant d'en créer un nouveau
+            kill_process(p2)
+
+            if btcdown > minimum_crypto_down:
                 # Vente de la crypto descendante
                 achat_vente(btcdown, symbol_down_kucoin, False)
 
                 argent = montant_compte("USDT")
 
-                symbol_stoploss = symbol_up_kucoin
-                prix_stoploss = prix * pourcentage_stoploss_up
+            symbol_stoploss = symbol_up_kucoin
+            prix_stoploss = prix * pourcentage_stoploss_up
 
-                # Achat de la crypto montante
-                achat_vente(argent, symbol_up_kucoin, True)
+            # Achat de la crypto montante
+            achat_vente(argent, symbol_up_kucoin, True)
 
-                # On vient recréer un processus manuel et qu'on vient démarrer
-                # Gère le stoploss de façon manuel
-                p2 = Process(target=stoploss_manuel, args=[
-                    symbol_stoploss, prix_stoploss])
-                p2.start()
+            # On vient recréer un processus manuel et qu'on vient démarrer
+            # Gère le stoploss de façon manuel
+            p2 = Process(target=stoploss_manuel, args=[
+                symbol_stoploss, prix_stoploss])
+            p2.start()
 
-                compteur_position += 1
+            compteur_position += 1
 
-                variable_achat_vente = True
+            variable_achat_vente = True
 
-            else:
-                # Si le processus du stoploss est toujours en vie
-                # On l'arrête avant d'en créer un nouveau
-                statut_p2 = p2.is_alive()
-                if statut_p2 == True:
-                    p2.kill()
+    elif prix > prediction and prix_up > prediction_up and prix_down < prediction_down:
+        if btcdown > minimum_crypto_down:
+            pass
 
-                symbol_stoploss = symbol_up_kucoin
-                prix_stoploss = prix * pourcentage_stoploss_up
+        else:
+            # Si le processus du stoploss est toujours en vie
+            # On l'arrête avant d'en créer un nouveau
+            kill_process(p2)
 
-                achat_vente(argent, symbol_up_kucoin, True)
-
-                # On vient recréer un processus manuel et qu'on vient démarrer
-                # Gère le stoploss de façon manuel
-                p2 = Process(target=stoploss_manuel, args=[
-                    symbol_stoploss, prix_stoploss])
-                p2.start()
-
-                compteur_position += 1
-
-                variable_achat_vente = True
-
-        elif prix > prediction and prix_up > prediction_up and prix_down < prediction_down:
-            if btcdown > minimum_crypto_down:
-                pass
-
-            elif btcup > minimum_crypto_up:
-                # Si le processus du stoploss est toujours en vie
-                # On l'arrête avant d'en créer un nouveau
-                statut_p2 = p2.is_alive()
-                if statut_p2 == True:
-                    p2.kill()
+            if btcup > minimum_crypto_up:
 
                 # Vente de la crypto montant
                 achat_vente(btcup, symbol_up_kucoin, False)
 
-                symbol_stoploss = symbol_down_kucoin
-                prix_stoploss = prix * pourcentage_stoploss_down
-
                 argent = montant_compte("USDT")
 
-                # Achat de la crypto descendante
-                achat_vente(argent, symbol_down_kucoin, True)
+            symbol_stoploss = symbol_down_kucoin
+            prix_stoploss = prix * pourcentage_stoploss_down
 
-                # On vient recréer un processus manuel et qu'on vient démarrer
-                # Gère le stoploss de façon manuel
-                p2 = Process(target=stoploss_manuel, args=[
-                    symbol_stoploss, prix_stoploss])
-                p2.start()
+            # Achat de la crypto descendante
+            achat_vente(argent, symbol_down_kucoin, True)
 
-                compteur_position += 1
+            # On vient recréer un processus manuel et qu'on vient démarrer
+            # Gère le stoploss de façon manuel
+            p2 = Process(target=stoploss_manuel, args=[
+                symbol_stoploss, prix_stoploss])
+            p2.start()
 
-                variable_achat_vente = True
+            compteur_position += 1
 
-            else:
-                symbol_stoploss = symbol_down_kucoin
-                prix_stoploss = prix * pourcentage_stoploss_down
+            variable_achat_vente = True
 
-                # Si le processus du stoploss est toujours en vie
-                # On l'arrête avant d'en créer un nouveau
-                statut_p2 = p2.is_alive()
-                if statut_p2 == True:
-                    p2.kill()
-
-                achat_vente(argent, symbol_down_kucoin, True)
-
-                # On vient recréer un processus manuel et qu'on vient démarrer
-                # Gère le stoploss de façon manuel
-                p2 = Process(target=stoploss_manuel, args=[
-                    symbol_stoploss, prix_stoploss])
-                p2.start()
-
-                compteur_position += 1
-
-                variable_achat_vente = True
-
-        elif len(historique) > 0:
-            # Si le prix est supérieur a la prédiction
-            # Et que on a pas acheté et qu'on a des cryptos
-            # Alors on vend
-            if prix > prediction or prix_up > prediction_up or prix_down < prediction_down:
-                if variable_achat_vente == False and btcup > minimum_crypto_up:
-                    achat_vente(btcup, symbol_up_kucoin, False)
-
-            elif prix < prediction or prix_up < prediction_up or prix_down > prediction_down:
-                if variable_achat_vente == False and btcdown > minimum_crypto_down:
-                    achat_vente(btcdown, symbol_up_kucoin, False)
     else:
-        compteur_position = 0
+        # Si le prix est supérieur a la prédiction
+        # Et que on a pas acheté et qu'on a des cryptos
+        # Alors on vend
+        if prix > prediction or prix_up > prediction_up or prix_down < prediction_down:
+            if variable_achat_vente == False and btcup > minimum_crypto_up:
+                achat_vente(btcup, symbol_up_kucoin, False)
 
-    historique = [prix, prediction, prix_up,
-                  prediction_up, prix_down, prediction_down]
+                kill_process(p2)
+
+        elif prix < prediction or prix_up < prediction_up or prix_down > prediction_down:
+            if variable_achat_vente == False and btcdown > minimum_crypto_down:
+                achat_vente(btcdown, symbol_up_kucoin, False)
+
+                kill_process(p2)
 
     # On enregistre l'état du bot (dernière heure et divergence)
     # Pour que si le bot est arrêté et repart, qu'il soit au courant
