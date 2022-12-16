@@ -5,6 +5,7 @@ from discord.ext import commands
 from main import *
 import traceback
 import runpy
+import os
 
 """
 fichier = open("crypto.txt", "r")
