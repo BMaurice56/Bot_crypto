@@ -1,6 +1,6 @@
-Première version du projet de bot de trading sous intelligence artificielle !
+Projet de bot de trading sous intelligence artificielle !
 
-Structure du bot :
+Structure du bot pour la v1:
 
 - Les ia sont basées sur le modèle de deepLearning, elles ont été entrainé sur les indices techniques du marché calculés à partir des données historiques du marché.
 - Les modèles d'ia crées permettent ensuite d'estimer un prix future de la cryptomonnaie sur lequelle elles ont été entrainée selon l'état du marché.
