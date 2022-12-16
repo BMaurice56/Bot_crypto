@@ -68,7 +68,7 @@ pourcentage_stoploss_down = 1.02
 while True:
     t1 = perf_counter()
 
-    variable_achat_vente = False
+    achat_vente = False
 
     argent = montant_compte("USDT")
     btcup = montant_compte("BTC3L")
@@ -132,9 +132,7 @@ while True:
                 symbol_stoploss, prix_stoploss])
             p2.start()
 
-            compteur_position += 1
-
-            variable_achat_vente = True
+            achat_vente = True
 
     elif prix > prediction and prix_up > prediction_up and prix_down < prediction_down:
         if btcdown > minimum_crypto_down:
@@ -164,22 +162,20 @@ while True:
                 symbol_stoploss, prix_stoploss])
             p2.start()
 
-            compteur_position += 1
-
-            variable_achat_vente = True
+            achat_vente = True
 
     else:
         # Si le prix est supérieur a la prédiction
         # Et que on a pas acheté et qu'on a des cryptos
         # Alors on vend
         if prix > prediction or prix_up > prediction_up or prix_down < prediction_down:
-            if variable_achat_vente == False and btcup > minimum_crypto_up:
+            if achat_vente == False and btcup > minimum_crypto_up:
                 achat_vente(btcup, symbol_up_kucoin, False)
 
                 kill_process(p2)
 
         elif prix < prediction or prix_up < prediction_up or prix_down > prediction_down:
-            if variable_achat_vente == False and btcdown > minimum_crypto_down:
+            if achat_vente == False and btcdown > minimum_crypto_down:
                 achat_vente(btcdown, symbol_up_kucoin, False)
 
                 kill_process(p2)
