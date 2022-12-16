@@ -120,7 +120,7 @@ client = Client(api_key, api_secret)
 
 # @connexion
 @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
-def donnée(symbol: str, début: str, fin: str, longueur: int) -> pandas.DataFrame:
+def donnée(symbol: str, début: str, fin: str) -> pandas.DataFrame:
     """
     Fonction qui prend en argument un symbol de type "BTCEUR" ou encore "ETHEUR" etc...
     Et qui renvoie les données sous forme d'une dataframe pandas
@@ -132,19 +132,19 @@ def donnée(symbol: str, début: str, fin: str, longueur: int) -> pandas.DataFra
     """
     donnée_historique = []
     # Tant que l'on a pas la bonne quantité de donnée on continue
-    while len(donnée_historique) != longueur:
-        # Récupération des données de la crypto
-        if fin[0] == "0":
-            donnée_historique = client.get_historical_klines(
-                symbol, client.KLINE_INTERVAL_15MINUTE, début)
 
-        else:
-            donnée_historique = client.get_historical_klines(
-                symbol, client.KLINE_INTERVAL_15MINUTE, début, fin)
+    # Récupération des données de la crypto
+    if fin[0] == "0":
+        donnée_historique = client.get_historical_klines(
+            symbol, client.KLINE_INTERVAL_1HOUR, début)
 
-        # On enlève les données pas nécessaire
-        for i in range(len(donnée_historique)):
-            donnée_historique[i] = donnée_historique[i][:7]
+    else:
+        donnée_historique = client.get_historical_klines(
+            symbol, client.KLINE_INTERVAL_1HOUR, début, fin)
+
+    # On enlève les données pas nécessaire
+    for i in range(len(donnée_historique)):
+        donnée_historique[i] = donnée_historique[i][:7]
 
     # Création de la df et nommage des colonnes
     data = pandas.DataFrame(donnée_historique)

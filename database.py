@@ -143,7 +143,7 @@ def insert_data_historique_bdd(symbol: str, nombre_données: int, curseur, conne
     # Puis on vient itérer sur ces données
 
     données_serveur = donnée(
-        symbol, f"{15 * nombre_données + 600} min ago UTC", "0 min ago UTC", (15 * nombre_données + 600)//15)
+        symbol, f"{15 * nombre_données + 600} min ago UTC", "0 min ago UTC")
 
     liste_data = []
     liste_rsi = []
