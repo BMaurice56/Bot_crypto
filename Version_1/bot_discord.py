@@ -3,9 +3,11 @@ from main import *
 import traceback
 import runpy
 
+"""
 fichier = open("crypto.txt", "r")
 text = fichier.read()
 listes_crypto = text.split(";")
+"""
 
 commande_bot_terminale = """ps -aux | grep "bot_discord.py"| awk -F " " '{ print $2 }' """
 commande_redemarrage_terminale = """ps -aux | grep "redemarrage.py"| awk -F " " '{ print $2 }' """
