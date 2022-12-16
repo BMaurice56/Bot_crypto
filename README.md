@@ -1,0 +1,1 @@
+Première version du projet de bot de trading avec une intelligence artificielle
