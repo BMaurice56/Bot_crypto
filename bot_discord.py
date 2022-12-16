@@ -1,3 +1,6 @@
+import sys
+sys.path[:0] = ['Version_1/']
+
 from discord.ext import commands
 from main import *
 import traceback
@@ -324,4 +327,4 @@ class Botcrypto(commands.Bot):
 if __name__ == "__main__":
     os.system("clear")
     bot = Botcrypto()
-    bot.run(os.getenv("TOKEN_BOT"))
+    bot.run("OTcyNDY0NDAwNzY4MzM1ODkz.YnZcDA.LYfcnXeeBB2aEO0-ZX7bNvM1T-8")

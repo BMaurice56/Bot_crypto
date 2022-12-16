@@ -112,8 +112,8 @@ def connexion(f):
 # Fonctions qui récupère les données du serveur
 
 
-api_key = os.getenv("API_KEY")
-api_secret = os.getenv("API_SECRET")
+api_key = "eUFWHXCMrNKoP4LURDCOW0faPCyzm2teZLU3eBYUM2AoNM3wvr8F4d3IjeJuDipd"
+api_secret = "AZM89mot3fJNk2ODEGomItIkWyP6pTazXj6W2SHfSRoRL3CTyIUQvcmXTIi6edRy"
 
 client = Client(api_key, api_secret)
 
@@ -242,9 +242,9 @@ def all_data(symbol: str) -> dict:
 
 api = "https://api.kucoin.com"
 
-kucoin_api_key = os.getenv("KUCOIN_API_KEY")
-kucoin_api_secret = os.getenv("KUCOIN_API_SECRET")
-kucoin_phrase_securite = os.getenv("KUCOIN_PHRASE_SECURITE")
+kucoin_api_key = "62b9bc88a719fb000156ca38"
+kucoin_api_secret = "d353a33d-cf02-4d73-9c15-2c5713baa8b1"
+kucoin_phrase_securite = "c5%Pnp8o$FE%^CEM7jwFp9PaTtW4kq"
 
 pourcentage_gain = 0.0150
 

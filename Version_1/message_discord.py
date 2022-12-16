@@ -1,17 +1,12 @@
 from discord_webhook import DiscordWebhook, DiscordEmbed
-from dotenv import load_dotenv
-import os
-
-# Chargement des clés
-
-load_dotenv(dotenv_path="config_bot")
 
 # Adresse du webhook discord
-adr_webhook_prise_position = os.getenv("ADR_WEBHOOK_PRISE_POSITION")
-adr_webhook_état_bot = os.getenv("ADR_WEBHOOK_ETAT_BOT")
-adr_webhook_général = os.getenv("ADR_WEBHOOK_GENERAL")
+adr_webhook_prise_position = "https://discord.com/api/webhooks/973269614874214410/UPyGLXDE2MbjvtmehG8cAAxx3zXtU3Kt-mN4TolLo1golSuHUp9AiCal0jrvIu3C6E6_"
+adr_webhook_état_bot = "https://discord.com/api/webhooks/972545553210695731/zLBkaDU4SPyyLoVXz5E-tv-4PkhfrZH6gipWwSI-1cAqwxFlrbYjKsxxRc2i9zioINIh"
+adr_webhook_général = "https://discordapp.com/api/webhooks/969652904959045674/KdVNf9INCcZ3O4V1NnzCsJfhwiAgy4cy1GMjaPZI7spmAAeIkS7sQSYGuKMT5YyAyLza"
 
 nom = "Jimmy"
+
 
 def message_prise_position(message: str, prise_position: bool) -> None:
     """
