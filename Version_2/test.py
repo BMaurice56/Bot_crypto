@@ -23,7 +23,7 @@ class Environnement:
         """
         Initialise l'environnement de l'ia
         """
-        self.argent = 10_000
+        # TODO
 
     class Action:
         """
@@ -37,27 +37,29 @@ class Environnement:
             self.prix_position = None
             self.montant_position = None
 
-        def prise_position(self, argent: int, montant: int, position: int) -> int:
+        def prise_position(self, montant: int, position: int) -> None:
             """
             Fonction qui simule une prise de position de l'ia
             """
             self.montant_position = montant
             self.prix_position = position
 
-            return argent - montant
-
-        def vente_position(self, prix_vente: int) -> int:
+        def vente_position(self, prix_vente: int) -> str or bool:
             """
             Fonction qui simule la vente d'une position de l'ia
+            Renvoie True ou false si gain suite à la transaction ou non
             """
 
             if self.prix_position == None:
                 return "pas de position prise !"
 
+            gain = (prix_vente * self.montant_position) / self.prix_position
+            resultat = (gain >= self.montant_position)
+
             self.prix_position = None
             self.montant_position = None
 
-            return (prix_vente * self.montant_position) / self.prix_position
+            return resultat
 
 
 ############################ ChatGPT ################################
