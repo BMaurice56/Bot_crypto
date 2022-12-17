@@ -173,6 +173,8 @@ def all_data(symbol: str) -> dict:
     """
     Fonction qui prend en argument un symbol
     Et renvoie toutes les données de tous les jetons (ceux avec effet de levier aussi) sous forme d'un seul dictionnaire
+    Ex param :
+    symbol : BTC
     """
     # Création du dictionnaire que recevra toutes les dataframes avec les données
     manager = Manager()

@@ -242,6 +242,7 @@ def select_donnée_bdd(df_numpy: str, curseur, connexion) -> [pandas.DataFrame, 
     if df_numpy == "dataframe":
         dp = pandas.DataFrame(donnée_dataframe)
         prix_df = pandas.DataFrame(prix)
+        
         return [dp, prix_df]
 
     elif df_numpy == "numpy":
