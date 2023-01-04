@@ -1,65 +1,14 @@
 from import_module_version1 import *
 from tensorflow.keras.utils import to_categorical
-import keras
 import tensorflow as tf
-
-#donnee_bdd, prix_bdd = select_donnée_bdd("numpy")
-
-
-"""
-datas = all_data("BTC")
-
-data = datas[0]
-rsi = datas[3]
-"""
+from random import randint
 
 
-class Environnement:
+def prise_position_gain(self, donnees: numpy.array, indice: int) -> bool:
     """
-    Class qui définie l'environnement de l'ia
+    Fonction qui simule une prise de position de l'ia
+    Renvoie True ou false si la prise de position de l'ia a mené à un gain
     """
-
-    def __init__(self):
-        """
-        Initialise l'environnement de l'ia
-        """
-        # TODO
-
-    class Action:
-        """
-        Class action qui possède les actions possibles pour l'ia    
-        """
-
-        def __init__(self):
-            """
-            Initialise la classe action
-            """
-            self.prix_position = None
-            self.montant_position = None
-
-        def prise_position(self, montant: int, position: int) -> None:
-            """
-            Fonction qui simule une prise de position de l'ia
-            """
-            self.montant_position = montant
-            self.prix_position = position
-
-        def vente_position(self, prix_vente: int) -> str or bool:
-            """
-            Fonction qui simule la vente d'une position de l'ia
-            Renvoie True ou false si gain suite à la transaction ou non
-            """
-
-            if self.prix_position == None:
-                return "pas de position prise !"
-
-            gain = (prix_vente * self.montant_position) / self.prix_position
-            resultat = (gain >= self.montant_position)
-
-            self.prix_position = None
-            self.montant_position = None
-
-            return resultat
 
 
 ############################ ChatGPT ################################
@@ -98,8 +47,8 @@ class CustomEnv:
 class Agent:
     def __init__(self, action_size=1, state_size=378):
         # Initialisation de l'agent
-        self.state_size = state_size  # Activation 1 ou 0, renvoie 1 ou 9
-        self.action_size = action_size  # Nombre d'entrées du bot (378 données)
+        self.action_size = action_size  # Activation 1 ou 0, renvoie 1 ou 0
+        self.state_size = state_size  # Nombre d'entrées du bot (378 données)
 
         # Création du modèle de réseau de neurones
         self.model = self._build_model()
@@ -110,7 +59,7 @@ class Agent:
         model.add(Dense(50, input_dim=self.state_size, activation='relu'))
         model.add(Dense(15, activation='relu'))
         model.add(Dense(self.action_size, activation='linear'))
-        model.compile(loss='mse', optimizer=keras.optimizers.Adam(lr=0.001))
+        model.compile(loss='mean_squared_logarithmic_error', optimizer='adam')
         return model
 
     def act(self, state):
@@ -127,3 +76,19 @@ class Agent:
         target_f = self.model.predict(state)
         target_f[0][action] = target
         self.model.fit(state, target_f, epochs=1, verbose=0)
+
+
+def _build_model():
+    # Création du modèle
+    model = Sequential()
+    model.add(Dense(50, input_dim=378, activation='relu'))
+    model.add(Dense(15, activation='relu'))
+    model.add(Dense(1, activation='sigmoid'))
+    model.compile(loss='mean_squared_logarithmic_error', optimizer='adam')
+    return model
+
+
+donnee_bdd, prix_bdd = select_donnée_bdd("numpy")
+
+modele = _build_model()
+
