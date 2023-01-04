@@ -15,7 +15,8 @@ def training_keras() -> None:
     modele = Sequential()
 
     modele.add(Dense(50, input_dim=378, activation='relu'))
-    modele.add(Dense(15, input_dim=378, activation='relu'))
+    modele.add(Dense(15, activation='relu'))
+    # Deuxieème input supprimer => meilleur résultat avec 40 et 25
 
     modele.compile(loss='mean_squared_logarithmic_error',
                    optimizer='adam')
