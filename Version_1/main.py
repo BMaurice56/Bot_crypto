@@ -14,14 +14,13 @@ def training_keras() -> None:
 
     modele = Sequential()
 
-    modele.add(Dense(50, input_dim=378, activation='relu'))
-    modele.add(Dense(15, activation='relu'))
-    # Deuxieème input supprimer => meilleur résultat avec 40 et 25
+    modele.add(Dense(30, input_dim=298, activation='relu'))
+    modele.add(Dense(16, activation='relu'))
 
     modele.compile(loss='mean_squared_logarithmic_error',
                    optimizer='adam')
 
-    modele.fit(X, y, epochs=50, batch_size=4)
+    modele.fit(X, y, epochs=50, batch_size=6)
 
     modele_json = modele.to_json()
 
@@ -39,8 +38,7 @@ def prédiction_keras(donnée_serveur_data: pandas.DataFrame, donnée_serveur_rs
     Fonction qui fait les prédiction et renvoie le prix potentiel de la crypto
     """
 
-    ls = [SMA(donnée_serveur_data), EMA(donnée_serveur_data), harami(donnée_serveur_data),
-          doji(donnée_serveur_data), ADX(donnée_serveur_data),
+    ls = [SMA(donnée_serveur_data), EMA(donnée_serveur_data), ADX(donnée_serveur_data),
           KAMA(donnée_serveur_data), T3(
               donnée_serveur_data), TRIMA(donnée_serveur_data),
           PPO(donnée_serveur_data), ultimate_oscilator(donnée_serveur_data),
@@ -55,14 +53,14 @@ def prédiction_keras(donnée_serveur_data: pandas.DataFrame, donnée_serveur_rs
 
     cpt = 1
     for element in ls:
-        if cpt <= 10 or cpt >= 23:
+        if cpt <= 8 or cpt >= 21:
             for nb in element:
                 donnée_prédiction.append(nb)
-        elif cpt <= 13:
+        elif cpt <= 11:
             for liste in element:
                 for nb in liste:
                     donnée_prédiction.append(nb)
-        elif cpt <= 22:
+        elif cpt <= 20:
             donnée_prédiction.append(element)
 
         cpt += 1
@@ -80,11 +78,11 @@ def chargement_modele(symbol):
     Fonction qui charge et renvoie les trois modèles
     """
 
-    json_file = open(f'Modèle_1h/SPOT/{symbol}USDT/modele.json', 'r')
+    json_file = open(f'Modèle_1h_2.0/SPOT/{symbol}USDT/modele.json', 'r')
     json_file_up = open(
-        f'Modèle_1h/SPOT_EFFET_LEVIER/{symbol}UPUSDT/modele.json', 'r')
+        f'Modèle_1h_2.0/SPOT_EFFET_LEVIER/{symbol}UPUSDT/modele.json', 'r')
     json_file_down = open(
-        f'Modèle_1h/SPOT_EFFET_LEVIER/{symbol}DOWNUSDT/modele.json', 'r')
+        f'Modèle_1h_2.0/SPOT_EFFET_LEVIER/{symbol}DOWNUSDT/modele.json', 'r')
 
     loaded_model_json = json_file.read()
     loaded_model_json_up = json_file_up.read()
@@ -98,11 +96,11 @@ def chargement_modele(symbol):
     loaded_model_up = model_from_json(loaded_model_json_up)
     loaded_model_down = model_from_json(loaded_model_json_down)
 
-    loaded_model.load_weights(f"Modèle_1h/SPOT/{symbol}USDT/modele.h5")
+    loaded_model.load_weights(f"Modèle_1h_2.0/SPOT/{symbol}USDT/modele.h5")
     loaded_model_up.load_weights(
-        f"Modèle_1h/SPOT_EFFET_LEVIER/{symbol}UPUSDT/modele.h5")
+        f"Modèle_1h_2.0/SPOT_EFFET_LEVIER/{symbol}UPUSDT/modele.h5")
     loaded_model_down.load_weights(
-        f"Modèle_1h/SPOT_EFFET_LEVIER/{symbol}DOWNUSDT/modele.h5")
+        f"Modèle_1h_2.0/SPOT_EFFET_LEVIER/{symbol}DOWNUSDT/modele.h5")
 
     loaded_model.compile(
         loss='mean_squared_logarithmic_error', optimizer='adam')
@@ -149,3 +147,6 @@ def kill_process(p: Process):
     # S'il est en vie, on le tue
     if statut == True:
         p.kill()
+
+if __name__ == "__main__":
+    training_keras()

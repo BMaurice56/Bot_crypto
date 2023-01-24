@@ -296,54 +296,6 @@ def EMA(donnée_ema: pandas.DataFrame) -> list:
     return ema
 
 
-def harami(donnée_harami: pandas.DataFrame) -> list:
-    """
-    Fonction qui calcule le harami (modèle de renversement qui peut être haussier ou baissier)
-    """
-    data_open = [float(x) for x in donnée_harami.open.values]
-    data_high = [float(x) for x in donnée_harami.high.values]
-    data_low = [float(x) for x in donnée_harami.low.values]
-    data_close = [float(x) for x in donnée_harami.close.values]
-
-    np_open = numpy.array(data_open)
-    np_high = numpy.array(data_high)
-    np_low = numpy.array(data_low)
-    np_close = numpy.array(data_close)
-
-    ha = talib.CDLHARAMI(np_open, np_high, np_low, np_close)
-
-    ls = []
-
-    for elt in ha:
-        ls.append(elt)
-
-    return ls
-
-
-def doji(donnée_doji: pandas.DataFrame) -> list:
-    """
-    Fonction qui calcule le doji (peuvent être considérés comme un renversement possible ou comme un modèle de continuation)
-    """
-    data_open = [float(x) for x in donnée_doji.open.values]
-    data_high = [float(x) for x in donnée_doji.high.values]
-    data_low = [float(x) for x in donnée_doji.low.values]
-    data_close = [float(x) for x in donnée_doji.close.values]
-
-    np_open = numpy.array(data_open)
-    np_high = numpy.array(data_high)
-    np_low = numpy.array(data_low)
-    np_close = numpy.array(data_close)
-
-    doji_data = talib.CDLDOJI(np_open, np_high, np_low, np_close)
-
-    ls = []
-
-    for elt in doji_data:
-        ls.append(elt)
-
-    return ls
-
-
 def ADX(donnée_adx: pandas.DataFrame) -> list:
     """
     Fonction qui calcul le ADX (Décrit si un marché est en tendance ou non)
@@ -383,14 +335,8 @@ def T3(donnée_t3: pandas.DataFrame) -> list:
     Fonction qui calcule le triple moving average exponential (peut donner des signaux potentiels d'achat 
     et de vente et tente de filtrer le bruit à court terme.)
     """
-    data_open = [float(x) for x in donnée_t3.open.values]
-    data_high = [float(x) for x in donnée_t3.high.values]
-    data_low = [float(x) for x in donnée_t3.low.values]
     data_close = [float(x) for x in donnée_t3.close.values]
 
-    np_open = numpy.array(data_open)
-    np_high = numpy.array(data_high)
-    np_low = numpy.array(data_low)
     np_close = numpy.array(data_close)
 
     t3 = [float(x) for x in talib.T3(np_close) if math.isnan(x) == False]

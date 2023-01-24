@@ -28,8 +28,6 @@ def bdd_data(curseur, connexion):
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     sma TEXT, 
     ema TEXT,
-    harami TEXT,
-    doji TEXT,
     adx TEXT,
     kama TEXT,
     t3 TEXT,
@@ -90,16 +88,14 @@ def insert_bdd(table: str, data: pandas.DataFrame, curseur, connexion) -> None:
     # On transforme en str qu'au dernier moment car la liste
     # Est utilisé lors de l'insertion des données dans la bdd au lancement
     if table == "data":
-        ls = [str(SMA(data)), str(EMA(data)), str(harami(data)),
-              str(doji(data)), str(ADX(data)), str(
-                  KAMA(data)), str(T3(data)), str(TRIMA(data)),
-              str(PPO(data)), str(ultimate_oscilator(data)),
-              str(MACD(data)), str(stochRSI(data)), str(bandes_bollinger(
-                  data)), float(data.close.values[-1])]
+        ls = [str(SMA(data)), str(EMA(data)), str(ADX(data)), str(
+            KAMA(data)), str(T3(data)), str(TRIMA(data)),
+            str(PPO(data)), str(ultimate_oscilator(data)),
+            str(MACD(data)), str(stochRSI(data)), str(bandes_bollinger(
+                data)), float(data.close.values[-1])]
 
         curseur.execute("""
-        insert into data (sma, ema, harami,
-        doji, adx, kama, t3, trima, ppo, u_oscilator,
+        insert into data (sma, ema, adx, kama, t3, trima, ppo, u_oscilator,
         macd, stochrsi, bande_bollinger, prix_fermeture) 
         values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         """, ls)
@@ -128,11 +124,8 @@ def insert_data_historique_bdd(symbol: str, nombre_données: int, curseur, conne
     """
     Fonction qui permet de charger les x dernières minutes/heures (avec un espace de x min/heure pour chaque jeux de données)
     Dans la base de donnée
-    Calcul du nombre initial des boucles :
-    15 x nombres_données + 600 ou 225 selon intervalles de données
-    Ex : 15 x 100 + 600 = 2100 et 15 * 100 + 225 = 1725
     Ex param :
-    symbol : 'BTCEUR'
+    symbol : 'BTCUSDT'
     nombres_données : 1000
     """
     # On enlève tout dans la bdd
@@ -143,7 +136,7 @@ def insert_data_historique_bdd(symbol: str, nombre_données: int, curseur, conne
     # Puis on vient itérer sur ces données
 
     données_serveur = donnée(
-        symbol, f"{15 * nombre_données + 600} min ago UTC", "0 min ago UTC")
+        symbol, f"{nombre_données} hour ago UTC", "0 min hour UTC")
 
     liste_data = []
     liste_rsi = []
@@ -152,12 +145,11 @@ def insert_data_historique_bdd(symbol: str, nombre_données: int, curseur, conne
 
         data = données_serveur[i:i+40]
 
-        ls = [str(SMA(data)), str(EMA(data)), str(harami(data)),
-              str(doji(data)), str(ADX(data)), str(
-                  KAMA(data)), str(T3(data)), str(TRIMA(data)),
-              str(PPO(data)), str(ultimate_oscilator(data)),
-              str(MACD(data)), str(stochRSI(data)), str(bandes_bollinger(
-                  data)), float(data.close.values[-1])]
+        ls = [str(SMA(data)), str(EMA(data)),  str(ADX(data)), str(
+            KAMA(data)), str(T3(data)), str(TRIMA(data)),
+            str(PPO(data)), str(ultimate_oscilator(data)),
+            str(MACD(data)), str(stochRSI(data)), str(bandes_bollinger(
+                data)), float(data.close.values[-1])]
 
         liste_data.append(ls)
 
@@ -172,10 +164,9 @@ def insert_data_historique_bdd(symbol: str, nombre_données: int, curseur, conne
         liste_rsi.append(ls)
 
     curseur.executemany("""
-        insert into data (sma, ema, harami,
-        doji, adx, kama, t3, trima, ppo, u_oscilator,
+        insert into data (sma, ema, adx, kama, t3, trima, ppo, u_oscilator,
         macd, stochrsi, bande_bollinger, prix_fermeture) 
-        values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        values (?,?,?,?,?,?,?,?,?,?,?,?)
         """, liste_data)
 
     curseur.executemany("""
@@ -199,8 +190,7 @@ def select_donnée_bdd(df_numpy: str, curseur, connexion) -> [pandas.DataFrame, 
     df_numpy : dataframe ou numpy
     """
     donnée_bdd = curseur.execute("""
-    SELECT data.sma, data.ema, data.harami, data.doji, 
-    data.adx, data.kama, data.t3, data.trima, data.ppo, data.u_oscilator,
+    SELECT data.sma, data.ema, data.adx, data.kama, data.t3, data.trima, data.ppo, data.u_oscilator,
     data.macd, data.stochrsi, data.bande_bollinger, 
     rsi_vwap_cmf.rsi, rsi_vwap_cmf.vwap, rsi_vwap_cmf.cmf,
     rsi_vwap_cmf.cci, rsi_vwap_cmf.mfi, rsi_vwap_cmf.linearregression,
@@ -218,35 +208,35 @@ def select_donnée_bdd(df_numpy: str, curseur, connexion) -> [pandas.DataFrame, 
 
     # On vient retransformer les données dans leur état d'origine
     # Et on remet le tout dans une dataframe
-    donnée_dataframe = []
+    donnée = []
     for row in donnée_bdd:
         temp = []
         cpt = 1
         for element in row:
-            if cpt <= 10 or cpt >= 23:
+            if cpt <= 8 or cpt >= 21:
                 elt = ast.literal_eval(str(element))
                 for nb in elt:
                     temp.append(nb)
-            elif cpt <= 13:
+            elif cpt <= 11:
                 elt = ast.literal_eval(str(element))
                 for liste in elt:
                     for nb in liste:
                         temp.append(nb)
-            elif cpt <= 22:
+            elif cpt <= 20:
                 temp.append(float(element))
 
             cpt += 1
 
-        donnée_dataframe.append(temp)
+        donnée.append(temp)
 
     if df_numpy == "dataframe":
-        dp = pandas.DataFrame(donnée_dataframe)
+        dp = pandas.DataFrame(donnée)
         prix_df = pandas.DataFrame(prix)
-        
+
         return [dp, prix_df]
 
     elif df_numpy == "numpy":
-        np = numpy.array(donnée_dataframe)
+        np = numpy.array(donnée)
         prix_np = numpy.array(prix)
 
         return [np, prix_np]
