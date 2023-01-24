@@ -77,11 +77,11 @@ def chargement_modele(symbol):
     Fonction qui charge et renvoie les trois modèles
     """
 
-    json_file = open(f'Modèle_1h_2.0/SPOT/{symbol}USDT/modele.json', 'r')
+    json_file = open(f'Modele_1h_2.0/SPOT/{symbol}USDT/modele.json', 'r')
     json_file_up = open(
-        f'Modèle_1h_2.0/SPOT_EFFET_LEVIER/{symbol}UPUSDT/modele.json', 'r')
+        f'Modele_1h_2.0/SPOT_EFFET_LEVIER/{symbol}UPUSDT/modele.json', 'r')
     json_file_down = open(
-        f'Modèle_1h_2.0/SPOT_EFFET_LEVIER/{symbol}DOWNUSDT/modele.json', 'r')
+        f'Modele_1h_2.0/SPOT_EFFET_LEVIER/{symbol}DOWNUSDT/modele.json', 'r')
 
     loaded_model_json = json_file.read()
     loaded_model_json_up = json_file_up.read()
@@ -95,11 +95,11 @@ def chargement_modele(symbol):
     loaded_model_up = model_from_json(loaded_model_json_up)
     loaded_model_down = model_from_json(loaded_model_json_down)
 
-    loaded_model.load_weights(f"Modèle_1h_2.0/SPOT/{symbol}USDT/modele.h5")
+    loaded_model.load_weights(f"Modele_1h_2.0/SPOT/{symbol}USDT/modele.h5")
     loaded_model_up.load_weights(
-        f"Modèle_1h_2.0/SPOT_EFFET_LEVIER/{symbol}UPUSDT/modele.h5")
+        f"Modele_1h_2.0/SPOT_EFFET_LEVIER/{symbol}UPUSDT/modele.h5")
     loaded_model_down.load_weights(
-        f"Modèle_1h_2.0/SPOT_EFFET_LEVIER/{symbol}DOWNUSDT/modele.h5")
+        f"Modele_1h_2.0/SPOT_EFFET_LEVIER/{symbol}DOWNUSDT/modele.h5")
 
     loaded_model.compile(
         loss='mean_squared_logarithmic_error', optimizer='adam')
