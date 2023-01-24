@@ -9,6 +9,9 @@ symbol_up_kucoin = "BTC3L-USDT"
 symbol_down_kucoin = "BTC3S-USDT"
 dodo = 60*60
 
+# Création d'un objet binance pour interagir avec les serveurs de binance
+binance = Binance()
+
 # Chargement des modèles d'ia pour les prédictions
 loaded_model, loaded_model_up, loaded_model_down = chargement_modele(symbol)
 
@@ -77,7 +80,7 @@ while True:
     date = datetime.now(tz=ZoneInfo("Europe/Paris")
                         ).strftime("%A %d %B %Y %H:%M:%S")
 
-    datas = all_data(symbol)
+    datas = binance.all_data(symbol)
 
     data = datas[0]
     data_up = datas[1]

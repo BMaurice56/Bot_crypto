@@ -147,6 +147,3 @@ def kill_process(p: Process):
     # S'il est en vie, on le tue
     if statut == True:
         p.kill()
-
-if __name__ == "__main__":
-    training_keras()

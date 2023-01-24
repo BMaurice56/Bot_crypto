@@ -1,11 +1,12 @@
 import sys
 sys.path[:0] = ['Version_1/']
 
-from discord.ext import commands
-from main import *
-import traceback
-import runpy
 import os
+import runpy
+import traceback
+from main import *
+from discord.ext import commands
+
 
 """
 fichier = open("crypto.txt", "r")

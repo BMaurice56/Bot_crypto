@@ -158,8 +158,3 @@ loop.run_until_complete(jsp(tototo, totototototo))
 loop.close()
 
 """
-
-from main import *
-
-#insert_data_historique_bdd("BTCDOWNUSDT", 50_000)
-training_keras()

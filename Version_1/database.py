@@ -135,7 +135,9 @@ def insert_data_historique_bdd(symbol: str, nombre_données: int, curseur, conne
     # On récupère toutes les données en 1 seule requête (car sinon beaucoup trop long)
     # Puis on vient itérer sur ces données
 
-    données_serveur = donnée(
+    binance = Binance()
+
+    données_serveur = binance.donnée(
         symbol, f"{nombre_données} hour ago UTC", "0 min hour UTC")
 
     liste_data = []
