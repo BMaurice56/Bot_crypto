@@ -28,6 +28,8 @@ class Botcrypto(commands.Bot):
         Initialise le bot discord
         """
         super().__init__(command_prefix="!")
+
+        # Objet Kucoin pour interagir avec le serveur
         self.kucoin = Kucoin()
         # Variable qui permet de savoir si le bot est déjà lancé ou non
         self.statut_bot_crypto = False
@@ -36,6 +38,8 @@ class Botcrypto(commands.Bot):
             """
             Fonction qui arrête le bot
             """
+            self.statut_bot_crypto = False
+
             proc = Popen(commande_bot_terminale,
                          shell=True, stdout=PIPE, stderr=PIPE)
 
@@ -45,8 +49,6 @@ class Botcrypto(commands.Bot):
 
             for elt in processus:
                 os.system(f"kill -9 {elt}")
-
-            self.statut_bot_crypto = False
 
         def lancement_bot():
             """
@@ -131,12 +133,14 @@ class Botcrypto(commands.Bot):
 
             # Puis on vérifie que la cryptomonnaie existe bien
             crypto = msg.content
-            """
-            crypto = "BTC-USDT"
             if crypto in listes_crypto:
                 await ctx.send(f"Le prix de la crypto est de : {self.kucoin.prix_temps_reel_kucoin(crypto)}")
             else:
                 await ctx.send("La cryptomonnaie n'existe pas")
+            """
+            crypto = "BTC-USDT"
+
+            await ctx.send(f"Le prix de la crypto est de : {self.kucoin.prix_temps_reel_kucoin(crypto)}")
 
         @self.command(name="start")
         async def start(ctx):
@@ -181,7 +185,7 @@ class Botcrypto(commands.Bot):
             Fonction qui stop le bot
             Tue le processus du bot ainsi que les processus qui chargent la bdd si ce n'est pas fini
             """
-            self.arret_bot()
+            arret_bot()
 
             self.statut_bot_crypto = False
 
