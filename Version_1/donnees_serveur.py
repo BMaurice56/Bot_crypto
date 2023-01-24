@@ -258,8 +258,8 @@ class Kucoin:
 
         self.api = "https://api.kucoin.com"
 
-        self.kucoin_api_key = "62b9bc88a719fb000156ca38"
-        self.kucoin_api_secret = "d353a33d-cf02-4d73-9c15-2c5713baa8b1"
+        self.kucoin_api_key = "63cffd08f8686d000140987a"
+        self.kucoin_api_secret = "d125b0df-e2eb-4532-8ed1-049d01dc18b8"
         self.kucoin_phrase_securite = "c5%Pnp8o$FE%^CEM7jwFp9PaTtW4kq"
 
         self.pourcentage_gain = 0.0150

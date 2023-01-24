@@ -3,14 +3,14 @@ from datetime import datetime
 from main import *
 import locale
 
-# symbol = sys.argv[1]
 symbol = "BTC"
 symbol_up_kucoin = "BTC3L-USDT"
 symbol_down_kucoin = "BTC3S-USDT"
 dodo = 60*60
 
-# Création d'un objet binance pour interagir avec les serveurs de binance
+# Création d'un objet binance et kucoin pour interagir avec leurs serveurs
 binance = Binance()
+kucoin = Kucoin()
 
 # Chargement des modèles d'ia pour les prédictions
 loaded_model, loaded_model_up, loaded_model_down = chargement_modele(symbol)
@@ -19,7 +19,7 @@ loaded_model, loaded_model_up, loaded_model_down = chargement_modele(symbol)
 locale.setlocale(locale.LC_ALL, 'fr_FR.UTF-8')
 
 # On lance la fonction qui permet de garder à jour l'id de l'ordre limite dans le fichier
-p = Process(target=update_id_ordre_limite)
+p = Process(target=kucoin.update_id_ordre_limite)
 p.start()
 
 # Info pour la fonction stoploss manuel
@@ -27,7 +27,7 @@ symbol_stoploss = ""
 prix_stoploss = 0.0
 
 # Création de la variable avec le processuss de stoploss manuel
-p2 = Process(target=stoploss_manuel, args=[symbol_stoploss, prix_stoploss])
+p2 = Process(target=kucoin.stoploss_manuel, args=[symbol_stoploss, prix_stoploss])
 
 # On récupère l'état précédent du bot (Heure et divergence)
 etat = etat_bot("lecture").split(";")
@@ -51,10 +51,10 @@ date = int(date.strftime("%s"))
 # Si il y a bien eu 1 heure d'attente, on peut passer au prédiction
 # Sinon on attend jusqu'a l'heure prévu tout en relancent le stoploss manuel si présence de crypto
 if date - ancienne_date < 3600:
-    btcup = montant_compte("BTC3L")
-    btcdown = montant_compte("BTC3S")
+    btcup = kucoin.montant_compte("BTC3L")
+    btcdown = kucoin.montant_compte("BTC3S")
 
-    if btcup > minimum_crypto_up or btcdown > minimum_crypto_down:
+    if btcup > kucoin.minimum_crypto_up or btcdown > kucoin.minimum_crypto_down:
         symbol_stoploss = etat[1]
         prix_stoploss = float(etat[2])
 
@@ -73,9 +73,9 @@ while True:
 
     achat_vente = False
 
-    argent = montant_compte("USDT")
-    btcup = montant_compte("BTC3L")
-    btcdown = montant_compte("BTC3S")
+    argent = kucoin.montant_compte("USDT")
+    btcup = kucoin.montant_compte("BTC3L")
+    btcdown = kucoin.montant_compte("BTC3S")
 
     date = datetime.now(tz=ZoneInfo("Europe/Paris")
                         ).strftime("%A %d %B %Y %H:%M:%S")
@@ -109,7 +109,7 @@ while True:
     message_état_bot(msg)
 
     if prix < prediction and prix_up < prediction_up and prix_down > prediction_down and prediction_down <= 0.03 and prediction_up - prix_up >= 0.045:
-        if btcup > minimum_crypto_up:
+        if btcup > kucoin.minimum_crypto_up:
             pass
 
         else:
@@ -117,11 +117,11 @@ while True:
             # On l'arrête avant d'en créer un nouveau
             kill_process(p2)
 
-            if btcdown > minimum_crypto_down:
+            if btcdown > kucoin.minimum_crypto_down:
                 # Vente de la crypto descendante
                 achat_vente(btcdown, symbol_down_kucoin, False)
 
-                argent = montant_compte("USDT")
+                argent = kucoin.montant_compte("USDT")
 
             symbol_stoploss = symbol_up_kucoin
             prix_stoploss = prix * pourcentage_stoploss_up
@@ -131,14 +131,14 @@ while True:
 
             # On vient recréer un processus manuel et qu'on vient démarrer
             # Gère le stoploss de façon manuel
-            p2 = Process(target=stoploss_manuel, args=[
+            p2 = Process(target=kucoin.stoploss_manuel, args=[
                 symbol_stoploss, prix_stoploss])
             p2.start()
 
             achat_vente = True
 
     elif prix > prediction and prix_up > prediction_up and prix_down < prediction_down:
-        if btcdown > minimum_crypto_down:
+        if btcdown > kucoin.minimum_crypto_down:
             pass
 
         else:
@@ -146,12 +146,12 @@ while True:
             # On l'arrête avant d'en créer un nouveau
             kill_process(p2)
 
-            if btcup > minimum_crypto_up:
+            if btcup > kucoin.minimum_crypto_up:
 
                 # Vente de la crypto montant
                 achat_vente(btcup, symbol_up_kucoin, False)
 
-                argent = montant_compte("USDT")
+                argent = kucoin.montant_compte("USDT")
 
             symbol_stoploss = symbol_down_kucoin
             prix_stoploss = prix * pourcentage_stoploss_down
@@ -161,7 +161,7 @@ while True:
 
             # On vient recréer un processus manuel et qu'on vient démarrer
             # Gère le stoploss de façon manuel
-            p2 = Process(target=stoploss_manuel, args=[
+            p2 = Process(target=kucoin.stoploss_manuel, args=[
                 symbol_stoploss, prix_stoploss])
             p2.start()
 
@@ -172,13 +172,13 @@ while True:
         # Et que on a pas acheté et qu'on a des cryptos
         # Alors on vend
         if prix > prediction or prix_up > prediction_up or prix_down < prediction_down:
-            if achat_vente == False and btcup > minimum_crypto_up:
+            if achat_vente == False and btcup > kucoin.minimum_crypto_up:
                 achat_vente(btcup, symbol_up_kucoin, False)
 
                 kill_process(p2)
 
         elif prix < prediction or prix_up < prediction_up or prix_down > prediction_down:
-            if achat_vente == False and btcdown > minimum_crypto_down:
+            if achat_vente == False and btcdown > kucoin.minimum_crypto_down:
                 achat_vente(btcdown, symbol_up_kucoin, False)
 
                 kill_process(p2)

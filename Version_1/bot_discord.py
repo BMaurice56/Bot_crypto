@@ -1,12 +1,15 @@
+from discord.ext import commands
+from main import *
+import traceback
+import runpy
+import os
+
+# A réactiver et à mettre en premier si le bot discord est un cran au dessus
+# dans l'arborescence de fichier pour gérer les deux versions du bot
+"""
 import sys
 sys.path[:0] = ['Version_1/']
-
-import os
-import runpy
-import traceback
-from main import *
-from discord.ext import commands
-
+"""
 
 """
 fichier = open("crypto.txt", "r")
@@ -17,14 +20,17 @@ listes_crypto = text.split(";")
 commande_bot_terminale = """ps -aux | grep "bot_discord.py"| awk -F " " '{ print $2 }' """
 commande_redemarrage_terminale = """ps -aux | grep "redemarrage.py"| awk -F " " '{ print $2 }' """
 
-# Variable qui permet de savoir si le bot est déjà lancé ou non
-statut_bot_crypto = False
-
 
 class Botcrypto(commands.Bot):
 
     def __init__(self):
+        """
+        Initialise le bot discord
+        """
         super().__init__(command_prefix="!")
+        self.kucoin = Kucoin()
+        # Variable qui permet de savoir si le bot est déjà lancé ou non
+        self.statut_bot_crypto = False
 
         def arret_bot():
             """
@@ -40,8 +46,7 @@ class Botcrypto(commands.Bot):
             for elt in processus:
                 os.system(f"kill -9 {elt}")
 
-            global statut_bot_crypto
-            statut_bot_crypto = False
+            self.statut_bot_crypto = False
 
         def lancement_bot():
             """
@@ -62,9 +67,9 @@ class Botcrypto(commands.Bot):
                 else:
                     message_status_général(erreur)
 
-                global statut_bot_crypto
-                statut_bot_crypto = False
+                self.statut_bot_crypto = False
                 message_status_général("Le bot s'est arrêté !")
+
                 arret_bot()
 
         @self.command(name="del")
@@ -129,7 +134,7 @@ class Botcrypto(commands.Bot):
             """
             crypto = "BTC-USDT"
             if crypto in listes_crypto:
-                await ctx.send(f"Le prix de la crypto est de : {prix_temps_reel_kucoin(crypto)}")
+                await ctx.send(f"Le prix de la crypto est de : {self.kucoin.prix_temps_reel_kucoin(crypto)}")
             else:
                 await ctx.send("La cryptomonnaie n'existe pas")
 
@@ -161,9 +166,9 @@ class Botcrypto(commands.Bot):
             else:
                 await ctx.send("La cryptomonnaie n'existe pas")
             """
-            global statut_bot_crypto
-            if statut_bot_crypto == False:
-                statut_bot_crypto = True
+
+            if self.statut_bot_crypto == False:
+                self.statut_bot_crypto = True
                 process = Process(target=lancement_bot)
                 process.start()
 
@@ -176,10 +181,9 @@ class Botcrypto(commands.Bot):
             Fonction qui stop le bot
             Tue le processus du bot ainsi que les processus qui chargent la bdd si ce n'est pas fini
             """
-            arret_bot()
+            self.arret_bot()
 
-            global statut_bot_crypto
-            statut_bot_crypto = False
+            self.statut_bot_crypto = False
 
             await ctx.send("Bot arrêté")
 
@@ -249,17 +253,17 @@ class Botcrypto(commands.Bot):
             Sans devoir accéder à la platforme
             """
             # On regarde le montant des deux cryptos
-            btcup = montant_compte("BTC3L")
-            btcdown = montant_compte("BTC3S")
+            btcup = self.kucoin.montant_compte("BTC3L")
+            btcdown = self.kucoin.montant_compte("BTC3S")
 
             # Et on vend la ou les cryptos en supprimant les ordres placés
-            if btcup > minimum_crypto_up:
-                achat_vente(btcup, "BTC3L-USDT", False)
+            if btcup > self.kucoin.minimum_crypto_up:
+                self.kucoin.achat_vente(btcup, "BTC3L-USDT", False)
 
                 await ctx.send(f"{btcup} crypto up vendu !")
 
-            if btcdown > minimum_crypto_down:
-                achat_vente(btcdown, "BTC3S-USDT", False)
+            if btcdown > self.kucoin.minimum_crypto_down:
+                self.kucoin.achat_vente(btcdown, "BTC3S-USDT", False)
 
                 await ctx.send(f"{btcdown} crypto down vendu !")
 
@@ -272,9 +276,9 @@ class Botcrypto(commands.Bot):
             Fonction qui renvoie le montant du compte des cryptos
             """
 
-            argent = montant_compte("USDT")
-            btcup = montant_compte("BTC3L")
-            btcdown = montant_compte("BTC3S")
+            argent = self.kucoin.montant_compte("USDT")
+            btcup = self.kucoin.montant_compte("BTC3L")
+            btcdown = self.kucoin.montant_compte("BTC3S")
 
             await ctx.send(f"Le compte possède {argent} USDT, {btcup} crypto up, {btcdown} crypto down !")
 
