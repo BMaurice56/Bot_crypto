@@ -12,8 +12,11 @@ dodo = 60*60
 binance = Binance()
 kucoin = Kucoin()
 
+# Message discord
+msg_discord = Message_discord()
+
 # Chargement des modèles d'ia pour les prédictions
-loaded_model, loaded_model_up, loaded_model_down = chargement_modele(symbol)
+loaded_model, loaded_model_up, loaded_model_down = IA.chargement_modele(symbol)
 
 # Définition de la zone pour l'horodatage car la date était en anglais avec le module datetime
 locale.setlocale(locale.LC_ALL, 'fr_FR.UTF-8')
@@ -26,42 +29,49 @@ p.start()
 symbol_stoploss = ""
 prix_stoploss = 0.0
 
-# Création de la variable avec le processuss de stoploss manuel
-p2 = Process(target=kucoin.stoploss_manuel, args=[symbol_stoploss, prix_stoploss])
+# Création de la variable avec le processus de stoploss manuel
+p2 = Process(target=kucoin.stoploss_manuel, args=[
+             symbol_stoploss, prix_stoploss])
 
 # On récupère l'état précédent du bot (Heure et divergence)
-etat = etat_bot("lecture").split(";")
+etat = IA.etat_bot("lecture")
 
-# Conversion de l'ancienne date sauvegarder et de la date actuelle en seconde
-ancienne_date = datetime.strptime(etat[0], "%A %d %B %Y %H:%M:%S")
+# S'il y a bien un état inscrit dans le fichier (fichier non vide)
+# alors on peut vérifier si le bot ne s'est pas arrêté avant l'heure
+if len(etat) > 0:
 
-ancienne_date = int(ancienne_date.strftime("%s"))
+    etat = etat.split(";")
 
-# Suite à un bug faisant que la conversion directe en seconde donnait -1
-# On transforme la date en format lisible (le même que d'habitude) -> format str
-# On retransforme la date en format date
-# Puis on vient enfin la mettre en seconde
-date = datetime.now(tz=ZoneInfo("Europe/Paris")
-                    ).strftime("%A %d %B %Y %H:%M:%S")
+    # Conversion de l'ancienne date sauvegarder et de la date actuelle en seconde
+    ancienne_date = datetime.strptime(etat[0], "%A %d %B %Y %H:%M:%S")
 
-date = datetime.strptime(date, "%A %d %B %Y %H:%M:%S")
+    ancienne_date = int(ancienne_date.strftime("%s"))
 
-date = int(date.strftime("%s"))
+    # Suite à un bug faisant que la conversion directe en seconde donnait -1
+    # On transforme la date en format lisible (le même que d'habitude) -> format str
+    # On retransforme la date en format date
+    # Puis on vient enfin la mettre en seconde
+    date = datetime.now(tz=ZoneInfo("Europe/Paris")
+                        ).strftime("%A %d %B %Y %H:%M:%S")
 
-# Si il y a bien eu 1 heure d'attente, on peut passer au prédiction
-# Sinon on attend jusqu'a l'heure prévu tout en relancent le stoploss manuel si présence de crypto
-if date - ancienne_date < 3600:
-    btcup = kucoin.montant_compte("BTC3L")
-    btcdown = kucoin.montant_compte("BTC3S")
+    date = datetime.strptime(date, "%A %d %B %Y %H:%M:%S")
 
-    if btcup > kucoin.minimum_crypto_up or btcdown > kucoin.minimum_crypto_down:
-        symbol_stoploss = etat[1]
-        prix_stoploss = float(etat[2])
+    date = int(date.strftime("%s"))
 
-        p2.start()
+    # Si il y a bien eu 1 heure d'attente, on peut passer au prédiction
+    # Sinon on attend jusqu'a l'heure prévu tout en relancent le stoploss manuel si présence de crypto
+    if date - ancienne_date < 3600:
+        btcup = kucoin.montant_compte("BTC3L")
+        btcdown = kucoin.montant_compte("BTC3S")
 
-    temps_dodo = 3600 - (date - ancienne_date)
-    sleep(temps_dodo)
+        if btcup > kucoin.minimum_crypto_up or btcdown > kucoin.minimum_crypto_down:
+            symbol_stoploss = etat[1]
+            prix_stoploss = float(etat[2])
+
+            p2.start()
+
+        temps_dodo = 3600 - (date - ancienne_date)
+        sleep(temps_dodo)
 
 # Variable pour modifier le pourcentage de variation de la crypto sur le marché de base
 # Sert pour le stoploss : si variation supérieur à ces deux bornes, on vend la crypto
@@ -94,9 +104,10 @@ while True:
     prix_up = float(data_up['close'][39])
     prix_down = float(data_down['close'][39])
 
-    prediction = prédiction_keras(data, rsi_vwap_cmf, loaded_model)
-    prediction_up = prédiction_keras(data_up, rsi_vwap_cmf_up, loaded_model_up)
-    prediction_down = prédiction_keras(
+    prediction = IA.prédiction_keras(data, rsi_vwap_cmf, loaded_model)
+    prediction_up = IA.prédiction_keras(
+        data_up, rsi_vwap_cmf_up, loaded_model_up)
+    prediction_down = IA.prédiction_keras(
         data_down, rsi_vwap_cmf_down, loaded_model_down)
 
     état = f"programme toujours en cour d'exécution le : {date}"
@@ -106,7 +117,7 @@ while True:
 
     msg = état + "\n" + infos + "\n" + up + "\n" + down
 
-    message_état_bot(msg)
+    msg_discord.message_état_bot(msg)
 
     if prix < prediction and prix_up < prediction_up and prix_down > prediction_down and prediction_down <= 0.03 and prediction_up - prix_up >= 0.045:
         if btcup > kucoin.minimum_crypto_up:
@@ -187,7 +198,7 @@ while True:
     # Pour que si le bot est arrêté et repart, qu'il soit au courant
     # S'il doit attendre ou non
     state = date + ";" + symbol_stoploss + ";" + str(prix_stoploss)
-    etat_bot("écriture", state)
+    IA.etat_bot("écriture", state)
 
     t2 = perf_counter()
 

@@ -1,3 +1,4 @@
+from typing import Union
 import talib
 import numpy
 import pandas
@@ -392,7 +393,7 @@ def ultimate_oscilator(donnée_uo: pandas.DataFrame) -> list:
 # Fonctions qui renvoient sous forme d'une liste de listes
 
 
-def MACD(donnée_macd: pandas.DataFrame) -> [list, list, list]:
+def MACD(donnée_macd: pandas.DataFrame) -> Union[list, list, list]:
     """
     Fonction qui prend en argument une dataframe pandas
     Et renvoie le MACD sous forme d'une liste de trois listes
@@ -415,7 +416,7 @@ def MACD(donnée_macd: pandas.DataFrame) -> [list, list, list]:
     return [macd, signal, hist]
 
 
-def stochRSI(donnée_stochrsi: pandas.DataFrame) -> [list, list]:
+def stochRSI(donnée_stochrsi: pandas.DataFrame) -> Union[list, list]:
     """
     Fonction qui prend en argument une dataframe pandas
     Et qui renvoie le stochRSI sous forme de deux listes
@@ -441,7 +442,7 @@ def stochRSI(donnée_stochrsi: pandas.DataFrame) -> [list, list]:
     return [stochrsi, signal]
 
 
-def bandes_bollinger(donnée_bandes: pandas.DataFrame) -> [list, list, list]:
+def bandes_bollinger(donnée_bandes: pandas.DataFrame) -> Union[list, list, list]:
     """
     Fonction qui prend en argument une dataframe pandas
     Et qui renvoie les bandes de bollinger sous forme d'une liste de trois listes

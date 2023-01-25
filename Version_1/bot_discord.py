@@ -11,12 +11,6 @@ import sys
 sys.path[:0] = ['Version_1/']
 """
 
-"""
-fichier = open("crypto.txt", "r")
-text = fichier.read()
-listes_crypto = text.split(";")
-"""
-
 commande_bot_terminale = """ps -aux | grep "bot_discord.py"| awk -F " " '{ print $2 }' """
 commande_redemarrage_terminale = """ps -aux | grep "redemarrage.py"| awk -F " " '{ print $2 }' """
 
@@ -31,15 +25,22 @@ class Botcrypto(commands.Bot):
 
         # Objet Kucoin pour interagir avec le serveur
         self.kucoin = Kucoin()
+
+        # Message discord
+        self.msg_discord = Message_discord()
+
         # Variable qui permet de savoir si le bot est déjà lancé ou non
         self.statut_bot_crypto = False
+
+        fichier = open("crypto.txt", "r")
+        text = fichier.read()
+
+        self.listes_crypto = text.split(";")
 
         def arret_bot():
             """
             Fonction qui arrête le bot
             """
-            self.statut_bot_crypto = False
-
             proc = Popen(commande_bot_terminale,
                          shell=True, stdout=PIPE, stderr=PIPE)
 
@@ -50,27 +51,30 @@ class Botcrypto(commands.Bot):
             for elt in processus:
                 os.system(f"kill -9 {elt}")
 
+            # Une fois le bot arrêté, on peut passer la variable a False
+            self.statut_bot_crypto = False
+
         def lancement_bot():
             """
             Fonction qui permet de lancer le bot
             Et de renvoyer l'erreur sur le serveur s'il y en a une qui apparait
             """
             try:
-                message_status_général("Le bot est lancé !")
+                self.msg_discord.message_status_général("Le bot est lancé !")
                 runpy.run_path("app.py")
             except:
                 erreur = traceback.format_exc()
                 if len(erreur) > 2000:
                     while len(erreur) >= 2000:
-                        message_status_général(erreur[:2000])
+                        self.msg_discord.message_status_général(erreur[:2000])
                         erreur = erreur[2000:]
                     if erreur != "":
-                        message_status_général(erreur)
+                        self.msg_discord.message_status_général(erreur)
                 else:
-                    message_status_général(erreur)
+                    self.msg_discord.message_status_général(erreur)
 
-                self.statut_bot_crypto = False
-                message_status_général("Le bot s'est arrêté !")
+                self.msg_discord.message_status_général(
+                    "Le bot s'est arrêté !")
 
                 arret_bot()
 
@@ -187,8 +191,6 @@ class Botcrypto(commands.Bot):
             """
             arret_bot()
 
-            self.statut_bot_crypto = False
-
             await ctx.send("Bot arrêté")
 
         @self.command(name="liste")
@@ -209,7 +211,7 @@ class Botcrypto(commands.Bot):
             crypto = msg.content
 
             crypto_voulu = ""
-            for cr in listes_crypto:
+            for cr in self.listes_crypto:
                 if crypto in cr:
                     crypto_voulu += cr + ", "
 
@@ -331,7 +333,7 @@ class Botcrypto(commands.Bot):
         for elt in processus:
             os.system(f"kill -9 {elt}")
 
-        message_status_général("Bot démarré !")
+        self.msg_discord.message_status_général("Bot démarré !")
 
 
 if __name__ == "__main__":

@@ -267,6 +267,9 @@ class Kucoin:
         self.minimum_crypto_up = 5000
         self.minimum_crypto_down = 4
 
+        # Message discord
+        self.msg_discord = Message_discord()
+
     def arrondi(self, valeur: float or str, zero_apres_virgule: Optional[float] = None) -> float:
         """
         Fonction qui prend en argument un décimal et renvoie ce décimal arrondi à 0,00001
@@ -520,13 +523,13 @@ class Kucoin:
         # Puis on vient envoyer un message sur le discord
         if achat_ou_vente == True:
             msg = f"Prise de position avec {montant} usdt au prix de {prix}$, il reste {self.montant_compte('USDT')} usdt, crypto : {symbol}"
-            message_prise_position(msg, True)
+            self.msg_discord.message_prise_position(msg, True)
 
         else:
             argent = self.montant_compte('USDT')
 
             msg = f"Vente de position au prix de {prix}$, il reste {argent} usdt"
-            message_prise_position(msg, False)
+            self.msg_discord.message_prise_position(msg, False)
 
     @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
     def ordre_vente_seuil(self, symbol: str) -> None:
@@ -571,7 +574,7 @@ class Kucoin:
         content = json.loads(prise_position.content.decode('utf-8'))
 
         if content["code"] != "200000":
-            message_état_bot(f"{str(content)}")
+            self.msg_discord.message_état_bot(f"{str(content)}")
 
         # Puis on vient écrire l'id de l'ordre dans un fichier pour faciliter la suppresion de celui-ci
         self.écriture_fichier(content["data"]["orderId"])

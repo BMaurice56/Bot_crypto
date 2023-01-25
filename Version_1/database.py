@@ -182,7 +182,7 @@ def insert_data_historique_bdd(symbol: str, nombre_données: int, curseur, conne
 
 
 @get_db
-def select_donnée_bdd(df_numpy: str, curseur, connexion) -> [pandas.DataFrame, pandas.DataFrame] or [numpy.array, numpy.array]:
+def select_donnée_bdd(df_numpy: str, curseur, connexion) -> Union[pandas.DataFrame, pandas.DataFrame] or Union[numpy.array, numpy.array]:
     """
     Fonction qui récupère toutes les données de la bdd
     Renvoie toutes les données et les prix sous forme de dataframe
