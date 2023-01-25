@@ -1,4 +1,4 @@
-from backports.zoneinfo import ZoneInfo
+from zoneinfo import ZoneInfo
 from datetime import datetime
 from main import *
 import locale

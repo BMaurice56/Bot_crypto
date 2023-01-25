@@ -158,17 +158,3 @@ loop.run_until_complete(jsp(tototo, totototototo))
 loop.close()
 
 """
-
-from datetime import datetime
-import locale
-
-from zoneinfo import ZoneInfo
-
-locale.setlocale(locale.LC_ALL, 'fr_FR.UTF-8')
-
-print(datetime.now(tz=ZoneInfo("Europe/Paris")).strftime("%A %d %B %Y %H:%M:%S"))
-
-"""
-toto = tzinfo("Europe/Paris")
-print(toto)
-"""
