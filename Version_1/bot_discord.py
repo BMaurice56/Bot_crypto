@@ -3,6 +3,8 @@ from main import *
 import traceback
 import runpy
 import os
+import asyncio
+
 
 # A réactiver et à mettre en premier si le bot discord est un cran au dessus
 # dans l'arborescence de fichier pour gérer les deux versions du bot
@@ -11,8 +13,12 @@ import sys
 sys.path[:0] = ['Version_1/']
 """
 
+# Commande d'arret des programmes
 commande_bot_terminale = """ps -aux | grep "bot_discord.py"| awk -F " " '{ print $2 }' """
 commande_redemarrage_terminale = """ps -aux | grep "redemarrage.py"| awk -F " " '{ print $2 }' """
+
+# Boucle qui permet de lancer la suppression automatique des messages
+loop = asyncio.get_event_loop()
 
 
 class Botcrypto(commands.Bot):
@@ -77,6 +83,53 @@ class Botcrypto(commands.Bot):
                     "Le bot s'est arrêté !")
 
                 arret_bot()
+
+        async def suppression_auto_message():
+            """
+            Fonction qui supprime automatiquement les messages sur les canal état-bot et prise-position
+            s'il y a plus de 10 messages
+            Evite que les canaux soient trop chargé par les messages du bot 
+            Evite la suppresion manuel et total des messages
+            """
+            id_etat_bot = 972545416786751488
+            id_prise_position = 973269585547653120
+
+            # On attend que le client soit prêt
+            # sinon get_channel renvoit none
+            await self.wait_until_ready()
+
+            etat_bot = self.get_channel(id_etat_bot)
+            prise_position = self.get_channel(id_prise_position)
+
+            async def suppression_messages(channel):
+                """
+                Fonction interne qui supprime les messages d'un canal
+                """
+                while True:
+                    # Récupération des messages
+                    messages = await channel.history().flatten()
+
+                    # S'il y en a plus de 10
+                    # Alors on inverse la liste pour avoir les anciens messages en premier
+                    if len(messages) > 10:
+                        messages.reverse()
+
+                        # On ne garde que les plus anciens
+                        messages = messages[:len(messages) - 10]
+
+                        # Puis on les supprime
+                        for msg in messages[:10]:
+                            await msg.delete()
+
+                    # Et enfin on attend une heure soit le temps d'attente du bot
+                    await asyncio.sleep(60 * 60)
+
+            # Démarrage suppression dans les deux canaux
+            loop.create_task(suppression_messages(etat_bot))
+            loop.create_task(suppression_messages(prise_position))
+
+        # Démarrage tache suppression auto message
+        loop.create_task(suppression_auto_message())
 
         @self.command(name="del")
         async def delete(ctx):
