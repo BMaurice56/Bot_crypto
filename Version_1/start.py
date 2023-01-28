@@ -6,4 +6,4 @@ import os
 # On met à jour les fichiers
 os.system("git pull")
 
-Popen("nohup python3.10 bot_discord.py >/dev/null 2>&1", shell=True)
+Popen("nohup python3 bot_discord.py >/dev/null 2>&1", shell=True)
