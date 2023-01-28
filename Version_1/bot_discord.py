@@ -1,9 +1,10 @@
 from discord.ext import commands
 from main import *
 import traceback
+import discord
+import asyncio
 import runpy
 import os
-import asyncio
 
 
 # A réactiver et à mettre en premier si le bot discord est un cran au dessus
@@ -27,7 +28,8 @@ class Botcrypto(commands.Bot):
         """
         Initialise le bot discord
         """
-        super().__init__(command_prefix="!")
+        super().__init__(command_prefix="!", intents=discord.Intents.all(),
+                         case_insensitive=True, self_bot=True)
 
         # Objet Kucoin pour interagir avec le serveur
         self.kucoin = Kucoin()
