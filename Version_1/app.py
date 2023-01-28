@@ -130,7 +130,7 @@ while True:
 
             if btcdown > kucoin.minimum_crypto_down:
                 # Vente de la crypto descendante
-                achat_vente(btcdown, symbol_down_kucoin, False)
+                kucoin.achat_vente(btcdown, symbol_down_kucoin, False)
 
                 argent = kucoin.montant_compte("USDT")
 
@@ -138,7 +138,7 @@ while True:
             prix_stoploss = prix * pourcentage_stoploss_up
 
             # Achat de la crypto montante
-            achat_vente(argent, symbol_up_kucoin, True)
+            kucoin.achat_vente(argent, symbol_up_kucoin, True)
 
             # On vient recréer un processus manuel et qu'on vient démarrer
             # Gère le stoploss de façon manuel
@@ -160,7 +160,7 @@ while True:
             if btcup > kucoin.minimum_crypto_up:
 
                 # Vente de la crypto montant
-                achat_vente(btcup, symbol_up_kucoin, False)
+                kucoin.achat_vente(btcup, symbol_up_kucoin, False)
 
                 argent = kucoin.montant_compte("USDT")
 
@@ -168,7 +168,7 @@ while True:
             prix_stoploss = prix * pourcentage_stoploss_down
 
             # Achat de la crypto descendante
-            achat_vente(argent, symbol_down_kucoin, True)
+            kucoin.achat_vente(argent, symbol_down_kucoin, True)
 
             # On vient recréer un processus manuel et qu'on vient démarrer
             # Gère le stoploss de façon manuel
@@ -184,13 +184,13 @@ while True:
         # Alors on vend
         if prix > prediction or prix_up > prediction_up or prix_down < prediction_down:
             if achat_vente == False and btcup > kucoin.minimum_crypto_up:
-                achat_vente(btcup, symbol_up_kucoin, False)
+                kucoin.achat_vente(btcup, symbol_up_kucoin, False)
 
                 kill_process(p2)
 
         elif prix < prediction or prix_up < prediction_up or prix_down > prediction_down:
             if achat_vente == False and btcdown > kucoin.minimum_crypto_down:
-                achat_vente(btcdown, symbol_up_kucoin, False)
+                kucoin.achat_vente(btcdown, symbol_up_kucoin, False)
 
                 kill_process(p2)
 
