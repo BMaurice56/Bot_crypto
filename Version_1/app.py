@@ -188,7 +188,7 @@ while True:
 
                 kill_process(p2)
 
-        elif prix < prediction or prix_up < prediction_up or prix_down > prediction_down:
+        if prix < prediction or prix_up < prediction_up or prix_down > prediction_down:
             if achat_vente == False and btcdown > kucoin.minimum_crypto_down:
                 kucoin.achat_vente(btcdown, symbol_up_kucoin, False)
 
