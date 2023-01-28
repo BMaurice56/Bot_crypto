@@ -16,4 +16,4 @@ for elt in processus:
 os.system("git pull")
 
 # Et enfin on redémarre le bot
-Popen("nohup python3 bot_discord.py >/dev/null 2>&1", shell=True)
+Popen("nohup python3.10 bot_discord.py >/dev/null 2>&1", shell=True)
