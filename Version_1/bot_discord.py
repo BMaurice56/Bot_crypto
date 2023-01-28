@@ -1,7 +1,6 @@
 from discord.ext import commands
 from main import *
 import traceback
-import discord
 import asyncio
 import runpy
 import os
@@ -28,8 +27,7 @@ class Botcrypto(commands.Bot):
         """
         Initialise le bot discord
         """
-        super().__init__(command_prefix="!", intents=discord.Intents.all(),
-                         case_insensitive=True, self_bot=True)
+        super().__init__(command_prefix="!")
 
         # Objet Kucoin pour interagir avec le serveur
         self.kucoin = Kucoin()
