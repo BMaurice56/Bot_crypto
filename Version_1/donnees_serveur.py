@@ -476,7 +476,8 @@ class Kucoin:
         entête = self.headers('POST', endpoint, param)
 
         # On prend la position sur le serveur
-        requete = requests.post(self.api + endpoint, headers=entête, data=param).content.decode('utf-8')
+        requete = requests.post(
+            self.api + endpoint, headers=entête, data=param).content.decode('utf-8')
 
         # On écrit le résultat de la requete dans le fichier
         self.écriture_requete(requete)
@@ -507,7 +508,8 @@ class Kucoin:
         entête = self.headers("GET", endpoint)
 
         # On envoie la requête
-        position = requests.get(self.api + endpoint, headers=entête).content.decode("utf-8")
+        position = requests.get(self.api + endpoint,
+                                headers=entête).content.decode("utf-8")
 
         # On écrit le résultat de la requete dans le fichier
         self.écriture_requete(position)
@@ -536,7 +538,8 @@ class Kucoin:
         entête = self.headers('DELETE', endpoint)
 
         # Puis on vient envoyer la requête pour supprimer l'ordre du serveur
-        requete = requests.delete(self.api + endpoint, headers=entête).content.decode('utf-8')
+        requete = requests.delete(
+            self.api + endpoint, headers=entête).content.decode('utf-8')
 
         # On écrit le résultat de la requete dans le fichier
         self.écriture_requete(requete)
