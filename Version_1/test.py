@@ -91,3 +91,23 @@ print("succes :", succes)
 print("fail :", fail)
 print(succes / fail)
 """
+
+from zoneinfo import ZoneInfo
+from datetime import datetime
+from main import *
+import locale
+
+locale.setlocale(locale.LC_ALL, 'fr_FR.UTF-8')
+
+date = datetime.now(tz=ZoneInfo("Europe/Paris")
+                    ).strftime("%A %d %B %Y %H:%M:%S")
+
+print(date)
+
+date = datetime.strptime(date, "%A %d %B %Y %H:%M:%S")
+
+print(date)
+
+date = int(date.strftime("%s"))
+
+print(date)
