@@ -366,10 +366,10 @@ class Kucoin:
             fichier = open("fichier_log/log_requete.txt", "a")
 
         elif emplacement == "presence_position":
-            fichier = open("fichier_log/log_presence_position.txt", "a")
+            fichier = open("fichier_log/log_update_id_position.txt", "a")
 
         elif emplacement == "stoploss":
-            fichier = open("fichier_log/log_update_id_stoploss.txt", "a")
+            fichier = open("fichier_log/log_stoploss_manuel.txt", "a")
 
         fichier.write(f"{date} ; {requete} \n")
 
