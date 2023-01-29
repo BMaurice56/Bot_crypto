@@ -79,10 +79,10 @@ class Botcrypto(commands.Bot):
                 else:
                     self.msg_discord.message_status_général(erreur)
 
+                arret_bot()
+
                 self.msg_discord.message_status_général(
                     "Le bot s'est arrêté !")
-
-                arret_bot()
 
         async def suppression_auto_message():
             """
