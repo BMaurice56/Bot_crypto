@@ -354,7 +354,7 @@ class Kucoin:
 
         fichier.close()
 
-    def écriture_requete(self, requete) -> None:
+    def écriture_requete(self, requete, emplacement) -> None:
         """
         Fonction qui écrit toutes les requêtes dans un fichier (leur résultat)
         Ainsi que la date
@@ -362,14 +362,21 @@ class Kucoin:
         date = datetime.now(tz=ZoneInfo("Europe/Paris")
                             ).strftime("%A %d %B %Y %H:%M:%S")
 
-        fichier = open("log_requete.txt", "a")
+        if emplacement == "requete":
+            fichier = open("log_requete.txt", "a")
+
+        elif emplacement == "presence_position":
+            fichier = open("log_presence_position.txt", "a")
+
+        elif emplacement == "stoploss":
+            fichier = open("log_update_id_stoploss.txt", "a")
 
         fichier.write(f"{date} ; {requete} \n")
 
         fichier.close()
 
     @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
-    def montant_compte(self, symbol: str) -> float:
+    def montant_compte(self, symbol: str, type_requete: Optional[str] = None) -> float:
         """
         Fonction qui renvoie le montant que possède le compte selon le ou les symbols voulus
         Ex paramètre :
@@ -386,7 +393,10 @@ class Kucoin:
                                headers=entête).content.decode("utf-8")
 
         # On écrit le résultat de la requete dans le fichier
-        self.écriture_requete(requete)
+        if type_requete == None:
+            self.écriture_requete(requete, "requete")
+        else:
+            self.écriture_requete(requete, "stoploss")
 
         # On la retransforme au format dict car reçu au format str
         # Puis on ne garde que les données
@@ -402,7 +412,7 @@ class Kucoin:
             return 0
 
     @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
-    def prix_temps_reel_kucoin(self, symbol: str) -> float:
+    def prix_temps_reel_kucoin(self, symbol: str, type_requete: Optional[str] = None) -> float:
         """
         Fonction qui renvoie le prix de la crypto en temps réel
         Ex paramètre : 
@@ -419,7 +429,10 @@ class Kucoin:
                                headers=entête).content.decode('utf-8')
 
         # On écrit le résultat de la requete dans le fichier
-        self.écriture_requete(requete)
+        if type_requete == None:
+            self.écriture_requete(requete, "requete")
+        else:
+            self.écriture_requete(requete, "stoploss")
 
         # On la retransforme en dictionnaire (car reçu au format str)
         # Et on garde que le prix voulu
@@ -480,7 +493,7 @@ class Kucoin:
             self.api + endpoint, headers=entête, data=param).content.decode('utf-8')
 
         # On écrit le résultat de la requete dans le fichier
-        self.écriture_requete(requete)
+        self.écriture_requete(requete, "requete")
 
         # S'il on vient d'acheter, on place un ordre limit
         if info["achat_vente"] == True:
@@ -512,7 +525,7 @@ class Kucoin:
                                 headers=entête).content.decode("utf-8")
 
         # On écrit le résultat de la requete dans le fichier
-        self.écriture_requete(position)
+        self.écriture_requete(position, "presence_position")
 
         # Puis on récupère le résultat et on le transforme en dictionnaire (car reçu au format str)
         resultat = json.loads(position)['data']['items']
@@ -542,7 +555,7 @@ class Kucoin:
             self.api + endpoint, headers=entête).content.decode('utf-8')
 
         # On écrit le résultat de la requete dans le fichier
-        self.écriture_requete(requete)
+        self.écriture_requete(requete, "requete")
 
         # Enfin on supprime l'id du fichier
         self.écriture_fichier()
@@ -618,7 +631,7 @@ class Kucoin:
             self.api + endpoint, headers=entête, data=param).content.decode('utf-8')
 
         # On écrit le résultat de la requete dans le fichier
-        self.écriture_requete(prise_position)
+        self.écriture_requete(prise_position, "requete")
 
         # On retransforme en dict car reçu au format str
         content = json.loads(prise_position)
@@ -637,13 +650,13 @@ class Kucoin:
         """
         while True:
             # On vérifie s'il y a toujours une crypto, s'il elle a été vendu on peut arrêter la fonction
-            btcup = self.montant_compte("BTC3L")
-            btcdown = self.montant_compte("BTC3S")
+            btcup = self.montant_compte("BTC3L", "stoploss")
+            btcdown = self.montant_compte("BTC3S", "stoploss")
 
             if btcup < self.minimum_crypto_up and btcdown < self.minimum_crypto_down:
                 break
 
-            prix = self.prix_temps_reel_kucoin("BTC-USDT")
+            prix = self.prix_temps_reel_kucoin("BTC-USDT", "stoploss")
 
             if symbol == "BTC3L-USDT":
 
