@@ -1,7 +1,4 @@
-from zoneinfo import ZoneInfo
-from datetime import datetime
 from main import *
-import locale
 
 symbol = "BTC"
 symbol_up_kucoin = "BTC3L-USDT"
@@ -17,9 +14,6 @@ msg_discord = Message_discord()
 
 # Chargement des modèles d'ia pour les prédictions
 loaded_model, loaded_model_up, loaded_model_down = IA.chargement_modele(symbol)
-
-# Définition de la zone pour l'horodatage car la date était en anglais avec le module datetime
-locale.setlocale(locale.LC_ALL, 'fr_FR.UTF-8')
 
 # On lance la fonction qui permet de garder à jour l'id de l'ordre limite dans le fichier
 p = Process(target=kucoin.update_id_ordre_limite)

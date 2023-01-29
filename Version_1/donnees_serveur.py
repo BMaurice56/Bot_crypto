@@ -5,6 +5,8 @@ from indices_techniques import moyenne
 from time import sleep, perf_counter
 from subprocess import Popen, PIPE
 from binance.client import Client
+from zoneinfo import ZoneInfo
+from datetime import datetime
 from message_discord import *
 from functools import wraps
 from typing import Optional
@@ -13,11 +15,14 @@ import requests
 import hashlib
 import base64
 import pandas
+import locale
 import time
 import hmac
 import json
 import ccxt
 
+# Définition de la zone pour l'horodatage car la date était en anglais avec le module datetime
+locale.setlocale(locale.LC_ALL, 'fr_FR.UTF-8')
 
 # Décorateurs
 
@@ -349,6 +354,20 @@ class Kucoin:
 
         fichier.close()
 
+    def écriture_requete(self, requete) -> None:
+        """
+        Fonction qui écrit toutes les requêtes dans un fichier (leur résultat)
+        Ainsi que la date
+        """
+        date = datetime.now(tz=ZoneInfo("Europe/Paris")
+                            ).strftime("%A %d %B %Y %H:%M:%S")
+
+        fichier = open("log_requete.txt", "a")
+
+        fichier.write(f"{date} ; {requete} \n")
+
+        fichier.close()
+
     @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
     def montant_compte(self, symbol: str) -> float:
         """
@@ -362,9 +381,16 @@ class Kucoin:
         # On crée l'entête
         entête = self.headers('GET', endpoint)
 
-        # Puis on execute la requête que l'on retransforme en dictionnaire (car reçu au format str)
-        argent = json.loads(requests.get(
-            self.api + endpoint, headers=entête).content.decode('utf-8'))["data"]
+        # Puis on execute la requête
+        requete = requests.get(self.api + endpoint,
+                               headers=entête).content.decode("utf-8")
+
+        # On écrit le résultat de la requete dans le fichier
+        self.écriture_requete(requete)
+
+        # On la retransforme au format dict car reçu au format str
+        # Puis on ne garde que les données
+        argent = json.loads(requete)["data"]
 
         # S'il le compte possède le symbol voulu, on renvoit le nombre
         # Avec seulement 99,9% de sa quantité initiale car pour l'achat des cryptos
@@ -388,10 +414,16 @@ class Kucoin:
         # On crée l'entête
         entête = self.headers('GET', endpoint)
 
-        # Puis on execute la requête que l'on retransforme en dictionnaire (car reçu au format str)
+        # Puis on execute la requête
+        requete = requests.get(self.api + endpoint,
+                               headers=entête).content.decode('utf-8')
+
+        # On écrit le résultat de la requete dans le fichier
+        self.écriture_requete(requete)
+
+        # On la retransforme en dictionnaire (car reçu au format str)
         # Et on garde que le prix voulu
-        argent = float(json.loads(requests.get(
-            self.api + endpoint, headers=entête).content.decode('utf-8'))["data"]["price"])
+        argent = float(json.loads(requete)["data"]["price"])
 
         return argent
 
@@ -444,7 +476,10 @@ class Kucoin:
         entête = self.headers('POST', endpoint, param)
 
         # On prend la position sur le serveur
-        requests.post(self.api + endpoint, headers=entête, data=param)
+        requete = requests.post(self.api + endpoint, headers=entête, data=param).content.decode('utf-8')
+
+        # On écrit le résultat de la requete dans le fichier
+        self.écriture_requete(requete)
 
         # S'il on vient d'acheter, on place un ordre limit
         if info["achat_vente"] == True:
@@ -472,11 +507,13 @@ class Kucoin:
         entête = self.headers("GET", endpoint)
 
         # On envoie la requête
-        position = requests.get(self.api + endpoint, headers=entête)
+        position = requests.get(self.api + endpoint, headers=entête).content.decode("utf-8")
+
+        # On écrit le résultat de la requete dans le fichier
+        self.écriture_requete(position)
 
         # Puis on récupère le résultat et on le transforme en dictionnaire (car reçu au format str)
-        resultat = json.loads(
-            position.content.decode("utf-8"))['data']['items']
+        resultat = json.loads(position)['data']['items']
 
         # S'il y a un ordre on renvoie les informations sur celui-ci
         if resultat == []:
@@ -489,16 +526,22 @@ class Kucoin:
         """
         Fonction qui supprime un ordre selon qu'il soit un stoploss ou un simple ordre
         """
+        # On récupère l'id de l'ordre
         id_ordre = self.lecture_fichier()
 
+        # On créer le point de terminaison de l'url
         endpoint = f"/api/v1/orders/{id_ordre}"
 
         # Création de l'entête
         entête = self.headers('DELETE', endpoint)
 
         # Puis on vient envoyer la requête pour supprimer l'ordre du serveur
-        requests.delete(self.api + endpoint, headers=entête)
+        requete = requests.delete(self.api + endpoint, headers=entête).content.decode('utf-8')
 
+        # On écrit le résultat de la requete dans le fichier
+        self.écriture_requete(requete)
+
+        # Enfin on supprime l'id du fichier
         self.écriture_fichier()
 
     @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
@@ -569,9 +612,13 @@ class Kucoin:
 
         # On prend la position sur le serveur
         prise_position = requests.post(
-            self.api + endpoint, headers=entête, data=param)
+            self.api + endpoint, headers=entête, data=param).content.decode('utf-8')
 
-        content = json.loads(prise_position.content.decode('utf-8'))
+        # On écrit le résultat de la requete dans le fichier
+        self.écriture_requete(prise_position)
+
+        # On retransforme en dict car reçu au format str
+        content = json.loads(prise_position)
 
         if content["code"] != "200000":
             self.msg_discord.message_état_bot(f"{str(content)}")
@@ -583,6 +630,7 @@ class Kucoin:
     def stoploss_manuel(self, symbol: str, prix_stop: float) -> None:
         """
         Fonction qui fait office de stoploss mais de façon manuel
+        Basé sur le prix du marché normal, pas celui des jetons à effet de levier
         """
         while True:
             # On vérifie s'il y a toujours une crypto, s'il elle a été vendu on peut arrêter la fonction
@@ -596,6 +644,9 @@ class Kucoin:
 
             if symbol == "BTC3L-USDT":
 
+                # Si le prix est inférieur au prix stop (marché qui descend)
+                # (crypto montante)
+                # On vend
                 if prix <= prix_stop:
 
                     self.achat_vente(btcup, symbol, False)
@@ -603,6 +654,9 @@ class Kucoin:
                     break
 
             elif symbol == "BTC3S-USDT":
+                # Si le prix est supérieur au prix stop (marché qui monte)
+                # (crypto descendante)
+                # On vend
                 if prix >= prix_stop:
 
                     self.achat_vente(btcdown, symbol, False)
