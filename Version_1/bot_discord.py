@@ -38,7 +38,7 @@ class Botcrypto(commands.Bot):
         # Variable qui permet de savoir si le bot est déjà lancé ou non
         self.statut_bot_crypto = False
 
-        fichier = open("crypto.txt", "r")
+        fichier = open("Autre_fichiers/crypto.txt", "r")
         text = fichier.read()
 
         self.listes_crypto = text.split(";")
