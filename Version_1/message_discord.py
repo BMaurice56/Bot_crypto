@@ -67,6 +67,10 @@ class Message_discord:
         """
         Fonction qui gère de recevoir une erreur et de l'envoyer sur le canal discord
         """
+        fichier = open("fichier_log/log_erreur.txt", "a")
+
+        fichier.write(f"{emplacement_erreur} ; {erreur} \n")
+
         # On envoie l'emplacement de l'erreur, où elle s'est produite
         # Et si cela arrête le programme ou non
         self.message_status_général(emplacement_erreur)

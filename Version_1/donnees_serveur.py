@@ -364,13 +364,15 @@ class Kucoin:
                             ).strftime("%A %d %B %Y %H:%M:%S")
 
         if emplacement == "requete":
-            fichier = open("fichier_log/log_requete.txt", "a")
-
+            pwd = "fichier_log/log_requete.txt"
+            
         elif emplacement == "presence_position":
-            fichier = open("fichier_log/log_update_id_position.txt", "a")
+            pwd = "fichier_log/log_update_id_position.txt"
 
         elif emplacement == "stoploss":
-            fichier = open("fichier_log/log_stoploss_manuel.txt", "a")
+            pwd = "fichier_log/log_stoploss_manuel.txt"
+
+        fichier = open(pwd, "a")        
 
         fichier.write(f"{date} ; {requete} \n")
 
