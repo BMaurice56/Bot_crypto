@@ -142,7 +142,7 @@ while True:
 
             achat_vente = True
 
-    elif prix > prediction and prix_up > prediction_up and prix_down < prediction_down:
+    elif prix > prediction and prix_up > prediction_up and prix_down < prediction_down and prix_up - prediction_up >= 0.045:
         if btcdown > kucoin.minimum_crypto_down:
             pass
 
