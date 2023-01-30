@@ -62,3 +62,21 @@ class Message_discord:
             url=self.adr_webhook_général, username=self.nom, content=message)
 
         webhook.execute()
+
+    def message_erreur(self, erreur: str, emplacement_erreur: str) -> None:
+        """
+        Fonction qui gère de recevoir une erreur et de l'envoyer sur le canal discord
+        """
+        # On envoie l'emplacement de l'erreur, où elle s'est produite
+        # Et si cela arrête le programme ou non
+        self.message_status_général(emplacement_erreur)
+
+        # Si l'erreur est trop grande, alors on la coupe en plusieurs morceaux
+        if len(erreur) > 2000:
+            while len(erreur) >= 2000:
+                self.message_status_général(erreur[:2000])
+                erreur = erreur[2000:]
+            if erreur != "":
+                self.message_status_général(erreur)
+        else:
+            self.message_status_général(erreur)

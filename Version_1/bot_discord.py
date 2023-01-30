@@ -1,6 +1,5 @@
 from discord.ext import commands
 from main import *
-import traceback
 import asyncio
 import runpy
 import os
@@ -70,14 +69,9 @@ class Botcrypto(commands.Bot):
                 runpy.run_path("app.py")
             except:
                 erreur = traceback.format_exc()
-                if len(erreur) > 2000:
-                    while len(erreur) >= 2000:
-                        self.msg_discord.message_status_général(erreur[:2000])
-                        erreur = erreur[2000:]
-                    if erreur != "":
-                        self.msg_discord.message_status_général(erreur)
-                else:
-                    self.msg_discord.message_status_général(erreur)
+
+                self.msg_discord.message_erreur(
+                    erreur, "Erreur survenue au niveau du bot, arrêt du programme")
 
                 arret_bot()
 

@@ -11,6 +11,7 @@ from message_discord import *
 from functools import wraps
 from typing import Optional
 from random import randint
+import traceback
 import requests
 import hashlib
 import base64
@@ -648,61 +649,82 @@ class Kucoin:
         Fonction qui fait office de stoploss mais de façon manuel
         Basé sur le prix du marché normal, pas celui des jetons à effet de levier
         """
-        while True:
-            # On vérifie s'il y a toujours une crypto, s'il elle a été vendu on peut arrêter la fonction
-            btcup = self.montant_compte("BTC3L", "stoploss")
-            btcdown = self.montant_compte("BTC3S", "stoploss")
+        try:
+            while True:
+                # On vérifie s'il y a toujours une crypto, s'il elle a été vendu on peut arrêter la fonction
+                btcup = self.montant_compte("BTC3L", "stoploss")
+                btcdown = self.montant_compte("BTC3S", "stoploss")
 
-            if btcup < self.minimum_crypto_up and btcdown < self.minimum_crypto_down:
-                break
-
-            prix = self.prix_temps_reel_kucoin("BTC-USDT", "stoploss")
-
-            if symbol == "BTC3L-USDT":
-
-                # Si le prix est inférieur au prix stop (marché qui descend)
-                # (crypto montante)
-                # On vend
-                if prix <= prix_stop:
-
-                    self.achat_vente(btcup, symbol, False)
-
+                if btcup < self.minimum_crypto_up and btcdown < self.minimum_crypto_down:
                     break
 
-            elif symbol == "BTC3S-USDT":
-                # Si le prix est supérieur au prix stop (marché qui monte)
-                # (crypto descendante)
-                # On vend
-                if prix >= prix_stop:
+                prix = self.prix_temps_reel_kucoin("BTC-USDT", "stoploss")
 
-                    self.achat_vente(btcdown, symbol, False)
+                if symbol == "BTC3L-USDT":
 
-                    break
+                    # Si le prix est inférieur au prix stop (marché qui descend)
+                    # (crypto montante)
+                    # On vend
+                    if prix <= prix_stop:
 
-            sleep(5)
+                        self.achat_vente(btcup, symbol, False)
 
-    # Fonction qui tourne en continue
+                        break
+
+                elif symbol == "BTC3S-USDT":
+                    # Si le prix est supérieur au prix stop (marché qui monte)
+                    # (crypto descendante)
+                    # On vend
+                    if prix >= prix_stop:
+
+                        self.achat_vente(btcdown, symbol, False)
+
+                        break
+
+                sleep(5)
+        except:
+            # On récupère l'erreur
+            erreur = traceback.format_exc()
+
+            # Puis on l'envoi sur le canal discord
+            self.msg_discord.message_erreur(
+                erreur, "Erreur survenu dans la fonction stoploss_manuel, aucune interruption du programme, fonction relancée")
+
+            # Et enfin on relance la fonction
+            self.stoploss_manuel(symbol, prix_stop)
+    # Fonction qui tourne en continue au lancement du programme
 
     @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
     def update_id_ordre_limite(self) -> None:
         """
         Fonction qui maintien à jour l'id de l'ordre limite dans le fichier
-        S'il l'ordre a été executé alors on vire l'id du fichier
+        S'il l'ordre a été executé alors on enlève l'id du fichier
         """
-        while True:
-            sl_3S = self.presence_position("BTC3S-USDT")
-            sl_3L = self.presence_position("BTC3L-USDT")
+        try:
+            while True:
+                sl_3S = self.presence_position("BTC3S-USDT")
+                sl_3L = self.presence_position("BTC3L-USDT")
 
-            # S'il y a aucun stoploss, par sécurité on vide le fichier
-            if sl_3L == None and sl_3S == None:
-                self.écriture_fichier()
+                # S'il y a aucun stoploss, par sécurité on vide le fichier
+                if sl_3L == None and sl_3S == None:
+                    self.écriture_fichier()
 
-            # Sinon par sécurité, on remet l'id du stoploss dans le fichier
-            elif sl_3L != None:
-                self.écriture_fichier(sl_3L['id'])
+                # Sinon par sécurité, on remet l'id du stoploss dans le fichier
+                elif sl_3L != None:
+                    self.écriture_fichier(sl_3L['id'])
 
-            # De même pour ici
-            elif sl_3S != None:
-                self.écriture_fichier(sl_3S['id'])
+                # De même pour ici
+                elif sl_3S != None:
+                    self.écriture_fichier(sl_3S['id'])
 
-            sleep(20)
+                sleep(20)
+        except:
+            # On récupère l'erreur
+            erreur = traceback.format_exc()
+
+            # Puis on l'envoi sur le canal discord
+            self.msg_discord.message_erreur(
+                erreur, "Erreur survenu dans la fonction update_id_ordre_limite, aucune interruption du programme, fonction relancée")
+
+            # Et enfin on relance la fonction
+            self.update_id_ordre_limite()
