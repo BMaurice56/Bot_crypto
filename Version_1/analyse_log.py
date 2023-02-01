@@ -56,6 +56,7 @@ def analyse_fichier(nom_fichier: str):
 
         return résultat
 
+récupération_fichier()
 
 print(analyse_fichier("log_erreur.txt"))
 print(analyse_fichier("log_requete.txt"))
