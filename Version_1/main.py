@@ -126,13 +126,17 @@ class IA:
         """
 
         if lecture_ecriture == "lecture":
-            fichier = open("etat_bot.txt", "r")
+            # On utilise try dans le cas où le fichier n'existe pas
+            try:
+                fichier = open("etat_bot.txt", "r")
 
-            elt = fichier.read()
+                elt = fichier.read()
 
-            fichier.close()
+                fichier.close()
 
-            return elt
+                return elt
+            except:
+                return ""
 
         elif lecture_ecriture == "écriture":
             fichier = open("etat_bot.txt", "w")
