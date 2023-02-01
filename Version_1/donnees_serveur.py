@@ -330,16 +330,19 @@ class Kucoin:
         Fonction qui lit ce qu'il y a dans le fichier 
         Et renvoie le contenu ou None s'il y a rien
         """
+        # On utilise try dans le cas où le fichier n'existe pas
+        try:
+            fichier = open("ordre_limit.txt", "r")
 
-        fichier = open("ordre_limit.txt", "r")
+            elt = fichier.read()
 
-        elt = fichier.read()
+            fichier.close()
 
-        fichier.close()
-
-        if elt == "":
+            if elt == "":
+                return None
+            return elt
+        except:
             return None
-        return elt
 
     def écriture_fichier(self, str_to_write: Optional[str] = None) -> None:
         """
@@ -365,14 +368,14 @@ class Kucoin:
 
         if emplacement == "requete":
             pwd = "fichier_log/log_requete.txt"
-            
+
         elif emplacement == "presence_position":
             pwd = "fichier_log/log_update_id_position.txt"
 
         elif emplacement == "stoploss":
             pwd = "fichier_log/log_stoploss_manuel.txt"
 
-        fichier = open(pwd, "a")        
+        fichier = open(pwd, "a")
 
         fichier.write(f"{date} ; {requete} \n")
 
@@ -547,20 +550,24 @@ class Kucoin:
         # On récupère l'id de l'ordre
         id_ordre = self.lecture_fichier()
 
-        # On créer le point de terminaison de l'url
-        endpoint = f"/api/v1/orders/{id_ordre}"
+        # Si le fichier n'est pas vide, alors on peut supprimer l'ordre
+        if id_ordre != None:
 
-        # Création de l'entête
-        entête = self.headers('DELETE', endpoint)
+            # On créer le point de terminaison de l'url
+            endpoint = f"/api/v1/orders/{id_ordre}"
 
-        # Puis on vient envoyer la requête pour supprimer l'ordre du serveur
-        requete = requests.delete(
-            self.api + endpoint, headers=entête).content.decode('utf-8')
+            # Création de l'entête
+            entête = self.headers('DELETE', endpoint)
 
-        # On écrit le résultat de la requete dans le fichier
-        self.écriture_requete(requete, "requete")
+            # Puis on vient envoyer la requête pour supprimer l'ordre du serveur
+            requete = requests.delete(
+                self.api + endpoint, headers=entête).content.decode('utf-8')
+
+            # On écrit le résultat de la requete dans le fichier
+            self.écriture_requete(requete, "requete")
 
         # Enfin on supprime l'id du fichier
+        # Créer le fichier s'il n'existe pas
         self.écriture_fichier()
 
     @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
