@@ -178,15 +178,15 @@ while True:
         # Alors on vend
         if prix > prediction or prix_up > prediction_up or prix_down < prediction_down:
             if achat_vente == False and btcup > kucoin.minimum_crypto_up:
-                kucoin.achat_vente(btcup, symbol_up_kucoin, False)
-
                 kill_process(p2)
+
+                kucoin.achat_vente(btcup, symbol_up_kucoin, False)
 
         if prix < prediction or prix_up < prediction_up or prix_down > prediction_down:
             if achat_vente == False and btcdown > kucoin.minimum_crypto_down:
-                kucoin.achat_vente(btcdown, symbol_up_kucoin, False)
-
                 kill_process(p2)
+
+                kucoin.achat_vente(btcdown, symbol_down_kucoin, False)
 
     # On enregistre l'état du bot (dernière heure et divergence)
     # Pour que si le bot est arrêté et repart, qu'il soit au courant
