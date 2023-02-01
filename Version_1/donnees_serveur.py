@@ -329,6 +329,18 @@ class Kucoin:
 
         return headers
 
+    def comparaisons(self, valeur_1: float, valeur_2: float, sens_comparaison: bool) -> bool:
+        """
+        Fonction qui compare deux décimaux entre eux
+        Sens_comparaison définit le sens dans lequel les deux valeurs doivent être comparées
+        Si True : valeur_1 >= valeur_2
+        Sinon : valeur_1 <= valeur_2
+        """
+        if sens_comparaison == True:
+            return valeur_1 >= valeur_2
+
+        return valeur_1 <= valeur_2
+
     def lecture_fichier(self) -> str or None:
         """
         Fonction qui lit ce qu'il y a dans le fichier 
@@ -672,36 +684,34 @@ class Kucoin:
         Basé sur le prix du marché normal, pas celui des jetons à effet de levier
         """
         try:
+            # Par défaut, on est sur le marché montant
+            type_marche = True
+            minimum = self.minimum_crypto_up
+
+            # On garde que le nom de la crypto
+            symbol_simple = symbol.split(3)[0]
+
+            # Si on est sur le marché descendant, alors on change les paramètres
+            if "3S" in symbol:
+                type_marche = False
+                minimum = self.minimum_crypto_down
+
             while True:
                 # On vérifie s'il y a toujours une crypto, s'il elle a été vendu on peut arrêter la fonction
-                btcup = self.montant_compte("BTC3L", "stoploss")
-                btcdown = self.montant_compte("BTC3S", "stoploss")
+                crypto = self.montant_compte(symbol_simple, "stoploss")
 
-                if btcup < self.minimum_crypto_up and btcdown < self.minimum_crypto_down:
+                if crypto < minimum:
                     break
 
+                # On récupère le prix du marché
                 prix = self.prix_temps_reel_kucoin("BTC-USDT", "stoploss")
 
-                if symbol == "BTC3L-USDT":
+                # Si la crypto dépasse le stoploss fixé, alors on vend
+                if self.comparaisons(prix, prix_stop, type_marche) == False:
 
-                    # Si le prix est inférieur au prix stop (marché qui descend)
-                    # (crypto montante)
-                    # On vend
-                    if prix <= prix_stop:
+                    self.achat_vente(crypto, symbol, False)
 
-                        self.achat_vente(btcup, symbol, False)
-
-                        break
-
-                elif symbol == "BTC3S-USDT":
-                    # Si le prix est supérieur au prix stop (marché qui monte)
-                    # (crypto descendante)
-                    # On vend
-                    if prix >= prix_stop:
-
-                        self.achat_vente(btcdown, symbol, False)
-
-                        break
+                    break
 
                 sleep(5)
         except:
