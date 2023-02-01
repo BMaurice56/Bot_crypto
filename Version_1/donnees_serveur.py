@@ -621,10 +621,10 @@ class Kucoin:
         nv_prix = self.arrondi(
             str(prix * (1 + self.pourcentage_gain)), zero_apres_virgule)
 
-        if "L" in symbol:
+        if "3L" in symbol:
             self.dico_partage["prix_estimer"] = prix_marche * \
                 (1 + (self.pourcentage_gain/3))
-        elif "S" in symbol:
+        elif "3S" in symbol:
             self.dico_partage["prix_estimer"] = prix_marche * \
                 (1 - (self.pourcentage_gain/3))
 
