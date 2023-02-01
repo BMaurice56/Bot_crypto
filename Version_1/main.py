@@ -146,6 +146,28 @@ class IA:
             fichier.close()
 
 
+def validation_achat(prix: float, prix_up: float, prix_down: float, prediction: float, prediction_up: float, prediction_down: float, crypto: bool) -> bool:
+    """
+    Fonction qui valide ou non l'achat d'une crypto
+    Ex param:
+    crypto : True pour crypto up et false pour down
+    """
+
+    if crypto == True:
+        if prix < prediction and prix_up < prediction_up and prix_down > prediction_down:
+            if prediction_up - prix_up >= 0.045 and prediction_down <= 0.03:
+                return True
+
+        return False
+
+    else:
+        if prix > prediction and prix_up > prediction_up and prix_down < prediction_down:
+            if prix_up - prediction_up >= 0.045 and prediction_down >= 0.02:
+                return True
+
+        return False
+
+
 def kill_process(p: Process):
     """
     Fonction qui tue le processus passé en argument

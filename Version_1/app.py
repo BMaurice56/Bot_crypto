@@ -113,7 +113,7 @@ while True:
 
     msg_discord.message_état_bot(msg)
 
-    if prix < prediction and prix_up < prediction_up and prix_down > prediction_down and prediction_down <= 0.03 and prediction_up - prix_up >= 0.045:
+    if validation_achat(prix, prix_up, prix_down, prediction, prediction_up, prediction_down, True):
         if btcup > kucoin.minimum_crypto_up:
             pass
 
@@ -142,7 +142,7 @@ while True:
 
             achat_vente = True
 
-    elif prix > prediction and prix_up > prediction_up and prix_down < prediction_down and prix_up - prediction_up >= 0.045 and prediction_down >= 0.02:
+    elif validation_achat(prix, prix_up, prix_down, prediction, prediction_up, prediction_down, False):
         if btcdown > kucoin.minimum_crypto_down:
             pass
 
