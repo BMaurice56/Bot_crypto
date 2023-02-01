@@ -52,18 +52,18 @@ if len(etat) > 0:
 
     date = int(date.strftime("%s"))
 
+    btcup = kucoin.montant_compte("BTC3L")
+    btcdown = kucoin.montant_compte("BTC3S")
+
     # Si il y a bien eu 1 heure d'attente, on peut passer au prédiction
     # Sinon on attend jusqu'a l'heure prévu tout en relancent le stoploss manuel si présence de crypto
-    if date - ancienne_date < 3600:
-        btcup = kucoin.montant_compte("BTC3L")
-        btcdown = kucoin.montant_compte("BTC3S")
-
-        if btcup > kucoin.minimum_crypto_up or btcdown > kucoin.minimum_crypto_down:
-            symbol_stoploss = etat[1]
-            prix_stoploss = float(etat[2])
-
+    if btcup > kucoin.minimum_crypto_up or btcdown > kucoin.minimum_crypto_down:
+        symbol_stoploss = etat[1]
+        prix_stoploss = float(etat[2])
+        if symbol_stoploss != "" and prix_stoploss != 0:
             p2.start()
 
+    if date - ancienne_date < 3600:
         temps_dodo = 3600 - (date - ancienne_date)
         sleep(temps_dodo)
 

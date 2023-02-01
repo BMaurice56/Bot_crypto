@@ -369,45 +369,10 @@ class Botcrypto(commands.Bot):
             """
             Fonction qui renvoi le prix estimer de vente de la crypto
             """
-            btcup = self.kucoin.montant_compte("BTC3L")
-            btcdown = self.kucoin.montant_compte("BTC3S")
-            type_crypto = None
-
-            # On vérifie qu'il y a bien des positions en cours
-            if btcup < self.kucoin.minimum_crypto_up and btcdown < self.kucoin.minimum_crypto_down:
-                await ctx.send("Il n'y a pas de position prise à l'heure actuel")
-                return
-
-            if btcup > self.kucoin.minimum_crypto_up:
-
-                prix_crypto = self.kucoin.prix_temps_reel_kucoin("BTC3L-USDT")
-                prix_ordre = float(self.kucoin.presence_position(
-                    "BTC3L-USDT")["price"])
-
-                type_crypto = True
-
-            elif btcdown > self.kucoin.minimum_crypto_down:
-
-                prix_crypto = self.kucoin.prix_temps_reel_kucoin("BTC3S-USDT")
-                prix_ordre = float(self.kucoin.presence_position(
-                    "BTC3S-USDT")["price"])
-
-                type_crypto = False
-
-            # On récupère le prix du marché
-            prix_marche = self.kucoin.prix_temps_reel_kucoin("BTC-USDT")
-
-            # Calcul de l'augmentation sur le marché de base
-            augmentation = (prix_ordre * 100 / prix_crypto - 100) / 3 / 100
-
-            # Calcul du prix finale
-            if type_crypto == True:
-                prix_final = prix_marche * (1 + augmentation)
+            if "prix_estimer" in self.kucoin.dico_partage:
+                await ctx.send(f"Le prix de vente estimer est de {self.kucoin.dico_partage['prix_estimer']}")
             else:
-                prix_final = prix_marche * (1 - augmentation)
-
-            await ctx.send(f"Le prix de revente estimer sur le marché est de {prix_final}")
-            await ctx.send(f"Le prix actuel est de {prix_marche}")
+                await ctx.send("Il n'y a pas de position prise à l'heure actuel ou de prix enregistrer")
 
     async def on_ready(self):
         """
