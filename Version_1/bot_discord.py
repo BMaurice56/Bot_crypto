@@ -371,6 +371,7 @@ class Botcrypto(commands.Bot):
             """
             btcup = self.kucoin.montant_compte("BTC3L")
             btcdown = self.kucoin.montant_compte("BTC3S")
+            type_crypto = None
 
             # On vérifie qu'il y a bien des positions en cours
             if btcup < self.kucoin.minimum_crypto_up and btcdown < self.kucoin.minimum_crypto_down:
@@ -380,14 +381,18 @@ class Botcrypto(commands.Bot):
             if btcup > self.kucoin.minimum_crypto_up:
 
                 prix_crypto = self.kucoin.prix_temps_reel_kucoin("BTC3L-USDT")
-                prix_ordre = self.kucoin.presence_position(
-                    "BTC3L-USDT")["price"]
+                prix_ordre = float(self.kucoin.presence_position(
+                    "BTC3L-USDT")["price"])
+
+                type_crypto = True
 
             elif btcdown > self.kucoin.minimum_crypto_down:
 
                 prix_crypto = self.kucoin.prix_temps_reel_kucoin("BTC3S-USDT")
-                prix_ordre = self.kucoin.presence_position(
-                    "BTC3S-USDT")["price"]
+                prix_ordre = float(self.kucoin.presence_position(
+                    "BTC3S-USDT")["price"])
+
+                type_crypto = False
 
             # On récupère le prix du marché
             prix_marche = self.kucoin.prix_temps_reel_kucoin("BTC-USDT")
@@ -396,9 +401,12 @@ class Botcrypto(commands.Bot):
             augmentation = (prix_ordre * 100 / prix_crypto - 100) / 3 / 100
 
             # Calcul du prix finale
-            prix_marche = prix_marche * (1 + augmentation)
+            if type_crypto == True:
+                prix_final = prix_marche * (1 + augmentation)
+            else:
+                prix_final = prix_marche * (1 - augmentation)
 
-            await ctx.send(f"Le prix de revente estimer sur le marché est de {prix_marche}")
+            await ctx.send(f"Le prix de revente estimer sur le marché est de {prix_final}")
             await ctx.send(f"Le prix actuel est de {prix_marche}")
 
     async def on_ready(self):
