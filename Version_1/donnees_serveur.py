@@ -591,9 +591,8 @@ class Kucoin:
         """
         Fonction qui achète ou vente les cryptomonnaies
         Ex param :
-        montant : 200
-        symbol : "BTC3S-USDT
-        achat_vente : True ou False
+        Achat : montant : 200 (USDT), symbol : "BTC3L-USDT, achat_vente : True
+        Vente : montant : 48 (BTC3L-USDT), "BTC3L-USDT", achat_vente : False
         """
         # On créer un dictionnaire avec toutes les informations nécessaires
         info = {"montant": montant,
