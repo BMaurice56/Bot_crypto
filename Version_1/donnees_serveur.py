@@ -402,7 +402,7 @@ class Kucoin:
         """
         Fonction qui renvoie le montant que possède le compte selon le ou les symbols voulus
         Ex paramètre :
-        symbol : USDT
+        symbol : USDT ou BTC3L
         """
         # On défini la terminaison de la requête
         endpoint = f"/api/v1/accounts?currency={symbol}&type=trade"
@@ -689,7 +689,7 @@ class Kucoin:
             minimum = self.minimum_crypto_up
 
             # On garde que le nom de la crypto
-            symbol_simple = symbol.split(3)[0]
+            symbol_simple = symbol.split("-")[0]
 
             # Si on est sur le marché descendant, alors on change les paramètres
             if "3S" in symbol:
