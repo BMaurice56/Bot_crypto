@@ -1,4 +1,5 @@
 from tenacity import retry, retry_if_exception_type, stop_after_attempt
+from shared_memory_dict import SharedMemoryDict
 from multiprocessing import Process, Manager
 from decimal import Decimal, ROUND_DOWN
 from indices_techniques import moyenne
@@ -275,6 +276,9 @@ class Kucoin:
 
         # Message discord
         self.msg_discord = Message_discord()
+
+        # Diction partagé entre programme
+        self.dico_partage = SharedMemoryDict(name="dico", size=1024)
 
     def arrondi(self, valeur: float or str, zero_apres_virgule: Optional[float] = None) -> float:
         """
@@ -605,8 +609,9 @@ class Kucoin:
         """
         Fonction qui place l'ordre limite de vente
         """
-
         prix = self.prix_temps_reel_kucoin(symbol)
+        prix_marche = self.prix_temps_reel_kucoin(
+            f"{symbol.split('3')[0]}-USDT")
 
         zero_apres_virgule = "0.0001"
 
@@ -615,6 +620,9 @@ class Kucoin:
 
         nv_prix = self.arrondi(
             str(prix * (1 + self.pourcentage_gain)), zero_apres_virgule)
+
+        self.dico_partage["prix_estimer"] = prix_marche * \
+            (1 + (self.pourcentage_gain/3))
 
         # Besoin d'un id pour l'achat des cryptos
         id_position = randint(0, 100_000_000)
@@ -647,7 +655,8 @@ class Kucoin:
         content = json.loads(prise_position)
 
         if content["code"] != "200000":
-            self.msg_discord.message_état_bot(f"{str(content)}")
+            self.msg_discord.message_erreur(
+                f"{str(content)}", "Echec placement de l'ordre limite")
 
         # Puis on vient écrire l'id de l'ordre dans un fichier pour faciliter la suppresion de celui-ci
         self.écriture_fichier(content["data"]["orderId"])

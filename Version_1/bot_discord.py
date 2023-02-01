@@ -42,6 +42,9 @@ class Botcrypto(commands.Bot):
 
         self.listes_crypto = text.split(";")
 
+        # Dictionnaire partagé entre programme
+        self.dico_partage = SharedMemoryDict(name="dico", size=1024)
+
         def arret_bot():
             """
             Fonction qui arrête le bot
@@ -363,6 +366,16 @@ class Botcrypto(commands.Bot):
 
             for elt in ls:
                 fichier.write(elt)
+
+        @self.command(name="estimation")
+        async def prix_vente(ctx):
+            """
+            Fonction qui renvoi le prix estimer de vente de la crypto
+            """
+            if "prix_estimer" in self.dico_partage:
+                await ctx.send(f"Le prix de vente estimer est de {self.dico_partage['prix_estimer']}")
+            else:
+                await ctx.send("Il n'y a pas de position prise à l'heure actuel")
 
     async def on_ready(self):
         """
