@@ -75,8 +75,6 @@ pourcentage_stoploss_down = 1.02
 while True:
     t1 = perf_counter()
 
-    achat_vente = False
-
     argent = kucoin.montant_compte("USDT")
     btcup = kucoin.montant_compte("BTC3L")
     btcdown = kucoin.montant_compte("BTC3S")
@@ -114,10 +112,7 @@ while True:
     msg_discord.message_état_bot(msg)
 
     if validation_achat(prix, prix_up, prix_down, prediction, prediction_up, prediction_down, True):
-        if btcup > kucoin.minimum_crypto_up:
-            pass
-
-        else:
+        if btcup < kucoin.minimum_crypto_up:
             # Si le processus du stoploss est toujours en vie
             # On l'arrête avant d'en créer un nouveau
             kill_process(p2)
@@ -140,13 +135,8 @@ while True:
                 symbol_stoploss, prix_stoploss])
             p2.start()
 
-            achat_vente = True
-
     elif validation_achat(prix, prix_up, prix_down, prediction, prediction_up, prediction_down, False):
-        if btcdown > kucoin.minimum_crypto_down:
-            pass
-
-        else:
+        if btcdown < kucoin.minimum_crypto_down:
             # Si le processus du stoploss est toujours en vie
             # On l'arrête avant d'en créer un nouveau
             kill_process(p2)
@@ -170,23 +160,19 @@ while True:
                 symbol_stoploss, prix_stoploss])
             p2.start()
 
-            achat_vente = True
-
     else:
-        # Si le prix est supérieur a la prédiction
+        # Si le prix est supérieur a la prédiction (ou inversement)
         # Et que on a pas acheté et qu'on a des cryptos
         # Alors on vend
-        if prix > prediction or prix_up > prediction_up or prix_down < prediction_down:
-            if achat_vente == False and btcup > kucoin.minimum_crypto_up:
-                kill_process(p2)
+        if (prix > prediction or prix_up > prediction_up or prix_down < prediction_down) and btcup > kucoin.minimum_crypto_up:
+            kill_process(p2)
 
-                kucoin.achat_vente(btcup, symbol_up_kucoin, False)
+            kucoin.achat_vente(btcup, symbol_up_kucoin, False)
 
-        if prix < prediction or prix_up < prediction_up or prix_down > prediction_down:
-            if achat_vente == False and btcdown > kucoin.minimum_crypto_down:
-                kill_process(p2)
+        if (prix < prediction or prix_up < prediction_up or prix_down > prediction_down) and btcdown > kucoin.minimum_crypto_down:
+            kill_process(p2)
 
-                kucoin.achat_vente(btcdown, symbol_down_kucoin, False)
+            kucoin.achat_vente(btcdown, symbol_down_kucoin, False)
 
     # On enregistre l'état du bot (dernière heure et divergence)
     # Pour que si le bot est arrêté et repart, qu'il soit au courant
