@@ -365,12 +365,13 @@ class Botcrypto(commands.Bot):
                 fichier.write(elt)
 
         @self.command(name="estimation")
-        async def prix_vente(ctx):
+        async def estimation(ctx):
             """
             Fonction qui renvoi le prix estimer de vente de la crypto
             """
             if "prix_estimer" in self.kucoin.dico_partage:
                 await ctx.send(f"Le prix de vente estimer est de {self.kucoin.dico_partage['prix_estimer']}")
+                await ctx.send(f"Le prix de marché est de {self.kucoin.prix_temps_reel_kucoin('BTC-USDT')}")
             else:
                 await ctx.send("Il n'y a pas de position prise à l'heure actuel ou de prix enregistrer")
 
