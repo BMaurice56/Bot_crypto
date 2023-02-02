@@ -608,7 +608,7 @@ class Kucoin:
         self.prise_position(info)
 
         # On récupère le prix en temps réel de la crypto que l'on vient d'acheter
-        prix = self.prix_temps_reel_kucoin("BTC-USDT")
+        prix = self.prix_temps_reel_kucoin(self.symbol)
 
         # Puis on vient envoyer un message sur le discord
         if achat_ou_vente == True:
@@ -713,7 +713,7 @@ class Kucoin:
                     break
 
                 # On récupère le prix du marché
-                prix = self.prix_temps_reel_kucoin("BTC-USDT", "stoploss")
+                prix = self.prix_temps_reel_kucoin(self.symbol, "stoploss")
 
                 # Si la crypto dépasse le stoploss fixé, alors on vend
                 if self.comparaisons(prix, prix_stop, type_marche) == False:
@@ -743,8 +743,8 @@ class Kucoin:
         """
         try:
             while True:
-                sl_3S = self.presence_position("BTC3S-USDT")
-                sl_3L = self.presence_position("BTC3L-USDT")
+                sl_3L = self.presence_position(self.symbol_up)
+                sl_3S = self.presence_position(self.symbol_down)
 
                 # S'il y a aucun stoploss, par sécurité on vide le fichier
                 if sl_3L == None and sl_3S == None:
