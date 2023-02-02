@@ -269,7 +269,7 @@ class Kucoin:
         self.kucoin_api_secret = "d125b0df-e2eb-4532-8ed1-049d01dc18b8"
         self.kucoin_phrase_securite = "c5%Pnp8o$FE%^CEM7jwFp9PaTtW4kq"
 
-        self.pourcentage_gain = 0.0150
+        self.pourcentage_gain = 0.02
 
         self.minimum_crypto_up = 5000
         self.minimum_crypto_down = 4
@@ -620,22 +620,26 @@ class Kucoin:
         """
         Fonction qui place l'ordre limite de vente
         """
+        # Récupération des prix de marchés
         prix = self.prix_temps_reel_kucoin(symbol)
         prix_marche = self.prix_temps_reel_kucoin(
             f"{symbol.split('3')[0]}-USDT")
 
         zero_apres_virgule = "0.0001"
 
-        if symbol == "BTC3L-USDT":
+        # Si crypto montante, elle autorise un nombre chiffre après virgule plus importante
+        if "3L" in symbol:
             zero_apres_virgule = '0.000001'
 
+        # Calcul du prix de vente de l'ordre
         nv_prix = self.arrondi(
             str(prix * (1 + self.pourcentage_gain)), zero_apres_virgule)
 
+        # On stock dans le dictionaire partagé le prix estimer de vente sur le marché de base
         if "3L" in symbol:
             self.dico_partage["prix_estimer"] = prix_marche * \
                 (1 + (self.pourcentage_gain/3))
-        elif "3S" in symbol:
+        else:
             self.dico_partage["prix_estimer"] = prix_marche * \
                 (1 - (self.pourcentage_gain/3))
 
