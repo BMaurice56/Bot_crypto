@@ -286,12 +286,6 @@ class Kucoin:
         # Diction partagé entre programme
         self.dico_partage = SharedMemoryDict(name="dico", size=1024)
 
-        # Si on créer un objet Kucoin en dehors de discord -> bot de trading
-        # Permet de garder l'id à jour dans le fichier
-        if crypto != "Discord":
-            p = Process(target=self.update_id_ordre_limite)
-            p.start()
-
     def arrondi(self, valeur: float or str, zero_apres_virgule: Optional[float] = None) -> float:
         """
         Fonction qui prend en argument un décimal et renvoie ce décimal arrondi à 0,00001
