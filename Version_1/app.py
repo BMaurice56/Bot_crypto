@@ -46,15 +46,16 @@ if len(etat) > 0:
 
     date = int(date.strftime("%s"))
 
-    crypto_up = kucoin.montant_compte(kucoin.symbol_up)
-    crypto_down = kucoin.montant_compte(kucoin.symbol_down)
+    crypto_up = kucoin.montant_compte(kucoin.symbol_up_simple)
+    crypto_down = kucoin.montant_compte(kucoin.symbol_down_simple)
+
+    symbol_stoploss = etat[1]
+    prix_stoploss = float(etat[2])
 
     # Si il y a bien eu 1 heure d'attente, on peut passer au prédiction
     # Sinon on attend jusqu'a l'heure prévu tout en relancent le stoploss manuel si présence de crypto
     if crypto_up > kucoin.minimum_crypto_up or crypto_down > kucoin.minimum_crypto_down:
-        symbol_stoploss = etat[1]
-        prix_stoploss = float(etat[2])
-        if symbol_stoploss != "" and prix_stoploss != 0:
+        if symbol_stoploss != "" and prix_stoploss != 0.0:
             p2.start()
 
     if date - ancienne_date < 3600:
@@ -70,8 +71,8 @@ while True:
     t1 = perf_counter()
 
     argent = kucoin.montant_compte("USDT")
-    crypto_up = kucoin.montant_compte(kucoin.symbol_up)
-    crypto_down = kucoin.montant_compte(kucoin.symbol_down)
+    crypto_up = kucoin.montant_compte(kucoin.symbol_up_simple)
+    crypto_down = kucoin.montant_compte(kucoin.symbol_down_simple)
 
     date = datetime.now(tz=ZoneInfo("Europe/Paris")
                         ).strftime("%A %d %B %Y %H:%M:%S")

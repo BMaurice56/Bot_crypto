@@ -280,6 +280,9 @@ class Kucoin:
         self.symbol_up = f"{crypto}3L-USDT"
         self.symbol_down = f"{crypto}3S-USDT"
 
+        self.symbol_up_simple = f"{crypto}3L"
+        self.symbol_down_simple = f"{crypto}3S"
+
         # Message discord
         self.msg_discord = Message_discord()
 
