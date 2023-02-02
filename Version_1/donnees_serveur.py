@@ -258,7 +258,7 @@ class Kucoin:
     Classe qui permet d'interagir avec les données des serveurs de kucoin
     """
 
-    def __init__(self) -> None:
+    def __init__(self, crypto) -> None:
         """
         Initialise un objet kucoin pour interagir avec leurs serveurs
         """
@@ -271,8 +271,14 @@ class Kucoin:
 
         self.pourcentage_gain = 0.02
 
+        # Les prix des cryptos de kucoin sont l'inverse de binance
         self.minimum_crypto_up = 5000
-        self.minimum_crypto_down = 4
+        self.minimum_crypto_down = 5
+
+        # Symbol des crypto
+        self.symbol = f"{crypto}-USDT"
+        self.symbol_up = f"{crypto}3L-USDT"
+        self.symbol_down = f"{crypto}3S-USDT"
 
         # Message discord
         self.msg_discord = Message_discord()
@@ -491,10 +497,10 @@ class Kucoin:
 
         # Soit on achète tant de crypto avec de l'usdt
         # Soit on vend tant de la crypto en question
-        if info["achat_vente"] == True:
-            achat = "buy"
-            type_achat = "funds"
-        else:
+        achat = "buy"
+        type_achat = "funds"
+
+        if info["achat_vente"] == False:
             achat = "sell"
             type_achat = "size"
 
