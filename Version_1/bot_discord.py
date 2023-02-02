@@ -29,7 +29,7 @@ class Botcrypto(commands.Bot):
         super().__init__(command_prefix="!")
 
         # Objet Kucoin pour interagir avec le serveur
-        self.kucoin = Kucoin()
+        self.kucoin = Kucoin("Discord")
 
         # Message discord
         self.msg_discord = Message_discord()
