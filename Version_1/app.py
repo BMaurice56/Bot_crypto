@@ -13,10 +13,6 @@ msg_discord = Message_discord()
 # Chargement des modèles d'ia pour les prédictions
 loaded_model, loaded_model_up, loaded_model_down = IA.chargement_modele(symbol)
 
-# On lance la fonction qui permet de garder à jour l'id de l'ordre limite dans le fichier
-p = Process(target=kucoin.update_id_ordre_limite)
-p.start()
-
 # Info pour la fonction stoploss manuel
 symbol_stoploss = ""
 prix_stoploss = 0.0
