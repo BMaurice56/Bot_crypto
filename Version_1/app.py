@@ -99,14 +99,12 @@ while True:
     prediction_down = IA.prédiction_keras(
         data_down, rsi_vwap_cmf_down, loaded_model_down)
 
-    état = f"programme toujours en cour d'exécution le : {date}"
-    infos = f"prix de la crypto : {prix}, prix de la prédiction : {prediction}"
-    up = f"prix crypto up : {prix_up}, prix de la prédiction : {prediction_up}"
-    down = f"prix crypto down : {prix_down}, prix de la prédiction : {prediction_down}"
+    état = f"programme toujours en cour d'exécution le : {date}\n" + \
+        f"prix de la crypto : {prix}, prix de la prédiction : {prediction}\n" + \
+        f"prix crypto up : {prix_up}, prix de la prédiction : {prediction_up}\n" + \
+        f"prix crypto down : {prix_down}, prix de la prédiction : {prediction_down}"
 
-    msg = état + "\n" + infos + "\n" + up + "\n" + down
-
-    msg_discord.message_état_bot(msg)
+    msg_discord.message_état_bot(état)
 
     if validation_achat(prix, prix_up, prix_down, prediction, prediction_up, prediction_down, True):
         if crypto_up < kucoin.minimum_crypto_up:
@@ -174,7 +172,7 @@ while True:
     # On enregistre l'état du bot (dernière heure et divergence)
     # Pour que si le bot est arrêté et repart, qu'il soit au courant
     # S'il doit attendre ou non
-    state = date + ";" + symbol_stoploss + ";" + str(prix_stoploss)
+    state = f"{date};{symbol_stoploss};{prix_stoploss}"
     IA.etat_bot("écriture", state)
 
     t2 = perf_counter()
