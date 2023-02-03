@@ -49,15 +49,17 @@ if len(etat) > 0:
     crypto_up = kucoin.montant_compte(kucoin.symbol_up_simple)
     crypto_down = kucoin.montant_compte(kucoin.symbol_down_simple)
 
-    symbol_stoploss = etat[1]
-    prix_stoploss = float(etat[2])
+    # S'il y a bien un état dans le fichier, alors on peut attribuer les valeurs aux variables
+    if etat[1] != "" and etat[2] != "":
+        symbol_stoploss = etat[1]
+        prix_stoploss = float(etat[2])
 
-    # Si il y a bien eu 1 heure d'attente, on peut passer au prédiction
-    # Sinon on attend jusqu'a l'heure prévu tout en relancent le stoploss manuel si présence de crypto
+    # S'il y a des cryptos en cours, alors on relance le stoploss
     if crypto_up > kucoin.minimum_crypto_up or crypto_down > kucoin.minimum_crypto_down:
         if symbol_stoploss != "" and prix_stoploss != 0.0:
             p2.start()
 
+    # Si le bot n'a pas attendu l'heure, alors il attend
     if date - ancienne_date < 3600:
         temps_dodo = 3600 - (date - ancienne_date)
         sleep(temps_dodo)

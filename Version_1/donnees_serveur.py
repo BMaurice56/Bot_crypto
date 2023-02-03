@@ -701,6 +701,8 @@ class Kucoin:
         Fonction qui fait office de stoploss mais de façon manuel
         Basé sur le prix du marché normal, pas celui des jetons à effet de levier
         """
+        self.msg_discord.message_status_général(
+            "fonction stoploss_manuel lancée !")
         try:
             # Par défaut, on est sur le marché montant
             type_marche = True
@@ -750,6 +752,8 @@ class Kucoin:
         Fonction qui maintien à jour l'id de l'ordre limite dans le fichier
         S'il l'ordre a été executé alors on enlève l'id du fichier
         """
+        self.msg_discord.message_status_général(
+            "fonction update_id_... lancée !")
         try:
             while True:
                 sl_3L = self.presence_position(self.symbol_up)
