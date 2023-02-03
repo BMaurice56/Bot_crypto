@@ -1,6 +1,7 @@
 import paramiko
 import json
 
+
 def récupération_fichier():
     """
     Fonction qui récupère les fichiers logs sur le serveur
@@ -19,16 +20,30 @@ def récupération_fichier():
     sftp = ssh.open_sftp()
 
     # Télécharger un fichier depuis le serveur SSH
-    sftp.get('/home/Bot_crypto/Version_1/fichier_log/log_requete.txt', "log_requete.txt")
-    sftp.get('/home/Bot_crypto/Version_1/fichier_log/log_stoploss_manuel.txt', "log_stoploss_manuel.txt")
-    sftp.get('/home/Bot_crypto/Version_1/fichier_log/log_update_id_position.txt', "log_update_id_position.txt")
-    sftp.get('/home/Bot_crypto/Version_1/fichier_log/log_erreur.txt', "log_erreur.txt")
+    sftp.get('/home/Bot_crypto/Version_1/fichier_log/log_requete.txt',
+             "log_requete.txt")
+    sftp.get('/home/Bot_crypto/Version_1/fichier_log/log_stoploss_manuel.txt',
+             "log_stoploss_manuel.txt")
+    sftp.get('/home/Bot_crypto/Version_1/fichier_log/log_update_id_position.txt',
+             "log_update_id_position.txt")
+    sftp.get('/home/Bot_crypto/Version_1/fichier_log/log_erreur.txt',
+             "log_erreur.txt")
+
+    ssh.exec_command(
+        'echo "" > /home/Bot_crypto/Version_1/fichier_log/log_requete.txt')
+    ssh.exec_command(
+        'echo "" > /home/Bot_crypto/Version_1/fichier_log/log_stoploss_manuel.txt')
+    ssh.exec_command(
+        'echo "" > /home/Bot_crypto/Version_1/fichier_log/log_update_id_position.txt')
+    ssh.exec_command(
+        'echo "" > /home/Bot_crypto/Version_1/fichier_log/log_erreur.txt')
 
     # Fermer la session SFTP
     sftp.close()
 
     # Déconnectez-vous du serveur SSH
     ssh.close()
+
 
 def analyse_fichier(nom_fichier: str):
     """
@@ -37,7 +52,7 @@ def analyse_fichier(nom_fichier: str):
     fichier = open(nom_fichier, "r").read()
     if fichier != "":
         # On sépare chaque ligne entre elles (-1 car on ne garde pas le dernier retoure a la ligne)
-        contenue = fichier.split("\n")[:-1]
+        contenue = fichier[1:].split("\n")[:-1]
         requete = []
         résultat = []
 
@@ -56,9 +71,9 @@ def analyse_fichier(nom_fichier: str):
 
         return résultat
 
+
 récupération_fichier()
 
-print(analyse_fichier("log_erreur.txt"))
 print(analyse_fichier("log_requete.txt"))
 print(analyse_fichier("log_stoploss_manuel.txt"))
 print(analyse_fichier("log_stoploss_manuel.txt"))

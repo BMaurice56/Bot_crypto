@@ -134,7 +134,7 @@ class Binance:
 
         self.client = Client(self.api_key, self.api_secret)
 
-    @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
+    @retry(retry=retry_if_exception_type((ccxt.NetworkError, requests.exceptions.SSLError, requests.exceptions.ConnectionError)), stop=stop_after_attempt(3))
     def donnée(self, symbol: str, début: str, fin: str) -> pandas.DataFrame:
         """
         Fonction qui prend en argument un symbol de type "BTCEUR" ou encore "ETHEUR" etc...
@@ -169,7 +169,7 @@ class Binance:
 
         return data
 
-    @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
+    @retry(retry=retry_if_exception_type((ccxt.NetworkError, requests.exceptions.SSLError, requests.exceptions.ConnectionError)), stop=stop_after_attempt(3))
     def prix_temps_reel(self, symbol: str) -> float:
         """
         Fonction qui récupère le prix en temps réel d'un symbol voulu
@@ -179,7 +179,7 @@ class Binance:
 
         return float(self.client.get_ticker(symbol=symbol)['lastPrice'])
 
-    @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
+    @retry(retry=retry_if_exception_type((ccxt.NetworkError, requests.exceptions.SSLError, requests.exceptions.ConnectionError)), stop=stop_after_attempt(3))
     def all_data(self, symbol: str) -> dict:
         """
         Fonction qui prend en argument un symbol
@@ -412,7 +412,7 @@ class Kucoin:
 
         fichier.close()
 
-    @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
+    @retry(retry=retry_if_exception_type((ccxt.NetworkError, requests.exceptions.SSLError, requests.exceptions.ConnectionError)), stop=stop_after_attempt(3))
     def montant_compte(self, symbol: str, type_requete: Optional[str] = None) -> float:
         """
         Fonction qui renvoie le montant que possède le compte selon le ou les symbols voulus
@@ -448,7 +448,7 @@ class Kucoin:
         else:
             return 0
 
-    @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
+    @retry(retry=retry_if_exception_type((ccxt.NetworkError, requests.exceptions.SSLError, requests.exceptions.ConnectionError)), stop=stop_after_attempt(3))
     def prix_temps_reel_kucoin(self, symbol: str, type_requete: Optional[str] = None) -> float:
         """
         Fonction qui renvoie le prix de la crypto en temps réel
@@ -477,7 +477,7 @@ class Kucoin:
 
         return argent
 
-    @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
+    @retry(retry=retry_if_exception_type((ccxt.NetworkError, requests.exceptions.SSLError, requests.exceptions.ConnectionError)), stop=stop_after_attempt(3))
     def prise_position(self, info: dict) -> None:
         """
         Fonction qui prend une position soit d'achat soit de vente et place un stoploss
@@ -536,7 +536,7 @@ class Kucoin:
         if info["achat_vente"] == True:
             self.ordre_vente_seuil(info["symbol"])
 
-    @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
+    @retry(retry=retry_if_exception_type((ccxt.NetworkError, requests.exceptions.SSLError, requests.exceptions.ConnectionError)), stop=stop_after_attempt(3))
     def presence_position(self, symbol: str) -> dict or None:
         """
         Fonction qui renvoie les positions en cours sur une pair de crypto précis
@@ -573,7 +573,7 @@ class Kucoin:
         else:
             return resultat[0]
 
-    @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
+    @retry(retry=retry_if_exception_type((ccxt.NetworkError, requests.exceptions.SSLError, requests.exceptions.ConnectionError)), stop=stop_after_attempt(3))
     def suppression_ordre(self) -> None:
         """
         Fonction qui supprime un ordre selon qu'il soit un stoploss ou un simple ordre
@@ -601,7 +601,7 @@ class Kucoin:
         # Créer le fichier s'il n'existe pas
         self.écriture_fichier()
 
-    @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
+    @retry(retry=retry_if_exception_type((ccxt.NetworkError, requests.exceptions.SSLError, requests.exceptions.ConnectionError)), stop=stop_after_attempt(3))
     def achat_vente(self, montant: int or float, symbol: str, achat_ou_vente: bool) -> None:
         """
         Fonction qui achète ou vente les cryptomonnaies
@@ -630,7 +630,7 @@ class Kucoin:
             msg = f"Vente de position au prix de {prix}$, il reste {argent} usdt"
             self.msg_discord.message_prise_position(msg, False)
 
-    @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
+    @retry(retry=retry_if_exception_type((ccxt.NetworkError, requests.exceptions.SSLError, requests.exceptions.ConnectionError)), stop=stop_after_attempt(3))
     def ordre_vente_seuil(self, symbol: str) -> None:
         """
         Fonction qui place l'ordre limite de vente
@@ -695,7 +695,7 @@ class Kucoin:
         # Puis on vient écrire l'id de l'ordre dans un fichier pour faciliter la suppresion de celui-ci
         self.écriture_fichier(content["data"]["orderId"])
 
-    @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
+    @retry(retry=retry_if_exception_type((ccxt.NetworkError, requests.exceptions.SSLError, requests.exceptions.ConnectionError)), stop=stop_after_attempt(3))
     def stoploss_manuel(self, symbol: str, prix_stop: float) -> None:
         """
         Fonction qui fait office de stoploss mais de façon manuel
@@ -746,7 +746,7 @@ class Kucoin:
             self.stoploss_manuel(symbol, prix_stop)
     # Fonction qui tourne en continue au lancement du programme
 
-    @retry(retry=retry_if_exception_type(ccxt.NetworkError), stop=stop_after_attempt(3))
+    @retry(retry=retry_if_exception_type((ccxt.NetworkError, requests.exceptions.SSLError, requests.exceptions.ConnectionError)), stop=stop_after_attempt(3))
     def update_id_ordre_limite(self) -> None:
         """
         Fonction qui maintien à jour l'id de l'ordre limite dans le fichier
