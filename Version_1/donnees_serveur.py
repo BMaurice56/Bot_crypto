@@ -753,6 +753,19 @@ class Kucoin:
         S'il l'ordre a été executé alors on enlève l'id du fichier
         """
         try:
+            def gestion_ordre(ordre: str, symbol: str):
+                """
+                Sous fonction qui gère l'écriture de l'id de l'ordre sur le fichier
+                Et qui gère les attributs de prix de l'ordre limite
+                """
+                id_ol = ordre['id']
+
+                self.prix = self.prix_temps_reel_kucoin(symbol)
+                self.prix_ordrelimite = ordre["price"]
+
+                self.id_ordrelimite = id_ol
+                self.écriture_fichier(id_ol)
+
             while True:
                 sl_3L = self.presence_position(self.symbol_up)
                 sl_3S = self.presence_position(self.symbol_down)
@@ -780,19 +793,6 @@ class Kucoin:
                     gestion_ordre(sl_3S, self.symbol_down)
 
                 sleep(20)
-
-                def gestion_ordre(ordre: str, symbol: str):
-                    """
-                    Sous fonction qui gère l'écriture de l'id de l'ordre sur le fichier
-                    Et qui gère les attributs de prix de l'ordre limite
-                    """
-                    id_ol = ordre['id']
-
-                    self.prix = self.prix_temps_reel_kucoin(symbol)
-                    self.prix_ordrelimite = ordre["price"]
-
-                    self.id_ordrelimite = id_ol
-                    self.écriture_fichier(id_ol)
 
         except:
             # On récupère l'erreur
