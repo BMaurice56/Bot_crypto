@@ -138,7 +138,7 @@ def insert_data_historique_bdd(symbol: str, nombre_données: int, curseur, conne
     binance = Binance()
 
     données_serveur = binance.donnée(
-        symbol, f"{nombre_données} hour ago UTC", "0 min hour UTC")
+        symbol, f"{nombre_données} hour ago UTC", "0 hour ago UTC")
 
     liste_data = []
     liste_rsi = []
