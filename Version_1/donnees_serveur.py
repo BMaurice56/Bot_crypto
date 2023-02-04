@@ -141,12 +141,10 @@ class Binance:
         Et qui renvoie les données sous forme d'une dataframe pandas
         Ex param :
         symbol : 'BTCEUR'
-        début : "200 min ago UTC" 
-        fin : "0 min ago UTC" ...
-        longueur : 40 données ...
+        début : "40 hour ago UTC" 
+        fin : "0 hour ago UTC" ...
         """
         donnée_historique = []
-        # Tant que l'on a pas la bonne quantité de donnée on continue
 
         # Récupération des données de la crypto
         if fin[0] == "0":
@@ -288,6 +286,11 @@ class Kucoin:
 
         # Diction partagé entre programme
         self.dico_partage = SharedMemoryDict(name="dico", size=1024)
+
+        # Stock les informations sur l'ordre limite pour savoir s'il a été executé
+        self.prix = 0.0
+        self.prix_ordrelimite = 0.0
+        self.id_ordrelimite = ""
 
         # Si on créer un objet Kucoin en dehors de discord -> bot de trading
         # Permet de garder l'id à jour dans le fichier
@@ -637,8 +640,7 @@ class Kucoin:
         """
         # Récupération des prix de marchés
         prix = self.prix_temps_reel_kucoin(symbol)
-        prix_marche = self.prix_temps_reel_kucoin(
-            f"{symbol.split('3')[0]}-USDT")
+        prix_marche = self.prix_temps_reel_kucoin(self.symbol)
 
         zero_apres_virgule = "0.0001"
 
@@ -759,15 +761,39 @@ class Kucoin:
                 if sl_3L == None and sl_3S == None:
                     self.écriture_fichier()
 
+                    # Si l'ordre est bien exécuté et que ce n'est pas une vente manuelle
+                    # Alors on envoit un message sur discord
+                    if 0.5 > self.prix - self.prix_ordrelimite > -0.5 and self.id_ordrelimite != "":
+                        self.msg_discord.message_vente_ordre()
+
+                        self.prix = 0.0
+                        self.prix_ordrelimite = 0.0
+
+                        self.id_ordrelimite = ""
+
                 # Sinon par sécurité, on remet l'id du stoploss dans le fichier
                 elif sl_3L != None:
-                    self.écriture_fichier(sl_3L['id'])
+                    gestion_ordre(sl_3L, self.symbol_up)
 
                 # De même pour ici
                 elif sl_3S != None:
-                    self.écriture_fichier(sl_3S['id'])
+                    gestion_ordre(sl_3S, self.symbol_down)
 
                 sleep(20)
+
+                def gestion_ordre(ordre: str, symbol: str):
+                    """
+                    Sous fonction qui gère l'écriture de l'id de l'ordre sur le fichier
+                    Et qui gère les attributs de prix de l'ordre limite
+                    """
+                    id_ol = ordre['id']
+
+                    self.prix = self.prix_temps_reel_kucoin(symbol)
+                    self.prix_ordrelimite = ordre["price"]
+
+                    self.id_ordrelimite = id_ol
+                    self.écriture_fichier(id_ol)
+
         except:
             # On récupère l'erreur
             erreur = traceback.format_exc()
