@@ -760,8 +760,8 @@ class Kucoin:
                 """
                 id_ol = ordre['id']
 
-                self.prix = self.prix_temps_reel_kucoin(symbol)
-                self.prix_ordrelimite = ordre["price"]
+                self.prix = self.prix_temps_reel_kucoin(symbol, "")
+                self.prix_ordrelimite = float(ordre["price"])
 
                 self.id_ordrelimite = id_ol
                 self.écriture_fichier(id_ol)
