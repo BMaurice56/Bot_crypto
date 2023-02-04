@@ -291,6 +291,7 @@ class Kucoin:
         self.prix = 0.0
         self.prix_ordrelimite = 0.0
         self.id_ordrelimite = ""
+        self.borne = 0.0
 
         # Si on créer un objet Kucoin en dehors de discord -> bot de trading
         # Permet de garder l'id à jour dans le fichier
@@ -728,7 +729,6 @@ class Kucoin:
 
                 # Si la crypto dépasse le stoploss fixé, alors on vend
                 if self.comparaisons(prix, prix_stop, type_marche) == False:
-
                     self.achat_vente(crypto, symbol, False)
 
                     break
@@ -776,7 +776,7 @@ class Kucoin:
 
                     # Si l'ordre est bien exécuté et que ce n'est pas une vente manuelle
                     # Alors on envoit un message sur discord
-                    if 0.5 > self.prix - self.prix_ordrelimite > -0.5 and self.id_ordrelimite != "":
+                    if self.borne > self.prix - self.prix_ordrelimite > -self.borne and self.id_ordrelimite != "":
                         self.msg_discord.message_vente_ordre()
 
                         self.prix = 0.0
@@ -787,10 +787,12 @@ class Kucoin:
                 # Sinon par sécurité, on remet l'id du stoploss dans le fichier
                 elif sl_3L != None:
                     gestion_ordre(sl_3L, self.symbol_up)
+                    self.borne = 0.00002
 
                 # De même pour ici
                 elif sl_3S != None:
                     gestion_ordre(sl_3S, self.symbol_down)
+                    self.borne = 0.002
 
                 sleep(20)
 
