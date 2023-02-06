@@ -392,7 +392,7 @@ class Kucoin:
 
         fichier.close()
 
-    def écriture_requete(self, requete, emplacement) -> None:
+    def écriture_requete(self, requete: str, emplacement: str) -> None:
         """
         Fonction qui écrit toutes les requêtes dans un fichier (leur résultat)
         Ainsi que la date
