@@ -45,7 +45,7 @@ class CustomEnv:
 
 
 class Agent:
-    def __init__(self, action_size=1, state_size=378):
+    def __init__(self, action_size=1, state_size=298):
         # Initialisation de l'agent
         self.action_size = action_size  # Activation 1 ou 0, renvoie 1 ou 0
         self.state_size = state_size  # Nombre d'entrées du bot (378 données)
@@ -81,7 +81,7 @@ class Agent:
 def _build_model():
     # Création du modèle
     model = Sequential()
-    model.add(Dense(50, input_dim=378, activation='relu'))
+    model.add(Dense(50, input_dim=298, activation='relu'))
     model.add(Dense(15, activation='relu'))
     model.add(Dense(1, activation='sigmoid'))
     model.compile(loss='mean_squared_logarithmic_error', optimizer='adam')
