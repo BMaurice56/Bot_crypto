@@ -78,6 +78,8 @@ pourcentage_gain_ordrelimite = kucoin.pourcentage_gain
 while True:
     t1 = perf_counter()
 
+    buy_sell = False
+
     argent = kucoin.montant_compte("USDT")
     crypto_up = kucoin.montant_compte(kucoin.symbol_up_simple)
     crypto_down = kucoin.montant_compte(kucoin.symbol_down_simple)
@@ -143,6 +145,8 @@ while True:
             temps_derniere_position = 0
             pourcentage_gain_ordrelimite = kucoin.pourcentage_gain
 
+            buy_sell = True
+
     elif validation_achat(prix, prix_up, prix_down, prediction, prediction_up, prediction_down, False):
         symbol_ordrelimite = kucoin.symbol_down
         temps_derniere_position += 1
@@ -175,6 +179,8 @@ while True:
             temps_derniere_position = 0
             pourcentage_gain_ordrelimite = kucoin.pourcentage_gain
 
+            buy_sell = True
+
     else:
         temps_derniere_position += 1
 
@@ -185,18 +191,24 @@ while True:
             kill_process(p2)
 
             kucoin.achat_vente(crypto_up, kucoin.symbol_up, False)
-            crypto_up = kucoin.montant_compte(kucoin.symbol_up_simple)
+            buy_sell = True
 
         if (prix < prediction or prix_up < prediction_up or prix_down > prediction_down) and crypto_down > kucoin.minimum_crypto_down:
             kill_process(p2)
 
             kucoin.achat_vente(crypto_down, kucoin.symbol_down, False)
-            crypto_down = kucoin.montant_compte(kucoin.symbol_down_simple)
+            buy_sell = True
 
-        # Si plus de crypto, alors on remet a zéro les variables
-        if crypto_up < kucoin.minimum_crypto_up and crypto_down < kucoin.minimum_crypto_down:
-            temps_derniere_position = 0
-            pourcentage_gain_ordrelimite = kucoin.pourcentage_gain
+    # On remet à jour les variables avec les dernières valeurs (si achat ou vente)
+    if buy_sell == True:
+        argent = kucoin.montant_compte("USDT")
+        crypto_up = kucoin.montant_compte(kucoin.symbol_up_simple)
+        crypto_down = kucoin.montant_compte(kucoin.symbol_down_simple)
+
+    # Si plus de crypto, alors on remet a zéro les variables
+    if crypto_up < kucoin.minimum_crypto_up and crypto_down < kucoin.minimum_crypto_down:
+        temps_derniere_position = 0
+        pourcentage_gain_ordrelimite = kucoin.pourcentage_gain
 
     # Si cela fait trop longtemps que l'ordre a été placé sans être vendu, on le descent
     if temps_derniere_position >= 5:
