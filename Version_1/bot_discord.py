@@ -2,8 +2,6 @@ from discord.ext import commands
 from main import *
 import asyncio
 import runpy
-import os
-
 
 # A réactiver et à mettre en premier si le bot discord est un cran au dessus
 # dans l'arborescence de fichier pour gérer les deux versions du bot

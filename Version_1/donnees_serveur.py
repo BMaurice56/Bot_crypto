@@ -21,6 +21,7 @@ import locale
 import time
 import hmac
 import json
+import os
 
 # Définition de la zone pour l'horodatage car la date était en anglais avec le module datetime
 locale.setlocale(locale.LC_ALL, 'fr_FR.UTF-8')
@@ -287,6 +288,9 @@ class Kucoin:
             p = Process(target=self.update_id_ordre_limite)
             p.start()
 
+            p2 = Process(target=self.analyse_fichier)
+            p2.start()
+
     def arrondi(self, valeur: float or str, zero_apres_virgule: Optional[float] = None) -> float:
         """
         Fonction qui prend en argument un décimal et renvoie ce décimal arrondi à 0,00001
@@ -403,6 +407,72 @@ class Kucoin:
         fichier.write(f"{date} ; {requete} \n")
 
         fichier.close()
+
+    def analyse_fichier(self):
+        """
+        Fonction qui analyse le fichier et renvoie tous les problèmes
+        """
+        try:
+            # Les noms des trois fichiers log de requêtes
+            nom = ["log_requete.txt", "log_stoploss_manuel.txt",
+                   "log_update_id_position.txt"]
+
+            while True:
+                for elt in nom:
+                    # On vient lire le contenue du fichier
+                    fichier = open(f"fichier_log/{elt}", "r").read()
+
+                    # S'il y a bien une requête dans le fichier, alors on peut l'analyser
+                    if len(fichier) > 25:
+                        # On sépare chaque ligne entre elles (-1 car on ne garde pas le dernier retoure a la ligne)
+                        contenue = fichier[1:-1].split("\n")
+
+                        # On ne garde que la requête sans la date
+                        requete = [elt.split(";")[1] for elt in contenue]
+
+                        requete_trie = []
+                        résultat = []
+
+                        # Puis on retransforme la requête en un objet python sans les espaces de début et fin
+                        # Si problème de longueur, on la stocke dans la liste de problème
+                        for j in range(len(requete)):
+                            if len(requete[j][1:-1]) < 10:
+                                résultat.append(requete[j])
+                            else:
+                                requete_trie.append(
+                                    json.loads(requete[j][1:-1]))
+
+                        # Enfin on parcours toutes les requêtes pour vérifier s'il y en a une qui n'a pas abouti
+                        # Ou qu'il y a un quelconque problème
+                        for k in range(len(requete_trie)):
+                            if requete_trie[k]['code'] != '200000' or len(requete_trie[k]) < 20:
+                                résultat.append(requete_trie[k])
+
+                        if len(résultat) > 0:
+                            f = open(f"fichier_log/log_récap.txt", "a")
+
+                            date = datetime.now(tz=ZoneInfo("Europe/Paris")
+                                                ).strftime("%A %d %B %Y %H:%M:%S")
+
+                            f.write(f"Erreur du {date} : {résultat} \n")
+
+                # Puis on vient vider les fichiers
+                os.system(
+                    'echo "" > /home/Bot_crypto/Version_1/fichier_log/log_requete.txt')
+                os.system(
+                    'echo "" > /home/Bot_crypto/Version_1/fichier_log/log_stoploss_manuel.txt')
+                os.system(
+                    'echo "" > /home/Bot_crypto/Version_1/fichier_log/log_update_id_position.txt')
+
+                # Et faire dormir le programme
+                sleep(60 * 60 * 4)
+        except:
+            # On récupère l'erreur
+            erreur = traceback.format_exc()
+
+            # Puis on l'envoi sur le canal discord
+            self.msg_discord.message_erreur(
+                erreur, "Erreur survenu dans la fonction analyse_log, fonction laissée arrêter")
 
     @retry(retry=retry_if_exception_type((requests.exceptions.SSLError, requests.exceptions.ConnectionError, json.decoder.JSONDecodeError)), stop=stop_after_attempt(3))
     def requete(self, get_post_del: str, endpoint: str, log: str, param: Optional[dict] = None) -> dict:
