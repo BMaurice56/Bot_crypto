@@ -389,6 +389,9 @@ class Kucoin:
         """
         Fonction qui écrit toutes les requêtes dans un fichier (leur résultat)
         Ainsi que la date
+        Ex param :
+        requete : données de la requête
+        emplacement : "requete", "presence_position", "stoploss"
         """
         date = datetime.now(tz=ZoneInfo("Europe/Paris")
                             ).strftime("%A %d %B %Y %H:%M:%S")
@@ -478,6 +481,11 @@ class Kucoin:
     def requete(self, get_post_del: str, endpoint: str, log: str, param: Optional[dict] = None) -> dict:
         """
         Fonction qui exécute la requête sur le serveur
+        Ex param : 
+        get_post_del : 'GET', 'POST', 'DELETE'
+        endpoint : '/api/v1/accounts...'
+        log : 'requete', 'stoploss', 'presence_position'
+        param (optionnel) : données pour la requête POST
         """
 
         # Création de l'entête
@@ -567,8 +575,6 @@ class Kucoin:
         "symbol" : "BTC3S-USDT",
         "achat_vente" : "True" (pour achat)
         }
-        Sortie de la fonction :
-        "vs9o2om08lvqav06000s2u7e"
         """
         # Lorsque l'on vend, on enlève l'ordre limit car soit il a été exécuté, soit il est toujours là
         if info["achat_vente"] == False:
@@ -688,6 +694,7 @@ class Kucoin:
         Fonction qui place l'ordre limite de vente
         Ex param
         symbol : BTC3S-USDT
+        gain (optionnel) : 0.002, 0.0175...
         """
         # Récupération des prix de marchés
         prix = self.prix_temps_reel_kucoin(symbol)
@@ -747,6 +754,9 @@ class Kucoin:
         """
         Fonction qui fait office de stoploss mais de façon manuel
         Basé sur le prix du marché normal, pas celui des jetons à effet de levier
+        Ex param : 
+        symbol : BTC3S-USDT
+        prix_stop : 23450.2463
         """
         try:
             # Par défaut, on est sur le marché montant
