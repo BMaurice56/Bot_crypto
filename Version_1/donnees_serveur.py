@@ -465,7 +465,7 @@ class Kucoin:
                     'echo "" > /home/Bot_crypto/Version_1/fichier_log/log_update_id_position.txt')
 
                 # Et faire dormir le programme
-                sleep(60 * 60 * 4)
+                sleep(60 * 60 * 3)
         except:
             # On récupère l'erreur
             erreur = traceback.format_exc()
