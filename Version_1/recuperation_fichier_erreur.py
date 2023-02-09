@@ -22,7 +22,7 @@ def récupération_fichier():
     sftp.get('/home/Bot_crypto/Version_1/fichier_log/log_erreur.txt',
              "log_erreur.txt")
 
-    sftp.get('/home/Bot_crypto/Version_1/fichier_log/log_erreur.txt',
+    sftp.get('/home/Bot_crypto/Version_1/fichier_log/log_recap.txt',
              "log_recap.txt")
 
     ssh.exec_command(
