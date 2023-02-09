@@ -133,7 +133,6 @@ class Binance:
 
         self.client = Client(self.api_key, self.api_secret)
 
-    @retry(retry=retry_if_exception_type((requests.exceptions.SSLError, requests.exceptions.ConnectionError, json.decoder.JSONDecodeError)), stop=stop_after_attempt(3))
     def donnée(self, symbol: str, début: str, fin: str) -> pandas.DataFrame:
         """
         Fonction qui prend en argument un symbol de type "BTCEUR" ou encore "ETHEUR" etc...
@@ -166,7 +165,6 @@ class Binance:
 
         return data
 
-    @retry(retry=retry_if_exception_type((requests.exceptions.SSLError, requests.exceptions.ConnectionError, json.decoder.JSONDecodeError)), stop=stop_after_attempt(3))
     def prix_temps_reel(self, symbol: str) -> float:
         """
         Fonction qui récupère le prix en temps réel d'un symbol voulu
@@ -176,7 +174,6 @@ class Binance:
 
         return float(self.client.get_ticker(symbol=symbol)['lastPrice'])
 
-    @retry(retry=retry_if_exception_type((requests.exceptions.SSLError, requests.exceptions.ConnectionError, json.decoder.JSONDecodeError)), stop=stop_after_attempt(3))
     def all_data(self, symbol: str) -> dict:
         """
         Fonction qui prend en argument un symbol
@@ -188,6 +185,7 @@ class Binance:
         manager = Manager()
         dico = manager.dict()
 
+        @retry(retry=retry_if_exception_type((requests.exceptions.SSLError, requests.exceptions.ConnectionError)), stop=stop_after_attempt(3))
         def requete(sl: str, limit: str, dictionnaire: dict, position_list: int):
             """
             Fonction qui récupère les données d'une crypto de façon asyncrone
@@ -416,6 +414,36 @@ class Kucoin:
         fichier.close()
 
     @retry(retry=retry_if_exception_type((requests.exceptions.SSLError, requests.exceptions.ConnectionError, json.decoder.JSONDecodeError)), stop=stop_after_attempt(3))
+    def requete(self, get_post_del: str, endpoint: str, log: str, param: Optional[dict] = None) -> dict:
+        """
+        Fonction qui exécute la requête sur le serveur
+        """
+
+        # Création de l'entête
+        entête = self.headers(get_post_del, endpoint, param)
+
+        # Création de l'url
+        url = self.api + endpoint
+
+        # On exécute la requête selon son type
+        if get_post_del == 'GET':
+            requete = requests.get(url, headers=entête)
+
+        elif get_post_del == 'POST':
+            requete = requests.post(url, headers=entête, data=param)
+
+        elif get_post_del == 'DELETE':
+            requete = requests.delete(url, headers=entête)
+
+        # On encode le résultat de la requête en str
+        content = requete.content.decode("utf-8")
+
+        # On écrit la requête sur le fichier log correspondant
+        self.écriture_requete(content, log)
+
+        # Puis on retourne les données
+        return json.loads(content)
+
     def montant_compte(self, symbol: str, type_requete: Optional[str] = None) -> float:
         """
         Fonction qui renvoie le montant que possède le compte selon le ou les symbols voulus
@@ -425,22 +453,15 @@ class Kucoin:
         # On défini la terminaison de la requête
         endpoint = f"/api/v1/accounts?currency={symbol}&type=trade"
 
-        # On crée l'entête
-        entête = self.headers('GET', endpoint)
+        # On change l'emplacement de l'écriture de la requete sur le fichier log
+        log = "requete"
+        if type_requete != None:
+            log = "stoploss"
 
-        # Puis on execute la requête
-        requete = requests.get(self.api + endpoint,
-                               headers=entête).content.decode("utf-8")
+        resultat = self.requete('GET', endpoint, log)
 
-        # On écrit le résultat de la requete dans le fichier
-        if type_requete == None:
-            self.écriture_requete(requete, "requete")
-        else:
-            self.écriture_requete(requete, "stoploss")
-
-        # On la retransforme au format dict car reçu au format str
-        # Puis on ne garde que les données
-        argent = json.loads(requete)["data"]
+        # On ne garde que les données
+        argent = resultat["data"]
 
         # S'il le compte possède le symbol voulu, on renvoit le nombre
         # Avec seulement 99,9% de sa quantité initiale car pour l'achat des cryptos
@@ -451,7 +472,6 @@ class Kucoin:
         else:
             return 0
 
-    @retry(retry=retry_if_exception_type((requests.exceptions.SSLError, requests.exceptions.ConnectionError, json.decoder.JSONDecodeError)), stop=stop_after_attempt(3))
     def prix_temps_reel_kucoin(self, symbol: str, type_requete: Optional[str] = None) -> float:
         """
         Fonction qui renvoie le prix de la crypto en temps réel
@@ -461,26 +481,19 @@ class Kucoin:
         # On défini la terminaison de la requête
         endpoint = f"/api/v1/market/orderbook/level1?symbol={symbol}"
 
-        # On crée l'entête
-        entête = self.headers('GET', endpoint)
+        # On change l'emplacement de l'écriture de la requete sur le fichier log
+        log = "requete"
+        if type_requete != None:
+            log = "stoploss"
 
-        # Puis on execute la requête
-        requete = requests.get(self.api + endpoint,
-                               headers=entête).content.decode('utf-8')
-
-        # On écrit le résultat de la requete dans le fichier
-        if type_requete == None:
-            self.écriture_requete(requete, "requete")
-        else:
-            self.écriture_requete(requete, "stoploss")
+        resultat = self.requete('GET', endpoint, log)
 
         # On la retransforme en dictionnaire (car reçu au format str)
         # Et on garde que le prix voulu
-        argent = float(json.loads(requete)["data"]["price"])
+        argent = float(resultat["data"]["price"])
 
         return argent
 
-    @retry(retry=retry_if_exception_type((requests.exceptions.SSLError, requests.exceptions.ConnectionError, json.decoder.JSONDecodeError)), stop=stop_after_attempt(3))
     def prise_position(self, info: dict) -> None:
         """
         Fonction qui prend une position soit d'achat soit de vente et place un stoploss
@@ -525,21 +538,13 @@ class Kucoin:
 
         param = json.dumps(param)
 
-        # Création de l'entête
-        entête = self.headers('POST', endpoint, param)
-
-        # On prend la position sur le serveur
-        requete = requests.post(
-            self.api + endpoint, headers=entête, data=param).content.decode('utf-8')
-
-        # On écrit le résultat de la requete dans le fichier
-        self.écriture_requete(requete, "requete")
+        # On exécute la requête
+        self.requete('POST', endpoint, "requete", param)
 
         # S'il on vient d'acheter, on place un ordre limit
         if info["achat_vente"] == True:
             self.ordre_vente_seuil(info["symbol"])
 
-    @retry(retry=retry_if_exception_type((requests.exceptions.SSLError, requests.exceptions.ConnectionError, json.decoder.JSONDecodeError)), stop=stop_after_attempt(3))
     def presence_position(self, symbol: str) -> dict or None:
         """
         Fonction qui renvoie les positions en cours sur une pair de crypto précis
@@ -557,18 +562,11 @@ class Kucoin:
         # On crée le point de terminaison
         endpoint = f"/api/v1/orders?status=active&symbol={symbol}"
 
-        # Création de l'entête
-        entête = self.headers("GET", endpoint)
-
-        # On envoie la requête
-        position = requests.get(self.api + endpoint,
-                                headers=entête).content.decode("utf-8")
-
-        # On écrit le résultat de la requete dans le fichier
-        self.écriture_requete(position, "presence_position")
+        # On exécute la requête
+        position = self.requete("GET", endpoint, "presence_position")
 
         # Puis on récupère le résultat et on le transforme en dictionnaire (car reçu au format str)
-        resultat = json.loads(position)['data']['items']
+        resultat = position['data']['items']
 
         # S'il y a un ordre on renvoie les informations sur celui-ci
         if resultat == []:
@@ -576,7 +574,6 @@ class Kucoin:
         else:
             return resultat[0]
 
-    @retry(retry=retry_if_exception_type((requests.exceptions.SSLError, requests.exceptions.ConnectionError, json.decoder.JSONDecodeError)), stop=stop_after_attempt(3))
     def suppression_ordre(self) -> None:
         """
         Fonction qui supprime un ordre selon qu'il soit un stoploss ou un simple ordre
@@ -590,22 +587,14 @@ class Kucoin:
             # On créer le point de terminaison de l'url
             endpoint = f"/api/v1/orders/{id_ordre}"
 
-            # Création de l'entête
-            entête = self.headers('DELETE', endpoint)
-
-            # Puis on vient envoyer la requête pour supprimer l'ordre du serveur
-            requete = requests.delete(
-                self.api + endpoint, headers=entête).content.decode('utf-8')
-
-            # On écrit le résultat de la requete dans le fichier
-            self.écriture_requete(requete, "requete")
+            # Enfin on exécute la requête
+            self.requete('DELETE', endpoint, "requete")
 
         # Enfin on supprime l'id du fichier
         # Créer le fichier s'il n'existe pas
         self.écriture_fichier()
 
-    @retry(retry=retry_if_exception_type((requests.exceptions.SSLError, requests.exceptions.ConnectionError, json.decoder.JSONDecodeError)), stop=stop_after_attempt(3))
-    def achat_vente(self, montant: int or float, symbol: str, achat_ou_vente: bool) -> None:
+    def achat_vente(self, montant: float, symbol: str, achat_ou_vente: bool) -> None:
         """
         Fonction qui achète ou vente les cryptomonnaies
         Ex param :
@@ -633,7 +622,6 @@ class Kucoin:
             msg = f"Vente de position au prix de {prix}$, il reste {argent} usdt"
             self.msg_discord.message_prise_position(msg, False)
 
-    @retry(retry=retry_if_exception_type((requests.exceptions.SSLError, requests.exceptions.ConnectionError, json.decoder.JSONDecodeError)), stop=stop_after_attempt(3))
     def ordre_vente_seuil(self, symbol: str) -> None:
         """
         Fonction qui place l'ordre limite de vente
@@ -677,22 +665,12 @@ class Kucoin:
 
         param = json.dumps(param)
 
-        # Création de l'entête
-        entête = self.headers('POST', endpoint, param)
-
-        # On prend la position sur le serveur
-        prise_position = requests.post(
-            self.api + endpoint, headers=entête, data=param).content.decode('utf-8')
-
-        # On écrit le résultat de la requete dans le fichier
-        self.écriture_requete(prise_position, "requete")
-
-        # On retransforme en dict car reçu au format str
-        content = json.loads(prise_position)
+        # On exécute la requête
+        content = self.requete('POST', endpoint, "requete", param)
 
         if content["code"] != "200000":
             self.msg_discord.message_erreur(
-                f"{str(content)}", "Echec placement de l'ordre limite")
+                f"{str(content)}", "Echec du placement de l'ordre limite")
 
         # Puis on vient écrire l'id de l'ordre dans un fichier pour faciliter la suppresion de celui-ci
         self.écriture_fichier(content["data"]["orderId"])
