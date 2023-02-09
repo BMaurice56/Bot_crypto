@@ -23,12 +23,12 @@ def récupération_fichier():
              "log_erreur.txt")
 
     sftp.get('/home/Bot_crypto/Version_1/fichier_log/log_erreur.txt',
-             "log_récap.txt")
+             "log_recap.txt")
 
     ssh.exec_command(
         'echo "" > /home/Bot_crypto/Version_1/fichier_log/log_requete.txt')
     ssh.exec_command(
-        'echo "" > /home/Bot_crypto/Version_1/fichier_log/log_récap.txt')
+        'echo "" > /home/Bot_crypto/Version_1/fichier_log/log_recap.txt')
 
     # Fermer la session SFTP
     sftp.close()

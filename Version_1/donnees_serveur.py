@@ -449,7 +449,7 @@ class Kucoin:
                                 résultat.append(requete_trie[k])
 
                         if len(résultat) > 0:
-                            f = open(f"fichier_log/log_récap.txt", "a")
+                            f = open(f"fichier_log/log_recap.txt", "a")
 
                             date = datetime.now(tz=ZoneInfo("Europe/Paris")
                                                 ).strftime("%A %d %B %Y %H:%M:%S")
