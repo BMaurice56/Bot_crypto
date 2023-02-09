@@ -273,14 +273,11 @@ class Kucoin:
         # Message discord
         self.msg_discord = Message_discord()
 
+        # Stock si l'on vend manuellement les cryptos ou non
+        self.vente_manuelle = False
+
         # Diction partagé entre programme
         self.dico_partage = SharedMemoryDict(name="dico", size=1024)
-
-        # Stock les informations sur l'ordre limite pour savoir s'il a été executé
-        self.prix = 0.0
-        self.prix_ordrelimite = 0.0
-        self.id_ordrelimite = ""
-        self.borne = 0.0
 
         # Si on créer un objet Kucoin en dehors de discord -> bot de trading
         # Permet de garder l'id à jour dans le fichier
@@ -579,6 +576,10 @@ class Kucoin:
         # Lorsque l'on vend, on enlève l'ordre limit car soit il a été exécuté, soit il est toujours là
         if info["achat_vente"] == False:
             self.suppression_ordre()
+
+            # Sert a savoir si c'est une vente manuelle ou l'ordre limite qui est exécuté
+            self.vente_manuelle = True
+
             sleep(1)
 
         # Besoin d'un id pour l'achat des cryptos
@@ -805,19 +806,8 @@ class Kucoin:
         S'il l'ordre a été executé alors on enlève l'id du fichier
         """
         try:
-            def gestion_ordre(ordre: str, symbol: str):
-                """
-                Sous fonction qui gère l'écriture de l'id de l'ordre sur le fichier
-                Et qui gère les attributs de prix de l'ordre limite
-                """
-                id_ol = ordre['id']
-
-                self.prix = self.prix_temps_reel_kucoin(symbol, "")
-                self.prix_ordrelimite = float(ordre["price"])
-
-                self.id_ordrelimite = id_ol
-                self.écriture_fichier(id_ol)
-
+            # Stock l'id de l'ordre
+            id_ordrelimite = ""
             while True:
                 sl_3L = self.presence_position(self.symbol_up)
                 sl_3S = self.presence_position(self.symbol_down)
@@ -826,25 +816,28 @@ class Kucoin:
                 if sl_3L == None and sl_3S == None:
                     self.écriture_fichier()
 
-                    # Si l'ordre est bien exécuté et que ce n'est pas une vente manuelle
-                    # Alors on envoit un message sur discord
-                    if self.borne > self.prix - self.prix_ordrelimite > -self.borne and self.id_ordrelimite != "":
-                        self.msg_discord.message_vente_ordre()
+                    # S'il y avait bien un id avant
+                    if id_ordrelimite != "":
+                        id_ordrelimite = ""
 
-                        self.prix = 0.0
-                        self.prix_ordrelimite = 0.0
+                        # alors soit l'ordre est exécuté
+                        if self.vente_manuelle == False:
+                            self.msg_discord.message_vente_ordre(
+                                self.montant_compte("USDT"))
 
-                        self.id_ordrelimite = ""
+                        # Soit c'est une vente manuelle
+                        else:
+                            self.vente_manuelle = False
 
                 # Sinon par sécurité, on remet l'id du stoploss dans le fichier
                 elif sl_3L != None:
-                    gestion_ordre(sl_3L, self.symbol_up)
-                    self.borne = 0.00003
+                    self.écriture_fichier(sl_3L['id'])
+                    id_ordrelimite = sl_3L['id']
 
                 # De même pour ici
                 elif sl_3S != None:
-                    gestion_ordre(sl_3S, self.symbol_down)
-                    self.borne = 0.003
+                    self.écriture_fichier(sl_3S['id'])
+                    id_ordrelimite = sl_3S['id']
 
                 sleep(20)
 

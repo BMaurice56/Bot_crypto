@@ -85,7 +85,7 @@ class Message_discord:
         else:
             self.message_status_général(erreur)
 
-    def message_vente_ordre(self) -> None:
+    def message_vente_ordre(self, montant: str) -> None:
         """
         Fonction qui envoie un message au serveur discord au travers d'un webhook sur le canal de prise de position
         Envoi un message pour annoncer la vente de l'ordre
@@ -96,6 +96,6 @@ class Message_discord:
         embed = DiscordEmbed(title="Vente de l'ordre limite", color="03b2f8")
 
         embed.add_embed_field(
-            name="Message :", value="Vente de l'ordre limite !")
+            name="Message :", value=f"Vente de l'ordre limite, il reste {montant} USDT !")
         webhook.add_embed(embed)
         webhook.execute()
