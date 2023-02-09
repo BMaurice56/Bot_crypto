@@ -165,15 +165,6 @@ class Binance:
 
         return data
 
-    def prix_temps_reel(self, symbol: str) -> float:
-        """
-        Fonction qui récupère le prix en temps réel d'un symbol voulu
-        Ex param :
-        symbol : BTCEUR
-        """
-
-        return float(self.client.get_ticker(symbol=symbol)['lastPrice'])
-
     def all_data(self, symbol: str) -> dict:
         """
         Fonction qui prend en argument un symbol
