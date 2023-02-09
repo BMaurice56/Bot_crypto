@@ -69,6 +69,12 @@ if len(etat) > 0:
 pourcentage_stoploss_up = 0.98
 pourcentage_stoploss_down = 1.02
 
+# Stock le temps depuis la dernière position prise
+# Si plusieurs heures passent sans l'exécution de l'ordre limite, alors on le baisse
+temps_derniere_position = -1
+symbol_ordrelimite = ""
+pourcentage_gain_ordrelimite = kucoin.pourcentage_gain
+
 while True:
     t1 = perf_counter()
 
@@ -107,6 +113,9 @@ while True:
     msg_discord.message_état_bot(état)
 
     if validation_achat(prix, prix_up, prix_down, prediction, prediction_up, prediction_down, True):
+        symbol_ordrelimite = kucoin.symbol_up
+        temps_derniere_position += 1
+
         if crypto_up < kucoin.minimum_crypto_up:
             # Si le processus du stoploss est toujours en vie
             # On l'arrête avant d'en créer un nouveau
@@ -130,7 +139,14 @@ while True:
                 symbol_stoploss, prix_stoploss])
             p2.start()
 
+            # Initialisation des varaibles pour l'ordre limite
+            temps_derniere_position = 0
+            pourcentage_gain_ordrelimite = kucoin.pourcentage_gain
+
     elif validation_achat(prix, prix_up, prix_down, prediction, prediction_up, prediction_down, False):
+        symbol_ordrelimite = kucoin.symbol_down
+        temps_derniere_position += 1
+
         if crypto_down < kucoin.minimum_crypto_down:
             # Si le processus du stoploss est toujours en vie
             # On l'arrête avant d'en créer un nouveau
@@ -155,7 +171,13 @@ while True:
                 symbol_stoploss, prix_stoploss])
             p2.start()
 
+            # Initialisation des varaibles pour l'ordre limite
+            temps_derniere_position = 0
+            pourcentage_gain_ordrelimite = kucoin.pourcentage_gain
+
     else:
+        temps_derniere_position += 1
+
         # Si le prix est supérieur a la prédiction (ou inversement)
         # Et que on a pas acheté et qu'on a des cryptos
         # Alors on vend
@@ -163,11 +185,29 @@ while True:
             kill_process(p2)
 
             kucoin.achat_vente(crypto_up, kucoin.symbol_up, False)
+            crypto_up = kucoin.montant_compte(kucoin.symbol_up_simple)
 
         if (prix < prediction or prix_up < prediction_up or prix_down > prediction_down) and crypto_down > kucoin.minimum_crypto_down:
             kill_process(p2)
 
             kucoin.achat_vente(crypto_down, kucoin.symbol_down, False)
+            crypto_down = kucoin.montant_compte(kucoin.symbol_down_simple)
+
+        # Si plus de crypto, alors on remet a zéro les variables
+        if crypto_up < kucoin.minimum_crypto_up and crypto_down < kucoin.minimum_crypto_down:
+            temps_derniere_position = 0
+            pourcentage_gain_ordrelimite = kucoin.pourcentage_gain
+
+    # Si cela fait trop longtemps que l'ordre a été placé sans être vendu, on le descent
+    if temps_derniere_position >= 5:
+        kucoin.suppression_ordre()
+
+        pourcentage_gain_ordrelimite -= kucoin.pourcentage_gain - 0.0025
+
+        kucoin.ordre_vente_seuil(
+            symbol_ordrelimite, pourcentage_gain_ordrelimite)
+
+        temps_derniere_position = 0
 
     # On enregistre l'état du bot (dernière heure et divergence)
     # Pour que si le bot est arrêté et repart, qu'il soit au courant

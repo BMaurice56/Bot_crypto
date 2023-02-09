@@ -256,7 +256,7 @@ class Kucoin:
         self.kucoin_api_secret = "d125b0df-e2eb-4532-8ed1-049d01dc18b8"
         self.kucoin_phrase_securite = "c5%Pnp8o$FE%^CEM7jwFp9PaTtW4kq"
 
-        self.pourcentage_gain = 0.0175
+        self.pourcentage_gain = 0.0200
 
         # Les prix des cryptos de kucoin sont l'inverse de binance
         self.minimum_crypto_up = 5000
@@ -404,7 +404,7 @@ class Kucoin:
 
         fichier = open(pwd, "a")
 
-        fichier.write(f"{date} ; {requete} \n")
+        fichier.write(f"{date};{requete}\n")
 
         fichier.close()
 
@@ -436,11 +436,11 @@ class Kucoin:
                         # Puis on retransforme la requête en un objet python sans les espaces de début et fin
                         # Si problème de longueur, on la stocke dans la liste de problème
                         for j in range(len(requete)):
-                            if len(requete[j][1:-1]) < 10:
+                            if len(requete[j]) < 10:
                                 résultat.append(requete[j])
                             else:
                                 requete_trie.append(
-                                    json.loads(requete[j][1:-1]))
+                                    json.loads(requete[j]))
 
                         # Enfin on parcours toutes les requêtes pour vérifier s'il y en a une qui n'a pas abouti
                         # Ou qu'il y a un quelconque problème
@@ -683,9 +683,11 @@ class Kucoin:
             msg = f"Vente de position au prix de {prix}$, il reste {argent} usdt"
             self.msg_discord.message_prise_position(msg, False)
 
-    def ordre_vente_seuil(self, symbol: str) -> None:
+    def ordre_vente_seuil(self, symbol: str, gain: Optional[float] = None) -> None:
         """
         Fonction qui place l'ordre limite de vente
+        Ex param
+        symbol : BTC3S-USDT
         """
         # Récupération des prix de marchés
         prix = self.prix_temps_reel_kucoin(symbol)
@@ -697,9 +699,13 @@ class Kucoin:
         if "3L" in symbol:
             zero_apres_virgule = '0.000001'
 
+        pr_gain = self.pourcentage_gain
+        if gain != None:
+            pr_gain = gain
+
         # Calcul du prix de vente de l'ordre
         nv_prix = self.arrondi(
-            str(prix * (1 + self.pourcentage_gain)), zero_apres_virgule)
+            str(prix * (1 + pr_gain)), zero_apres_virgule)
 
         # On stock dans le dictionaire partagé le prix estimer de vente sur le marché de base
         if "3L" in symbol:
