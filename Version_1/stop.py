@@ -1,8 +1,9 @@
 # Programme qui permet d'arreter le bot discord
 # Utile sur le serveur vps
-from bot_discord import commande_bot_terminale
 from subprocess import Popen, PIPE
 import os
+
+commande_bot_terminale = """ps -aux | grep "bot_discord.py"| awk -F " " '{ print $2 }' """
 
 proc = Popen(commande_bot_terminale, shell=True, stdout=PIPE, stderr=PIPE)
 
