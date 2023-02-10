@@ -82,6 +82,8 @@ class IA:
     def chargement_modele(symbol):
         """
         Fonction qui charge et renvoie les trois modèles
+        Ex param :
+        symbol : "BTC"
         """
 
         json_file = open(f'Modele_1h_2.0/SPOT/{symbol}USDT/modele.json', 'r')
