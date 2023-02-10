@@ -446,7 +446,7 @@ class Kucoin:
                         # Enfin on parcours toutes les requêtes pour vérifier s'il y en a une qui n'a pas abouti
                         # Ou qu'il y a un quelconque problème
                         for k in range(len(requete_trie)):
-                            if requete_trie[k]['code'] != '200000' or len(requete_trie[k]['data']) < 5:
+                            if requete_trie[k]['code'] != '200000' or len(requete_trie[k]['data']) == 0:
                                 résultat.append(requete_trie[k])
 
                         if len(résultat) > 0:
