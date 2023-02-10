@@ -18,8 +18,7 @@ symbol_stoploss = ""
 prix_stoploss = 0.0
 
 # Création de la variable avec le processus de stoploss manuel
-p2 = Process(target=kucoin.stoploss_manuel, args=[
-             symbol_stoploss, prix_stoploss])
+process = kucoin.stoploss_manuel(symbol_stoploss, prix_stoploss)
 
 # On récupère l'état précédent du bot (Heure et divergence)
 etat = IA.etat_bot("lecture")
@@ -57,7 +56,8 @@ if len(etat) > 0:
     # S'il y a des cryptos en cours, alors on relance le stoploss
     if crypto_up > kucoin.minimum_crypto_up or crypto_down > kucoin.minimum_crypto_down:
         if symbol_stoploss != "" and prix_stoploss != 0.0:
-            p2.start()
+            process = kucoin.stoploss_manuel(
+                symbol_stoploss, prix_stoploss, True)
 
     # Si le bot n'a pas attendu l'heure, alors il attend
     if date - ancienne_date < 3600:
@@ -72,7 +72,6 @@ pourcentage_stoploss_down = 1.02
 # Stock le temps depuis la dernière position prise
 # Si plusieurs heures passent sans l'exécution de l'ordre limite, alors on le baisse
 temps_derniere_position = -1
-symbol_ordrelimite = ""
 pourcentage_gain_ordrelimite = kucoin.pourcentage_gain
 
 while True:
@@ -115,13 +114,12 @@ while True:
     msg_discord.message_état_bot(état)
 
     if validation_achat(prix, prix_up, prix_down, prediction, prediction_up, prediction_down, True):
-        symbol_ordrelimite = kucoin.symbol_up
         temps_derniere_position += 1
 
         if crypto_up < kucoin.minimum_crypto_up:
             # Si le processus du stoploss est toujours en vie
             # On l'arrête avant d'en créer un nouveau
-            kill_process(p2)
+            kill_process(process)
 
             if crypto_down > kucoin.minimum_crypto_down:
                 # Vente de la crypto descendante
@@ -135,11 +133,9 @@ while True:
             # Achat de la crypto montante
             kucoin.achat_vente(argent, kucoin.symbol_up, True)
 
-            # On vient recréer un processus manuel et qu'on vient démarrer
             # Gère le stoploss de façon manuel
-            p2 = Process(target=kucoin.stoploss_manuel, args=[
-                symbol_stoploss, prix_stoploss])
-            p2.start()
+            process = kucoin.stoploss_manuel(
+                symbol_stoploss, prix_stoploss, True)
 
             # Initialisation des varaibles pour l'ordre limite
             temps_derniere_position = 0
@@ -148,13 +144,12 @@ while True:
             buy_sell = True
 
     elif validation_achat(prix, prix_up, prix_down, prediction, prediction_up, prediction_down, False):
-        symbol_ordrelimite = kucoin.symbol_down
         temps_derniere_position += 1
 
         if crypto_down < kucoin.minimum_crypto_down:
             # Si le processus du stoploss est toujours en vie
             # On l'arrête avant d'en créer un nouveau
-            kill_process(p2)
+            kill_process(process)
 
             if crypto_up > kucoin.minimum_crypto_up:
 
@@ -169,11 +164,9 @@ while True:
             # Achat de la crypto descendante
             kucoin.achat_vente(argent, kucoin.symbol_down, True)
 
-            # On vient recréer un processus manuel et qu'on vient démarrer
             # Gère le stoploss de façon manuel
-            p2 = Process(target=kucoin.stoploss_manuel, args=[
-                symbol_stoploss, prix_stoploss])
-            p2.start()
+            process = kucoin.stoploss_manuel(
+                symbol_stoploss, prix_stoploss, True)
 
             # Initialisation des varaibles pour l'ordre limite
             temps_derniere_position = 0
@@ -188,13 +181,13 @@ while True:
         # Et que on a pas acheté et qu'on a des cryptos
         # Alors on vend
         if (prix > prediction or prix_up > prediction_up or prix_down < prediction_down) and crypto_up > kucoin.minimum_crypto_up:
-            kill_process(p2)
+            kill_process(process)
 
             kucoin.achat_vente(crypto_up, kucoin.symbol_up, False)
             buy_sell = True
 
         if (prix < prediction or prix_up < prediction_up or prix_down > prediction_down) and crypto_down > kucoin.minimum_crypto_down:
-            kill_process(p2)
+            kill_process(process)
 
             kucoin.achat_vente(crypto_down, kucoin.symbol_down, False)
             buy_sell = True
@@ -214,10 +207,10 @@ while True:
     if temps_derniere_position >= 5:
         kucoin.suppression_ordre()
 
-        pourcentage_gain_ordrelimite -= kucoin.pourcentage_gain - 0.0025
+        pourcentage_gain_ordrelimite -= 0.0025
 
         kucoin.ordre_vente_seuil(
-            symbol_ordrelimite, pourcentage_gain_ordrelimite)
+            symbol_stoploss, pourcentage_gain_ordrelimite)
 
         temps_derniere_position = 0
 

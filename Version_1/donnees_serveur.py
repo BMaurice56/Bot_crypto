@@ -257,6 +257,7 @@ class Kucoin:
         self.kucoin_phrase_securite = "c5%Pnp8o$FE%^CEM7jwFp9PaTtW4kq"
 
         self.pourcentage_gain = 0.0200
+        self.precedant_gain = 0.0
 
         # Les prix des cryptos de kucoin sont l'inverse de binance
         self.minimum_crypto_up = 5000
@@ -690,12 +691,12 @@ class Kucoin:
             msg = f"Vente de position au prix de {prix}$, il reste {argent} usdt"
             self.msg_discord.message_prise_position(msg, False)
 
-    def ordre_vente_seuil(self, symbol: str, gain: Optional[float] = None) -> None:
+    def ordre_vente_seuil(self, symbol: str, nouveau_gain: Optional[float] = None) -> None:
         """
         Fonction qui place l'ordre limite de vente
         Ex param
         symbol : BTC3S-USDT
-        gain (optionnel) : 0.002, 0.0175...
+        nouveau_gain (optionnel) : 0.002, 0.0175...
         """
         # Récupération des prix de marchés
         prix = self.prix_temps_reel_kucoin(symbol)
@@ -707,13 +708,26 @@ class Kucoin:
         if "3L" in symbol:
             zero_apres_virgule = '0.000001'
 
-        pr_gain = self.pourcentage_gain
-        if gain != None:
-            pr_gain = gain
+        # On stock le pourcentage de gain actuel dans une variable
+        gain = self.pourcentage_gain
 
         # Calcul du prix de vente de l'ordre
         nv_prix = self.arrondi(
-            str(prix * (1 + pr_gain)), zero_apres_virgule)
+            str(prix * (1 + gain)), zero_apres_virgule)
+
+        # S'il on lui passe un nouveau pourcentage de gain, on recalcule le prix
+        if nouveau_gain != None:
+            gain = nouveau_gain
+
+            ancien_prix = float(self.presence_position(symbol)["price"])
+
+            nv_prix = self.arrondi(
+                str(gain * ancien_prix / self.precedant_gain), zero_apres_virgule)
+
+            self.msg_discord.message_changement_ordre()
+
+        # Puis on garde en mémoire le précedant gain, au cas où on souhaite baisser le prix
+        self.precedant_gain = gain
 
         # On stock dans le dictionaire partagé le prix estimer de vente sur le marché de base
         if "3L" in symbol:
@@ -751,54 +765,63 @@ class Kucoin:
         self.écriture_fichier(content["data"]["orderId"])
 
     # Fonction qui tourne en continue
-    def stoploss_manuel(self, symbol: str, prix_stop: float) -> None:
+    def stoploss_manuel(self, symbol: str, prix_stop: float, start: Optional[bool] = None) -> Process:
         """
         Fonction qui fait office de stoploss mais de façon manuel
         Basé sur le prix du marché normal, pas celui des jetons à effet de levier
         Ex param : 
         symbol : BTC3S-USDT
         prix_stop : 23450.2463
+        start : True pour démarrer ou laisser à None
         """
-        try:
-            # Par défaut, on est sur le marché montant
-            type_marche = True
-            minimum = self.minimum_crypto_up
+        def stoploss_processus(symbol: str, prix_stop: float):
+            try:
+                # Par défaut, on est sur le marché montant
+                type_marche = True
+                minimum = self.minimum_crypto_up
 
-            # On garde que le nom de la crypto
-            symbol_simple = symbol.split("-")[0]
+                # On garde que le nom de la crypto
+                symbol_simple = symbol.split("-")[0]
 
-            # Si on est sur le marché descendant, alors on change les paramètres
-            if "3S" in symbol:
-                type_marche = False
-                minimum = self.minimum_crypto_down
+                # Si on est sur le marché descendant, alors on change les paramètres
+                if "3S" in symbol:
+                    type_marche = False
+                    minimum = self.minimum_crypto_down
 
-            while True:
-                # On vérifie s'il y a toujours une crypto, s'il elle a été vendu on peut arrêter la fonction
-                crypto = self.montant_compte(symbol_simple, "stoploss")
+                while True:
+                    # On vérifie s'il y a toujours une crypto, s'il elle a été vendu on peut arrêter la fonction
+                    crypto = self.montant_compte(symbol_simple, "stoploss")
 
-                if crypto < minimum:
-                    break
+                    if crypto < minimum:
+                        break
 
-                # On récupère le prix du marché
-                prix = self.prix_temps_reel_kucoin(self.symbol, "stoploss")
+                    # On récupère le prix du marché
+                    prix = self.prix_temps_reel_kucoin(self.symbol, "stoploss")
 
-                # Si la crypto dépasse le stoploss fixé, alors on vend
-                if self.comparaisons(prix, prix_stop, type_marche) == False:
-                    self.achat_vente(crypto, symbol, False)
+                    # Si la crypto dépasse le stoploss fixé, alors on vend
+                    if self.comparaisons(prix, prix_stop, type_marche) == False:
+                        self.achat_vente(crypto, symbol, False)
 
-                    break
+                        break
 
-                sleep(5)
-        except:
-            # On récupère l'erreur
-            erreur = traceback.format_exc()
+                    sleep(5)
+            except:
+                # On récupère l'erreur
+                erreur = traceback.format_exc()
 
-            # Puis on l'envoi sur le canal discord
-            self.msg_discord.message_erreur(
-                erreur, "Erreur survenu dans la fonction stoploss_manuel, aucune interruption du programme, fonction relancée")
+                # Puis on l'envoi sur le canal discord
+                self.msg_discord.message_erreur(
+                    erreur, "Erreur survenu dans la fonction stoploss_manuel, aucune interruption du programme, fonction relancée")
 
-            # Et enfin on relance la fonction
-            self.stoploss_manuel(symbol, prix_stop)
+                # Et enfin on relance la fonction
+                self.stoploss_manuel(symbol, prix_stop)
+
+        p = Process(target=stoploss_processus, args=[symbol, prix_stop])
+
+        if start != None:
+            p.start()
+
+        return p
 
     def update_id_ordre_limite(self) -> None:
         """
