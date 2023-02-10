@@ -49,7 +49,7 @@ if len(etat) > 0:
     crypto_down = kucoin.montant_compte(kucoin.symbol_down_simple)
 
     # S'il y a bien un état dans le fichier, alors on peut attribuer les valeurs aux variables
-    if etat[1] != "" and etat[2] != "":
+    if etat[1] != "" and etat[2] != "0.0":
         symbol_stoploss = etat[1]
         prix_stoploss = float(etat[2])
 
@@ -61,7 +61,7 @@ if len(etat) > 0:
 
     # Si le bot n'a pas attendu l'heure, alors il attend
     if date - ancienne_date < 3600:
-        temps_dodo = 3600 - (date - ancienne_date)
+        temps_dodo = 3600 - (date - ancienne_date) - 1
         sleep(temps_dodo)
 
 # Variable pour modifier le pourcentage de variation de la crypto sur le marché de base
@@ -214,9 +214,9 @@ while True:
 
         temps_derniere_position = 0
 
-    # On enregistre l'état du bot (dernière heure et divergence)
+    # On enregistre l'état du bot (dernière heure et stoploss)
     # Pour que si le bot est arrêté et repart, qu'il soit au courant
-    # S'il doit attendre ou non
+    # S'il doit attendre ou non, et s'il doit relancer le stoploss
     state = f"{date};{symbol_stoploss};{prix_stoploss}"
     IA.etat_bot("écriture", state)
 
