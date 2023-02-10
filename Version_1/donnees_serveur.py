@@ -257,7 +257,7 @@ class Kucoin:
         self.kucoin_phrase_securite = "c5%Pnp8o$FE%^CEM7jwFp9PaTtW4kq"
 
         self.pourcentage_gain = 0.0200
-        self.precedant_gain = 0.0
+        self.precedant_gain = 0.0200
 
         # Les prix des cryptos de kucoin sont l'inverse de binance
         self.minimum_crypto_up = 5000
