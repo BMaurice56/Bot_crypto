@@ -74,7 +74,7 @@ if len(etat) > 0:
 # Stock le temps depuis la dernière position prise
 # Si plusieurs heures passent sans l'exécution de l'ordre limite, alors on le baisse
 temps_derniere_position = -1
-pourcentage_gain_ordrelimite = kucoin.pourcentage_gain
+gain_ordrelimite = kucoin.pourcentage_gain
 
 while True:
     t1 = perf_counter()
@@ -150,7 +150,7 @@ while True:
 
             # Initialisation des varaibles pour l'ordre limite
             temps_derniere_position = 0
-            pourcentage_gain_ordrelimite = kucoin.pourcentage_gain
+            gain_ordrelimite = kucoin.pourcentage_gain
 
             buy_sell = True
 
@@ -181,16 +181,24 @@ while True:
     # Si plus de crypto, alors on remet a zéro les variables
     if crypto_up < kucoin.minimum_crypto_up and crypto_down < kucoin.minimum_crypto_down:
         temps_derniere_position = 0
-        pourcentage_gain_ordrelimite = kucoin.pourcentage_gain
+        gain_ordrelimite = kucoin.pourcentage_gain
 
     # Si cela fait trop longtemps que l'ordre a été placé sans être vendu, on le descent
     if temps_derniere_position >= 5:
-        pourcentage_gain_ordrelimite -= 0.0025
+        gain_ordrelimite -= 0.0025
 
-        kucoin.ordre_vente_seuil(
-            symbol_stoploss, pourcentage_gain_ordrelimite)
+        # Si on arrive au moment où il se produit 0.0075 - 0.0025
+        # Cela donne un chiffre inexacte et donc on le remet sur une valeur fixe
+        if gain_ordrelimite == 0.004999999999999999:
+            gain_ordrelimite = 0.005
 
-        temps_derniere_position = 0
+        # Si on descent à zéro, alors on ne replace plus l'ordre
+        if gain_ordrelimite > 0.0:
+
+            kucoin.ordre_vente_seuil(
+                symbol_stoploss, gain_ordrelimite)
+
+            temps_derniere_position = 0
 
     # On enregistre l'état du bot (dernière heure et stoploss)
     # Pour que si le bot est arrêté et repart, qu'il soit au courant
