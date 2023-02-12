@@ -26,7 +26,7 @@ def récupération_fichier():
              "log_recap.txt")
 
     ssh.exec_command(
-        'echo "" > /home/Bot_crypto/Version_1/fichier_log/log_requete.txt')
+        'echo "" > /home/Bot_crypto/Version_1/fichier_log/log_erreur.txt')
     ssh.exec_command(
         'echo "" > /home/Bot_crypto/Version_1/fichier_log/log_recap.txt')
 
