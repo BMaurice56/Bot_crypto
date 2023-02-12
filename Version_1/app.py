@@ -4,14 +4,21 @@ symbol = "BTC"
 dodo = 60*60
 
 # Création d'un objet binance et kucoin pour interagir avec leurs serveurs
+# Création d'un objet ia
 binance = Binance()
 kucoin = Kucoin(symbol)
+ia = IA(symbol)
+
+# dictionnaire qui stocke les deux symboles pour passer de l'un à l'autre facilement
+dico_symbol = {1: kucoin.symbol_up, 0: kucoin.symbol_down}
+dico_minimum = {1: kucoin.minimum_crypto_up, 0: kucoin.minimum_crypto_down}
+dico_pourcentage_stoploss = {1: 0.98, 0: 1.02}  # Prix stoploss up et down
 
 # Message discord
 msg_discord = Message_discord()
 
 # Chargement des modèles d'ia pour les prédictions
-loaded_model, loaded_model_up, loaded_model_down = IA.chargement_modele(symbol)
+loaded_model, loaded_model_up, loaded_model_down = ia.chargement_modele()
 
 # Info pour la fonction stoploss manuel
 symbol_stoploss = ""
@@ -20,8 +27,8 @@ prix_stoploss = 0.0
 # Création de la variable avec le processus de stoploss manuel
 process = kucoin.stoploss_manuel(symbol_stoploss, prix_stoploss)
 
-# On récupère l'état précédent du bot (Heure et divergence)
-etat = IA.etat_bot("lecture")
+# On récupère l'état précédent du bot (Heure et stoploss)
+etat = ia.etat_bot("lecture")
 
 # S'il y a bien un état inscrit dans le fichier (fichier non vide)
 # alors on peut vérifier si le bot ne s'est pas arrêté avant l'heure
@@ -64,11 +71,6 @@ if len(etat) > 0:
         temps_dodo = 3600 - (date - ancienne_date) - 1
         sleep(temps_dodo)
 
-# Variable pour modifier le pourcentage de variation de la crypto sur le marché de base
-# Sert pour le stoploss : si variation supérieur à ces deux bornes, on vend la crypto
-pourcentage_stoploss_up = 0.98
-pourcentage_stoploss_down = 1.02
-
 # Stock le temps depuis la dernière position prise
 # Si plusieurs heures passent sans l'exécution de l'ordre limite, alors on le baisse
 temps_derniere_position = -1
@@ -79,9 +81,11 @@ while True:
 
     buy_sell = False
 
-    argent = kucoin.montant_compte("USDT")
+    argent = kucoin.montant_compte(kucoin.devise)
     crypto_up = kucoin.montant_compte(kucoin.symbol_up_simple)
     crypto_down = kucoin.montant_compte(kucoin.symbol_down_simple)
+
+    dico_montant = {1: crypto_up, 0: crypto_down}
 
     date = datetime.now(tz=ZoneInfo("Europe/Paris")
                         ).strftime("%A %d %B %Y %H:%M:%S")
@@ -100,10 +104,10 @@ while True:
     prix_up = float(data_up['close'][39])
     prix_down = float(data_down['close'][39])
 
-    prediction = IA.prédiction_keras(data, rsi_vwap_cmf, loaded_model)
-    prediction_up = IA.prédiction_keras(
+    prediction = ia.prédiction_keras(data, rsi_vwap_cmf, loaded_model)
+    prediction_up = ia.prédiction_keras(
         data_up, rsi_vwap_cmf_up, loaded_model_up)
-    prediction_down = IA.prédiction_keras(
+    prediction_down = ia.prédiction_keras(
         data_down, rsi_vwap_cmf_down, loaded_model_down)
 
     état = f"programme toujours en cour d'exécution le : {date}\n" + \
@@ -113,56 +117,32 @@ while True:
 
     msg_discord.message_état_bot(état)
 
-    if validation_achat(prix, prix_up, prix_down, prediction, prediction_up, prediction_down, True):
+    résultat_achat = ia.validation_achat(
+        prix, prix_up, prix_down, prediction, prediction_up, prediction_down)
+
+    # S'il y a bien un signal d'achat, alors on peut passer à la suite
+    if résultat_achat != None:
+
         temps_derniere_position += 1
 
-        if crypto_up < kucoin.minimum_crypto_up:
+        if dico_montant[résultat_achat] < dico_minimum[résultat_achat]:
             # Si le processus du stoploss est toujours en vie
             # On l'arrête avant d'en créer un nouveau
             kill_process(process)
 
-            if crypto_down > kucoin.minimum_crypto_down:
-                # Vente de la crypto descendante
-                kucoin.achat_vente(crypto_down, kucoin.symbol_down, False)
+            # Si on possède toujours de l'autre crypto, on la vend
+            if dico_montant[not résultat_achat] > dico_minimum[not résultat_achat]:
+                kucoin.achat_vente(
+                    dico_montant[not résultat_achat], dico_symbol[not résultat_achat], False)
 
-                argent = kucoin.montant_compte("USDT")
+                argent = kucoin.montant_compte(kucoin.devise)
 
-            symbol_stoploss = kucoin.symbol_up
-            prix_stoploss = prix * pourcentage_stoploss_up
+            # Définition des variables pour le stoploss
+            symbol_stoploss = dico_symbol[résultat_achat]
+            prix_stoploss = prix * dico_pourcentage_stoploss[résultat_achat]
 
-            # Achat de la crypto montante
-            kucoin.achat_vente(argent, kucoin.symbol_up, True)
-
-            # Gère le stoploss de façon manuel
-            process = kucoin.stoploss_manuel(
-                symbol_stoploss, prix_stoploss, True)
-
-            # Initialisation des varaibles pour l'ordre limite
-            temps_derniere_position = 0
-            pourcentage_gain_ordrelimite = kucoin.pourcentage_gain
-
-            buy_sell = True
-
-    elif validation_achat(prix, prix_up, prix_down, prediction, prediction_up, prediction_down, False):
-        temps_derniere_position += 1
-
-        if crypto_down < kucoin.minimum_crypto_down:
-            # Si le processus du stoploss est toujours en vie
-            # On l'arrête avant d'en créer un nouveau
-            kill_process(process)
-
-            if crypto_up > kucoin.minimum_crypto_up:
-
-                # Vente de la crypto montant
-                kucoin.achat_vente(crypto_up, kucoin.symbol_up, False)
-
-                argent = kucoin.montant_compte("USDT")
-
-            symbol_stoploss = kucoin.symbol_down
-            prix_stoploss = prix * pourcentage_stoploss_down
-
-            # Achat de la crypto descendante
-            kucoin.achat_vente(argent, kucoin.symbol_down, True)
+            # Achat de la crypto voulu
+            kucoin.achat_vente(argent, dico_symbol[résultat_achat], True)
 
             # Gère le stoploss de façon manuel
             process = kucoin.stoploss_manuel(
@@ -194,7 +174,7 @@ while True:
 
     # On remet à jour les variables avec les dernières valeurs (si achat ou vente)
     if buy_sell == True:
-        argent = kucoin.montant_compte("USDT")
+        argent = kucoin.montant_compte(kucoin.devise)
         crypto_up = kucoin.montant_compte(kucoin.symbol_up_simple)
         crypto_down = kucoin.montant_compte(kucoin.symbol_down_simple)
 
@@ -205,8 +185,6 @@ while True:
 
     # Si cela fait trop longtemps que l'ordre a été placé sans être vendu, on le descent
     if temps_derniere_position >= 5:
-        kucoin.suppression_ordre()
-
         pourcentage_gain_ordrelimite -= 0.0025
 
         kucoin.ordre_vente_seuil(
@@ -218,7 +196,7 @@ while True:
     # Pour que si le bot est arrêté et repart, qu'il soit au courant
     # S'il doit attendre ou non, et s'il doit relancer le stoploss
     state = f"{date};{symbol_stoploss};{prix_stoploss}"
-    IA.etat_bot("écriture", state)
+    ia.etat_bot("écriture", state)
 
     t2 = perf_counter()
 

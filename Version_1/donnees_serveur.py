@@ -264,12 +264,14 @@ class Kucoin:
         self.minimum_crypto_down = 5
 
         # Symbol des crypto
+        self.symbol_base = crypto
         self.symbol = f"{crypto}-USDT"
         self.symbol_up = f"{crypto}3L-USDT"
         self.symbol_down = f"{crypto}3S-USDT"
 
         self.symbol_up_simple = f"{crypto}3L"
         self.symbol_down_simple = f"{crypto}3S"
+        self.devise = "USDT"
 
         # Message discord
         self.msg_discord = Message_discord()
@@ -357,7 +359,7 @@ class Kucoin:
         """
         # On utilise try dans le cas où le fichier n'existe pas
         try:
-            fichier = open("ordre_limit.txt", "r")
+            fichier = open(f"ordre_limit_{self.symbol_base}.txt", "r")
 
             elt = fichier.read()
 
@@ -376,7 +378,7 @@ class Kucoin:
         str_to_write : id de l'ordre
         """
 
-        fichier = open("ordre_limit.txt", "w")
+        fichier = open(f"ordre_limit_{self.symbol_base}.txt", "w")
 
         if str_to_write != None:
             fichier.write(str_to_write)
@@ -395,13 +397,13 @@ class Kucoin:
                             ).strftime("%A %d %B %Y %H:%M:%S")
 
         if emplacement == "requete":
-            pwd = "fichier_log/log_requete.txt"
+            pwd = f"fichier_log/log_requete_{self.symbol_base}.txt"
 
         elif emplacement == "presence_position":
-            pwd = "fichier_log/log_update_id_position.txt"
+            pwd = f"fichier_log/log_update_id_position_{self.symbol_base}.txt"
 
         elif emplacement == "stoploss":
-            pwd = "fichier_log/log_stoploss_manuel.txt"
+            pwd = f"fichier_log/log_stoploss_manuel_{self.symbol_base}.txt"
 
         fichier = open(pwd, "a")
 
@@ -415,8 +417,8 @@ class Kucoin:
         """
         try:
             # Les noms des trois fichiers log de requêtes
-            nom = ["log_requete.txt", "log_stoploss_manuel.txt",
-                   "log_update_id_position.txt"]
+            nom = [f"log_requete_{self.symbol_base}.txt", f"log_stoploss_manuel_{self.symbol_base}.txt",
+                   f"log_update_id_position_{self.symbol_base}.txt"]
 
             while True:
                 for elt in nom:
@@ -446,7 +448,13 @@ class Kucoin:
                         # Enfin on parcours toutes les requêtes pour vérifier s'il y en a une qui n'a pas abouti
                         # Ou qu'il y a un quelconque problème
                         for k in range(len(requete_trie)):
-                            if requete_trie[k]['code'] != '200000' or len(requete_trie[k]['data']) == 0:
+                            if requete_trie[k]['code'] != '200000':
+                                résultat.append(requete_trie[k])
+
+                            elif requete_trie[k]['data'] == None:
+                                résultat.append(requete_trie[k])
+
+                            elif len(requete_trie[k]['data']) == 0:
                                 résultat.append(requete_trie[k])
 
                         if len(résultat) > 0:
@@ -459,11 +467,11 @@ class Kucoin:
 
                 # Puis on vient vider les fichiers
                 os.system(
-                    'echo "" > /home/Bot_crypto/Version_1/fichier_log/log_requete.txt')
+                    f'echo "" > /home/Bot_crypto/Version_1/fichier_log/log_requete_{self.symbol_base}.txt')
                 os.system(
-                    'echo "" > /home/Bot_crypto/Version_1/fichier_log/log_stoploss_manuel.txt')
+                    f'echo "" > /home/Bot_crypto/Version_1/fichier_log/log_stoploss_manuel_{self.symbol_base}.txt')
                 os.system(
-                    'echo "" > /home/Bot_crypto/Version_1/fichier_log/log_update_id_position.txt')
+                    f'echo "" > /home/Bot_crypto/Version_1/fichier_log/log_update_id_position_{self.symbol_base}.txt')
 
                 # Et faire dormir le programme
                 sleep(60 * 60 * 3)
@@ -721,6 +729,8 @@ class Kucoin:
 
             ancien_prix = float(self.presence_position(symbol)["price"])
 
+            self.suppression_ordre()
+
             nv_prix = self.arrondi(
                 str(gain * ancien_prix / self.precedant_gain), zero_apres_virgule)
 
@@ -846,7 +856,7 @@ class Kucoin:
                         # alors soit l'ordre est exécuté
                         if self.vente_manuelle == False:
                             self.msg_discord.message_vente_ordre(
-                                self.montant_compte("USDT"))
+                                self.montant_compte(self.devise))
 
                         # Soit c'est une vente manuelle
                         else:

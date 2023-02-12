@@ -8,8 +8,20 @@ class IA:
     Classe qui contient l'entrainement ainsi la prédiction des modèles d'ia
     """
 
+    def __init__(self, symbol) -> None:
+        """
+        Initialise un objet IA permet d'interagir avec ou de les créer
+        Ex param :
+        symbol : "BTC"
+        """
+        self.symbol_base = symbol
+        self.symbol = f"{symbol}-USDT"
+        self.symbol_up = f"{symbol}3L-USDT"
+        self.symbol_down = f"{symbol}3S-USDT"
+
     # Fonction d'entrainement
-    def training_keras() -> None:
+
+    def training_keras(self) -> None:
         """
         Fonction qui entraine les neurones et les sauvegardes
         """
@@ -39,7 +51,7 @@ class IA:
 
     # Fonction de prédiction
 
-    def prédiction_keras(donnée_serveur_data: pandas.DataFrame, donnée_serveur_rsi: pandas.DataFrame, Modèle) -> float:
+    def prédiction_keras(self, donnée_serveur_data: pandas.DataFrame, donnée_serveur_rsi: pandas.DataFrame, Modèle) -> float:
         """
         Fonction qui fait les prédiction et renvoie le prix potentiel de la crypto
         """
@@ -79,18 +91,19 @@ class IA:
 
     # Fonction de chargement des modèles
 
-    def chargement_modele(symbol):
+    def chargement_modele(self):
         """
         Fonction qui charge et renvoie les trois modèles
         Ex param :
         symbol : "BTC"
         """
 
-        json_file = open(f'Modele_1h_2.0/SPOT/{symbol}USDT/modele.json', 'r')
+        json_file = open(
+            f'Modele_1h_2.0/SPOT/{self.symbol_base}USDT/modele.json', 'r')
         json_file_up = open(
-            f'Modele_1h_2.0/SPOT_EFFET_LEVIER/{symbol}UPUSDT/modele.json', 'r')
+            f'Modele_1h_2.0/SPOT_EFFET_LEVIER/{self.symbol_base}UPUSDT/modele.json', 'r')
         json_file_down = open(
-            f'Modele_1h_2.0/SPOT_EFFET_LEVIER/{symbol}DOWNUSDT/modele.json', 'r')
+            f'Modele_1h_2.0/SPOT_EFFET_LEVIER/{self.symbol_base}DOWNUSDT/modele.json', 'r')
 
         loaded_model_json = json_file.read()
         loaded_model_json_up = json_file_up.read()
@@ -104,11 +117,12 @@ class IA:
         loaded_model_up = model_from_json(loaded_model_json_up)
         loaded_model_down = model_from_json(loaded_model_json_down)
 
-        loaded_model.load_weights(f"Modele_1h_2.0/SPOT/{symbol}USDT/modele.h5")
+        loaded_model.load_weights(
+            f"Modele_1h_2.0/SPOT/{self.symbol_base}USDT/modele.h5")
         loaded_model_up.load_weights(
-            f"Modele_1h_2.0/SPOT_EFFET_LEVIER/{symbol}UPUSDT/modele.h5")
+            f"Modele_1h_2.0/SPOT_EFFET_LEVIER/{self.symbol_base}UPUSDT/modele.h5")
         loaded_model_down.load_weights(
-            f"Modele_1h_2.0/SPOT_EFFET_LEVIER/{symbol}DOWNUSDT/modele.h5")
+            f"Modele_1h_2.0/SPOT_EFFET_LEVIER/{self.symbol_base}DOWNUSDT/modele.h5")
 
         loaded_model.compile(
             loss='mean_squared_logarithmic_error', optimizer='adam')
@@ -119,7 +133,7 @@ class IA:
 
         return loaded_model, loaded_model_up, loaded_model_down
 
-    def etat_bot(lecture_ecriture: str, to_write: Optional[str] = None) -> str or None:
+    def etat_bot(self, lecture_ecriture: str, to_write: Optional[str] = None) -> str or None:
         """
         Fonction qui écrit ou lit dans un fichier l'état du bot (prédiction, heure)
         Pour que quand le bot démarre, sait s'il doit attendre l'heure et si on sors d'une divergence
@@ -130,7 +144,7 @@ class IA:
         if lecture_ecriture == "lecture":
             # On utilise try dans le cas où le fichier n'existe pas
             try:
-                fichier = open("etat_bot.txt", "r")
+                fichier = open(f"etat_bot_{self.symbol_base}.txt", "r")
 
                 elt = fichier.read()
 
@@ -141,36 +155,28 @@ class IA:
                 return ""
 
         elif lecture_ecriture == "écriture":
-            fichier = open("etat_bot.txt", "w")
+            fichier = open(f"etat_bot_{self.symbol_base}.txt", "w")
 
             fichier.write(to_write)
 
             fichier.close()
 
-
-def validation_achat(prix: float, prix_up: float, prix_down: float, prediction: float, prediction_up: float, prediction_down: float, crypto: bool) -> bool:
-    """
-    Fonction qui valide ou non l'achat d'une crypto
-    Ex param:
-    crypto : True pour crypto up et false pour down
-    """
-
-    if crypto == True:
+    def validation_achat(self, prix: float, prix_up: float, prix_down: float, prediction: float, prediction_up: float, prediction_down: float) -> bool or None:
+        """
+        Fonction qui valide ou non l'achat d'une crypto
+        """
         if prix < prediction and prix_up < prediction_up and prix_down > prediction_down:
             if prediction_up - prix_up >= 0.045 and prediction_down <= 0.03:
-                return True
+                return 1
 
-        return False
-
-    else:
         if prix > prediction and prix_up > prediction_up and prix_down < prediction_down:
             if prix_up - prediction_up >= 0.045 and prediction_down >= 0.02:
-                return True
+                return 0
 
-        return False
+        return None
 
 
-def kill_process(p: Process):
+def kill_process(p: Process) -> None:
     """
     Fonction qui tue le processus passé en argument
     """
