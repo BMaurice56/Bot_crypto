@@ -422,48 +422,49 @@ class Kucoin:
 
             while True:
                 for elt in nom:
-                    # On vient lire le contenue du fichier
-                    fichier = open(f"fichier_log/{elt}", "r").read()
+                    if os.path.exists(f"fichier_log/{elt}") == True:
+                        # On vient lire le contenue du fichier
+                        fichier = open(f"fichier_log/{elt}", "r").read()
 
-                    # S'il y a bien une requête dans le fichier, alors on peut l'analyser
-                    if len(fichier) > 25:
-                        # On sépare chaque ligne entre elles (-1 car on ne garde pas le dernier retoure a la ligne)
-                        contenue = fichier[1:-1].split("\n")
+                        # S'il y a bien une requête dans le fichier, alors on peut l'analyser
+                        if len(fichier) > 25:
+                            # On sépare chaque ligne entre elles (-1 car on ne garde pas le dernier retoure a la ligne)
+                            contenue = fichier[1:-1].split("\n")
 
-                        # On ne garde que la requête sans la date
-                        requete = [elt.split(";")[1] for elt in contenue]
+                            # On ne garde que la requête sans la date
+                            requete = [elt.split(";")[1] for elt in contenue]
 
-                        requete_trie = []
-                        résultat = []
+                            requete_trie = []
+                            résultat = []
 
-                        # Puis on retransforme la requête en un objet python sans les espaces de début et fin
-                        # Si problème de longueur, on la stocke dans la liste de problème
-                        for j in range(len(requete)):
-                            if len(requete[j]) < 10:
-                                résultat.append(requete[j])
-                            else:
-                                requete_trie.append(
-                                    json.loads(requete[j]))
+                            # Puis on retransforme la requête en un objet python sans les espaces de début et fin
+                            # Si problème de longueur, on la stocke dans la liste de problème
+                            for j in range(len(requete)):
+                                if len(requete[j]) < 10:
+                                    résultat.append(requete[j])
+                                else:
+                                    requete_trie.append(
+                                        json.loads(requete[j]))
 
-                        # Enfin on parcours toutes les requêtes pour vérifier s'il y en a une qui n'a pas abouti
-                        # Ou qu'il y a un quelconque problème
-                        for k in range(len(requete_trie)):
-                            if requete_trie[k]['code'] != '200000':
-                                résultat.append(requete_trie[k])
+                            # Enfin on parcours toutes les requêtes pour vérifier s'il y en a une qui n'a pas abouti
+                            # Ou qu'il y a un quelconque problème
+                            for k in range(len(requete_trie)):
+                                if requete_trie[k]['code'] != '200000':
+                                    résultat.append(requete_trie[k])
 
-                            elif requete_trie[k]['data'] == None:
-                                résultat.append(requete_trie[k])
+                                elif requete_trie[k]['data'] == None:
+                                    résultat.append(requete_trie[k])
 
-                            elif len(requete_trie[k]['data']) == 0:
-                                résultat.append(requete_trie[k])
+                                elif len(requete_trie[k]['data']) == 0:
+                                    résultat.append(requete_trie[k])
 
-                        if len(résultat) > 0:
-                            f = open(f"fichier_log/log_recap.txt", "a")
+                            if len(résultat) > 0:
+                                f = open(f"fichier_log/log_recap.txt", "a")
 
-                            date = datetime.now(tz=ZoneInfo("Europe/Paris")
-                                                ).strftime("%A %d %B %Y %H:%M:%S")
+                                date = datetime.now(tz=ZoneInfo("Europe/Paris")
+                                                    ).strftime("%A %d %B %Y %H:%M:%S")
 
-                            f.write(f"Erreur du {date} : {résultat} \n")
+                                f.write(f"Erreur du {date} : {résultat} \n")
 
                 # Puis on vient vider les fichiers
                 os.system(
