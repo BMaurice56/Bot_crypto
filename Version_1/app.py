@@ -117,14 +117,15 @@ while True:
 
     msg_discord.message_état_bot(état)
 
+    # On augmente de 1 le temps qu'on a de position
+    # Remis à zéro après si achat ou aucune crypto
+    temps_derniere_position += 1
+
     résultat_achat = ia.validation_achat(
         prix, prix_up, prix_down, prediction, prediction_up, prediction_down)
 
     # S'il y a bien un signal d'achat, alors on peut passer à la suite
     if résultat_achat != None:
-
-        temps_derniere_position += 1
-
         if dico_montant[résultat_achat] < dico_minimum[résultat_achat]:
             # Si le processus du stoploss est toujours en vie
             # On l'arrête avant d'en créer un nouveau
@@ -148,15 +149,9 @@ while True:
             process = kucoin.stoploss_manuel(
                 symbol_stoploss, prix_stoploss, True)
 
-            # Initialisation des varaibles pour l'ordre limite
-            temps_derniere_position = 0
-            gain_ordrelimite = kucoin.pourcentage_gain
-
             buy_sell = True
 
     else:
-        temps_derniere_position += 1
-
         # Si le prix est supérieur a la prédiction (ou inversement)
         # Et que on a pas acheté et qu'on a des cryptos
         # Alors on vend
@@ -172,14 +167,8 @@ while True:
             kucoin.achat_vente(crypto_down, kucoin.symbol_down, False)
             buy_sell = True
 
-    # On remet à jour les variables avec les dernières valeurs (si achat ou vente)
-    if buy_sell == True:
-        argent = kucoin.montant_compte(kucoin.devise)
-        crypto_up = kucoin.montant_compte(kucoin.symbol_up_simple)
-        crypto_down = kucoin.montant_compte(kucoin.symbol_down_simple)
-
-    # Si plus de crypto, alors on remet a zéro les variables
-    if crypto_up < kucoin.minimum_crypto_up and crypto_down < kucoin.minimum_crypto_down:
+    # Si plus de crypto ou achat, alors on remet a zéro les variables
+    if buy_sell == True or crypto_up < kucoin.minimum_crypto_up and crypto_down < kucoin.minimum_crypto_down:
         temps_derniere_position = 0
         gain_ordrelimite = kucoin.pourcentage_gain
 
