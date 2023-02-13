@@ -111,6 +111,6 @@ class Message_discord:
             title="Modification de l'ordre limite", color="03b2f8")
 
         embed.add_embed_field(
-            name="Message :", value="Baisse de l'ordre limite, l'estimation du prix de revente est faussée !")
+            name="Message :", value="Baisse de l'ordre limite, l'estimation du prix de revente risque d'être fausse !")
         webhook.add_embed(embed)
         webhook.execute()

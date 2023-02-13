@@ -27,7 +27,7 @@ class Botcrypto(commands.Bot):
         super().__init__(command_prefix="!")
 
         # Objet Kucoin pour interagir avec le serveur
-        self.kucoin = Kucoin("Discord")
+        self.kucoin = Kucoin("Discord", False)
 
         # Message discord
         self.msg_discord = Message_discord()
@@ -307,14 +307,16 @@ class Botcrypto(commands.Bot):
             btcup = self.kucoin.montant_compte("BTC3L")
             btcdown = self.kucoin.montant_compte("BTC3S")
 
+            kk = Kucoin("BTC", False)
+
             # Et on vend la ou les cryptos en supprimant les ordres placés
             if btcup > self.kucoin.minimum_crypto_up:
-                self.kucoin.achat_vente(btcup, "BTC3L-USDT", False)
+                kk.achat_vente(btcup, "BTC3L-USDT", False)
 
                 await ctx.send(f"{btcup} crypto up vendu !")
 
             if btcdown > self.kucoin.minimum_crypto_down:
-                self.kucoin.achat_vente(btcdown, "BTC3S-USDT", False)
+                kk.achat_vente(btcdown, "BTC3S-USDT", False)
 
                 await ctx.send(f"{btcdown} crypto down vendu !")
 

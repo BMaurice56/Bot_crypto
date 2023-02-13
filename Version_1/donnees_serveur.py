@@ -26,94 +26,6 @@ import os
 # Définition de la zone pour l'horodatage car la date était en anglais avec le module datetime
 locale.setlocale(locale.LC_ALL, 'fr_FR.UTF-8')
 
-# Décorateurs
-
-
-def connexion(f):
-    """
-    Décorateur permettant de vérifier si on est bien connecté à internet
-    """
-    @wraps(f)
-    def auto_con(*args, **kwargs):
-        """
-        Fonction qui reconnecte automatiquement le pc à internet
-        commande à implenter :
-        """
-        # On regarde si on est connecté à internet via wifi ou ethernet
-        proc = Popen("nmcli con show --active",
-                     shell=True, stdout=PIPE, stderr=PIPE)
-
-        sortie, autre = proc.communicate()
-
-        type_connexion = sortie.decode('utf-8')
-        ###############################################################
-
-        connex = False
-
-        if "ethernet" not in type_connexion and "wifi" not in type_connexion:
-            # Tant qu'on est pas connecté, on continue
-            while connex == False:
-                # On regarde les réseaux disponibles autour de l'appareil et on supprime les doublons de noms de réseaux
-                proc = Popen(
-                    """nmcli device wifi | awk -F " " '{ print $2 }'""", shell=True, stdout=PIPE, stderr=PIPE)
-                sortie, autre = proc.communicate()
-                result = sortie.decode('utf-8')[6:-1].split(chr(10))
-                reseau_dispo = list(set(result))
-                ###############################################################
-                if len(reseau_dispo) == 0:
-                    return "Pas de connexion disponible"
-                # On regarde les réseaux connus de l'appareil
-                proc2 = Popen("nmcli con --show | grep wifi",
-                              shell=True, stdout=PIPE, stderr=PIPE)
-                sortie2, autre = proc2.communicate()
-                resultat = sortie2.decode('utf-8').split(chr(10))
-                reseaux_connu = []
-                for i in range(len(resultat)):
-                    temp = ""
-                    # Dès qu'on arrive aux ssid, le nom étant forcément avant, on garde tout ce qui y'a devant
-                    for j in range(len(resultat[i])):
-                        if resultat[i][j].isnumeric() and resultat[i][j+8] == "-" and resultat[i][j+13] == "-" and resultat[i][j+18] == "-" and resultat[i][j+23] == "-":
-                            temp = resultat[i][:j]
-                            break
-                    # Etant donnée qu'il reste des espaces à la fin (car taille des noms de réseaux différents)
-                    # Tant qu'il y a un espace à la fin, on garde tout sauf l'espace
-                    for k in range(len(temp)-1, 0, -1):
-                        if ord(temp[k]) == 32:
-                            temp = temp[:-1]
-                        else:
-                            break
-                    reseaux_connu.append(temp)
-                # Et à la fin, on enlève le dernier élément de la liste qui est ''
-                reseaux_connu.pop()
-                ###############################################################
-
-                # On regarde si le réseau est connu et si oui, on essaye de se connecter à celui-ci
-                # On re-regarde si on est bien connecté à internet
-                # Et si ce n'est pas le cas alors on passe au réseau suivant
-                # Si on est bien connecté, on peut arrêter la boucle while qui permet de reéssayer en boucle
-                # Et on ne teste pas les autres réseaux
-                for reseau in reseau_dispo:
-                    if reseau in reseaux_connu:
-                        Popen(f"nmcli con up {reseau}", shell=True)
-                        sleep(4)
-
-                        proc = Popen("nmcli con show --active",
-                                     shell=True, stdout=PIPE, stderr=PIPE)
-
-                        sortie, autre = proc.communicate()
-
-                        type_connexion = sortie.decode('utf-8')
-                        if "wifi" not in type_connexion:
-                            continue
-                        else:
-                            connex = True
-                            break
-
-                ###############################################################
-
-        return f(*args, **kwargs)
-
-    return auto_con
 
 # BINANCE
 # Fonctions qui récupère les données du serveur
@@ -245,7 +157,7 @@ class Kucoin:
     Classe qui permet d'interagir avec les données des serveurs de kucoin
     """
 
-    def __init__(self, crypto) -> None:
+    def __init__(self, crypto, processus: Optional[bool] = None) -> None:
         """
         Initialise un objet kucoin pour interagir avec leurs serveurs
         """
@@ -284,7 +196,7 @@ class Kucoin:
 
         # Si on créer un objet Kucoin en dehors de discord -> bot de trading
         # Permet de garder l'id à jour dans le fichier
-        if crypto != "Discord":
+        if processus == None:
             p = Process(target=self.update_id_ordre_limite)
             p.start()
 
@@ -691,7 +603,7 @@ class Kucoin:
 
         # Puis on vient envoyer un message sur le discord
         if achat_ou_vente == True:
-            msg = f"Prise de position avec {montant} usdt au prix de {prix}$, il reste {self.montant_compte('USDT')} usdt, crypto : {symbol}"
+            msg = f"Prise de position avec {montant} usdt au prix de {prix}$, crypto : {symbol}"
             self.msg_discord.message_prise_position(msg, True)
 
         else:
@@ -733,7 +645,7 @@ class Kucoin:
             self.suppression_ordre()
 
             nv_prix = self.arrondi(
-                str(gain * ancien_prix / self.precedant_gain), zero_apres_virgule)
+                str(((1 + gain) * ancien_prix) / (1 + self.precedant_gain)), zero_apres_virgule)
 
             self.msg_discord.message_changement_ordre()
 
@@ -754,6 +666,7 @@ class Kucoin:
         # Point de terminaison de la requête
         endpoint = "/api/v1/orders"
 
+        # On récupère le montant du compte pour pouvoir placer l'ordre
         montant = self.montant_compte(symbol.split("-")[0])
 
         # Définition de tous les paramètres nécessaires
