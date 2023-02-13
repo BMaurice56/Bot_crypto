@@ -174,7 +174,7 @@ while True:
 
     # Si cela fait trop longtemps que l'ordre a été placé sans être vendu, on le descent
     if temps_derniere_position >= 5:
-        gain_ordrelimite -= 0.0025
+        gain_ordrelimite -= 0.0010
 
         # Si on arrive au moment où il se produit 0.0075 - 0.0025
         # Cela donne un chiffre inexacte et donc on le remet sur une valeur fixe
