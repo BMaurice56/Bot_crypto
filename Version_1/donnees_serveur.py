@@ -497,10 +497,10 @@ class Kucoin:
         """
         # Lorsque l'on vend, on enlève l'ordre limit car soit il a été exécuté, soit il est toujours là
         if info["achat_vente"] == False:
-            self.suppression_ordre()
-
             # Sert a savoir si c'est une vente manuelle ou l'ordre limite qui est exécuté
             self.vente_manuelle = True
+
+            self.suppression_ordre()
 
             sleep(1)
 
