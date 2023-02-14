@@ -535,6 +535,9 @@ class Kucoin:
         if info["achat_vente"] == True:
             self.ordre_vente_seuil(info["symbol"])
 
+            # On repasse la variable a False pour l'ordre limite
+            self.vente_manuelle = False
+
     def presence_position(self, symbol: str) -> dict or None:
         """
         Fonction qui renvoie les positions en cours sur une pair de crypto précis
@@ -642,6 +645,10 @@ class Kucoin:
 
             ancien_prix = float(self.presence_position(symbol)["price"])
 
+            # On le met a True pour que quand on replace l'ordre
+            # Il n'y a pas entre temps un message de l'ordre limite
+            self.vente_manuelle = True
+
             self.suppression_ordre()
 
             nv_prix = self.arrondi(
@@ -688,6 +695,9 @@ class Kucoin:
         # Puis on vient écrire l'id de l'ordre dans un fichier pour faciliter la suppresion de celui-ci
         self.écriture_fichier(content["data"]["orderId"])
 
+        # Et on repasse la variable a False
+        self.vente_manuelle = False
+
     # Fonction qui tourne en continue
     def stoploss_manuel(self, symbol: str, prix_stop: float, start: Optional[bool] = None) -> Process:
         """
@@ -724,6 +734,9 @@ class Kucoin:
 
                     # Si la crypto dépasse le stoploss fixé, alors on vend
                     if self.comparaisons(prix, prix_stop, type_marche) == False:
+                        # Message sur le discord
+                        self.msg_discord.message_vente_stoploss()
+
                         self.achat_vente(crypto, symbol, False)
 
                         break

@@ -114,3 +114,19 @@ class Message_discord:
             name="Message :", value="Baisse de l'ordre limite, l'estimation du prix de revente risque d'être fausse !")
         webhook.add_embed(embed)
         webhook.execute()
+
+    def message_vente_stoploss(self) -> None:
+        """
+        Fonction qui envoit un message sur le canal prise_position
+        Averti que le stoploss vend la position
+        """
+        webhook = DiscordWebhook(
+            url=self.adr_webhook_prise_position, username=self.nom)
+
+        embed = DiscordEmbed(
+            title="Exécution du stoploss", color="03b2f8")
+
+        embed.add_embed_field(
+            name="Message :", value="Vente des cryptos via le stoploss")
+        webhook.add_embed(embed)
+        webhook.execute()
