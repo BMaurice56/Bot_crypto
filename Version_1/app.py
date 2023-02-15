@@ -173,7 +173,7 @@ while True:
         gain_ordrelimite = kucoin.pourcentage_gain
 
     # Si cela fait trop longtemps que l'ordre a été placé sans être vendu, on le descent
-    if temps_derniere_position >= 5:
+    if temps_derniere_position >= 4:
         gain_ordrelimite -= 0.0025
 
         # Si on arrive au moment où il se produit 0.0075 - 0.0025

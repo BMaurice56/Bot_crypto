@@ -100,7 +100,7 @@ class Message_discord:
         webhook.add_embed(embed)
         webhook.execute()
 
-    def message_changement_ordre(self) -> None:
+    def message_changement_ordre(self, gain) -> None:
         """
         Fonction qui prévient d'un changement / d'une baisse de l'ordre limite
         """
@@ -110,8 +110,11 @@ class Message_discord:
         embed = DiscordEmbed(
             title="Modification de l'ordre limite", color="03b2f8")
 
+        msg = "Baisse de l'ordre limite, l'estimation du prix de revente risque d'être fausse !\n" + \
+            f"Nouveau gain : {gain}"
+
         embed.add_embed_field(
-            name="Message :", value="Baisse de l'ordre limite, l'estimation du prix de revente risque d'être fausse !")
+            name="Message :", value=msg)
         webhook.add_embed(embed)
         webhook.execute()
 

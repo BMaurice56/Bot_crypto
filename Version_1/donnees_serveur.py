@@ -646,15 +646,18 @@ class Kucoin:
             ancien_prix = float(self.presence_position(symbol)["price"])
 
             # On le met a True pour que quand on replace l'ordre
-            # Il n'y a pas entre temps un message de l'ordre limite
+            # Il n'y a pas entre temps un message de vente de l'ordre limite
             self.vente_manuelle = True
 
+            # On supprime l'ancien ordre limite
             self.suppression_ordre()
 
+            # Calcul du nouveau prix
             nv_prix = self.arrondi(
                 str(((1 + gain) * ancien_prix) / (1 + self.precedant_gain)), zero_apres_virgule)
 
-            self.msg_discord.message_changement_ordre()
+            # Envoit d'un message sur le canal discord
+            self.msg_discord.message_changement_ordre(gain)
 
         # Puis on garde en mémoire le précedant gain, au cas où on souhaite baisser le prix
         self.precedant_gain = gain
@@ -673,8 +676,12 @@ class Kucoin:
         # Point de terminaison de la requête
         endpoint = "/api/v1/orders"
 
+        # Donne le symbol simple
+        dico_symbol_simple = {self.symbol_up: self.symbol_up_simple,
+                              self.symbol_down: self.symbol_down_simple}
+
         # On récupère le montant du compte pour pouvoir placer l'ordre
-        montant = self.montant_compte(symbol.split("-")[0])
+        montant = self.montant_compte(dico_symbol_simple[symbol])
 
         # Définition de tous les paramètres nécessaires
         param = {"clientOid": id_position,
@@ -708,19 +715,25 @@ class Kucoin:
         prix_stop : 23450.2463
         start : True pour démarrer ou laisser à None
         """
+
         def stoploss_processus(symbol: str, prix_stop: float):
             try:
-                # Par défaut, on est sur le marché montant
-                type_marche = True
-                minimum = self.minimum_crypto_up
+                # Dictionnaire qui donne les bonnes valeurs et symbol au stoploss
+                dico_type_marché = {self.symbol_up: True,
+                                    self.symbol_down: False}
 
-                # On garde que le nom de la crypto
-                symbol_simple = symbol.split("-")[0]
+                dico_minimum = {self.symbol_up: self.minimum_crypto_up,
+                                self.symbol_down: self.minimum_crypto_down}
 
-                # Si on est sur le marché descendant, alors on change les paramètres
-                if "3S" in symbol:
-                    type_marche = False
-                    minimum = self.minimum_crypto_down
+                dico_symbol_simple = {self.symbol_up: self.symbol_up_simple,
+                                      self.symbol_down: self.symbol_down_simple}
+
+                # On attribut les bonnes valeurs aux variables
+                type_marche = dico_type_marché[symbol]
+
+                minimum = dico_minimum[symbol]
+
+                symbol_simple = dico_symbol_simple[symbol]
 
                 while True:
                     # On vérifie s'il y a toujours une crypto, s'il elle a été vendu on peut arrêter la fonction
@@ -780,8 +793,10 @@ class Kucoin:
                     if id_ordrelimite != "":
                         id_ordrelimite = ""
 
+                        sleep(1)
+
                         # alors soit l'ordre est exécuté
-                        if self.vente_manuelle == False:
+                        if self.vente_manuelle != True:
                             self.msg_discord.message_vente_ordre(
                                 self.montant_compte(self.devise))
 
