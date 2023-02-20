@@ -166,11 +166,11 @@ class IA:
         Fonction qui valide ou non l'achat d'une crypto
         """
         if prix < prediction and prix_up < prediction_up and prix_down > prediction_down:
-            if prediction_up - prix_up >= 0.045 and prediction_down <= 0.03:
+            if prediction_up - prix_up >= 0.05 and prediction_down <= 0.03:
                 return 1
 
         if prix > prediction and prix_up > prediction_up and prix_down < prediction_down:
-            if prix_up - prediction_up >= 0.045 and prediction_down >= 0.02:
+            if prix_up - prediction_up >= 0.05 and prediction_down >= 0.025:
                 return 0
 
         return None

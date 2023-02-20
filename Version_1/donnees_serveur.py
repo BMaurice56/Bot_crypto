@@ -188,9 +188,6 @@ class Kucoin:
         # Message discord
         self.msg_discord = Message_discord()
 
-        # Stock si l'on vend manuellement les cryptos ou non
-        self.vente_manuelle = False
-
         # Diction partagé entre programme
         self.dico_partage = SharedMemoryDict(name="dico", size=1024)
 
@@ -498,7 +495,7 @@ class Kucoin:
         # Lorsque l'on vend, on enlève l'ordre limit car soit il a été exécuté, soit il est toujours là
         if info["achat_vente"] == False:
             # Sert a savoir si c'est une vente manuelle ou l'ordre limite qui est exécuté
-            self.vente_manuelle = True
+            self.dico_partage["vente_manuelle"] = True
 
             self.suppression_ordre()
 
@@ -536,7 +533,8 @@ class Kucoin:
             self.ordre_vente_seuil(info["symbol"])
 
             # On repasse la variable a False pour l'ordre limite
-            self.vente_manuelle = False
+            if "vente_manuelle" in self.dico_partage:
+                del self.dico_partage["vente_manuelle"]
 
     def presence_position(self, symbol: str) -> dict or None:
         """
@@ -647,7 +645,7 @@ class Kucoin:
 
             # On le met a True pour que quand on replace l'ordre
             # Il n'y a pas entre temps un message de vente de l'ordre limite
-            self.vente_manuelle = True
+            self.dico_partage["vente_manuelle"] = True
 
             # On supprime l'ancien ordre limite
             self.suppression_ordre()
@@ -703,7 +701,8 @@ class Kucoin:
         self.écriture_fichier(content["data"]["orderId"])
 
         # Et on repasse la variable a False
-        self.vente_manuelle = False
+        if "vente_manuelle" in self.dico_partage:
+            del self.dico_partage["vente_manuelle"]
 
     # Fonction qui tourne en continue
     def stoploss_manuel(self, symbol: str, prix_stop: float, start: Optional[bool] = None) -> Process:
@@ -793,16 +792,14 @@ class Kucoin:
                     if id_ordrelimite != "":
                         id_ordrelimite = ""
 
-                        sleep(1)
-
                         # alors soit l'ordre est exécuté
-                        if self.vente_manuelle != True:
+                        if "vente_manuelle" not in self.dico_partage:
                             self.msg_discord.message_vente_ordre(
                                 self.montant_compte(self.devise))
 
                         # Soit c'est une vente manuelle
                         else:
-                            self.vente_manuelle = False
+                            del self.dico_partage["vente_manuelle"]
 
                 # Sinon par sécurité, on remet l'id du stoploss dans le fichier
                 elif sl_3L != None:
