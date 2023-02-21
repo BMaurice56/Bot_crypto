@@ -1,3 +1,4 @@
+from subprocess import Popen, PIPE
 from discord.ext import commands
 from main import *
 import asyncio

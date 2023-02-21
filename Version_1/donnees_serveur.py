@@ -2,16 +2,13 @@ from tenacity import retry, retry_if_exception_type, stop_after_attempt
 from shared_memory_dict import SharedMemoryDict
 from multiprocessing import Process, Manager
 from decimal import Decimal, ROUND_DOWN
-from indices_techniques import moyenne
-from time import sleep, perf_counter
-from subprocess import Popen, PIPE
 from binance.client import Client
 from zoneinfo import ZoneInfo
 from datetime import datetime
 from message_discord import *
-from functools import wraps
 from typing import Optional
 from random import randint
+from time import sleep
 import traceback
 import requests
 import hashlib

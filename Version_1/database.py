@@ -1,5 +1,6 @@
 from indices_techniques import *
 from donnees_serveur import *
+from functools import wraps
 import sqlite3
 import ast
 

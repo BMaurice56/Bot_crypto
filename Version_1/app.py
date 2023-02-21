@@ -1,3 +1,4 @@
+from time import perf_counter
 from main import *
 
 symbol = "BTC"
