@@ -391,7 +391,7 @@ class Kucoin:
 
             # Puis on l'envoi sur le canal discord
             self.msg_discord.message_erreur(
-                erreur, "Erreur survenu dans la fonction analyse_log, fonction laissée arrêter")
+                erreur, "Erreur survenu dans la fonction analyse_log, fonction laissée arrêter, bot toujours en cours d'exécution")
 
     @retry(retry=retry_if_exception_type((requests.exceptions.SSLError, requests.exceptions.ConnectionError, json.decoder.JSONDecodeError)), stop=stop_after_attempt(3))
     def requete(self, get_post_del: str, endpoint: str, log: str, param: Optional[dict] = None) -> dict:
@@ -495,11 +495,9 @@ class Kucoin:
         # Lorsque l'on vend, on enlève l'ordre limit car soit il a été exécuté, soit il est toujours là
         if info["achat_vente"] == False:
             # Sert a savoir si c'est une vente manuelle ou l'ordre limite qui est exécuté
-            self.dico_partage["vente_manuelle"] = True
+            self.dico_partage[f"vente_manuelle_{self.symbol_base}"] = True
 
             self.suppression_ordre()
-
-            sleep(1)
 
         # Besoin d'un id pour l'achat des cryptos
         id_position = randint(0, 100_000_000)
@@ -528,13 +526,13 @@ class Kucoin:
         # On exécute la requête
         self.requete('POST', endpoint, "requete", param)
 
-        # S'il on vient d'acheter, on place un ordre limit
+        # S'il on vient d'acheter, on place un ordre limite
         if info["achat_vente"] == True:
             self.ordre_vente_seuil(info["symbol"])
 
             # On repasse la variable a False pour l'ordre limite
-            if "vente_manuelle" in self.dico_partage:
-                del self.dico_partage["vente_manuelle"]
+            if f"vente_manuelle_{self.symbol_base}" in self.dico_partage:
+                del self.dico_partage[f"vente_manuelle_{self.symbol_base}"]
 
     def presence_position(self, symbol: str) -> dict or None:
         """
@@ -645,7 +643,7 @@ class Kucoin:
 
             # On le met a True pour que quand on replace l'ordre
             # Il n'y a pas entre temps un message de vente de l'ordre limite
-            self.dico_partage["vente_manuelle"] = True
+            self.dico_partage[f"vente_manuelle_{self.symbol_base}"] = True
 
             # On supprime l'ancien ordre limite
             self.suppression_ordre()
@@ -700,9 +698,9 @@ class Kucoin:
         # Puis on vient écrire l'id de l'ordre dans un fichier pour faciliter la suppresion de celui-ci
         self.écriture_fichier(content["data"]["orderId"])
 
-        # Et on repasse la variable a False
-        if "vente_manuelle" in self.dico_partage:
-            del self.dico_partage["vente_manuelle"]
+        # Et on supprime la valeur du dictionnaire
+        if f"vente_manuelle_{self.symbol_base}" in self.dico_partage:
+            del self.dico_partage[f"vente_manuelle_{self.symbol_base}"]
 
     # Fonction qui tourne en continue
     def stoploss_manuel(self, symbol: str, prix_stop: float, start: Optional[bool] = None) -> Process:
@@ -793,13 +791,13 @@ class Kucoin:
                         id_ordrelimite = ""
 
                         # alors soit l'ordre est exécuté
-                        if "vente_manuelle" not in self.dico_partage:
+                        if f"vente_manuelle_{self.symbol_base}" not in self.dico_partage:
                             self.msg_discord.message_vente_ordre(
                                 self.montant_compte(self.devise))
 
                         # Soit c'est une vente manuelle
                         else:
-                            del self.dico_partage["vente_manuelle"]
+                            del self.dico_partage[f"vente_manuelle_{self.symbol_base}"]
 
                 # Sinon par sécurité, on remet l'id du stoploss dans le fichier
                 elif sl_3L != None:
