@@ -113,6 +113,7 @@ class Botcrypto(commands.Bot):
                         # Puis on les supprime
                         for msg in messages[:10]:
                             await msg.delete()
+                            await asyncio.sleep(0.2)
 
                     # Et enfin on attend une heure soit le temps d'attente du bot
                     await asyncio.sleep(60 * 60)
@@ -133,7 +134,7 @@ class Botcrypto(commands.Bot):
 
             for each_message in messages:
                 await each_message.delete()
-                await asyncio.sleep(0.1)
+                await asyncio.sleep(0.2)
 
         @self.command(name="aide")
         async def aide(ctx):
