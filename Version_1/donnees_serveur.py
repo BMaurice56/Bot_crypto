@@ -324,6 +324,7 @@ class Kucoin:
         """
         Fonction qui analyse le fichier et renvoie tous les problèmes
         """
+        fichier_en_cours = ""
         try:
             # Les noms des trois fichiers log de requêtes
             nom = [f"log_requete_{self.symbol_base}.txt", f"log_stoploss_manuel_{self.symbol_base}.txt",
@@ -331,6 +332,7 @@ class Kucoin:
 
             while True:
                 for elt in nom:
+                    fichier_en_cours = elt
                     if os.path.exists(f"fichier_log/{elt}") == True:
                         # On vient lire le contenue du fichier
                         fichier = open(f"fichier_log/{elt}", "r").read()
@@ -391,7 +393,7 @@ class Kucoin:
 
             # Puis on l'envoi sur le canal discord
             self.msg_discord.message_erreur(
-                erreur, "Erreur survenu dans la fonction analyse_log, fonction laissée arrêter, bot toujours en cours d'exécution")
+                erreur, f"Erreur survenu dans la fonction analyse_log, fonction laissée arrêter, bot toujours en cours d'exécution\nfichier qui pose problème : {fichier_en_cours}")
 
     @retry(retry=retry_if_exception_type((requests.exceptions.SSLError, requests.exceptions.ConnectionError, json.decoder.JSONDecodeError)), stop=stop_after_attempt(3))
     def requete(self, get_post_del: str, endpoint: str, log: str, param: Optional[dict] = None) -> dict:
