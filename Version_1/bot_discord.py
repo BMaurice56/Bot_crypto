@@ -133,7 +133,7 @@ class Botcrypto(commands.Bot):
 
             for each_message in messages:
                 await each_message.delete()
-                asyncio.sleep(0.1)
+                await asyncio.sleep(0.1)
 
         @self.command(name="aide")
         async def aide(ctx):
