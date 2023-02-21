@@ -176,14 +176,14 @@ while True:
     if temps_derniere_position >= 4:
         gain_ordrelimite -= 0.0025
 
-        # Si on arrive au moment où il se produit 0.0150 - 0.0025 ou 0.0075 - 0.0025 
+        # Si on arrive au moment où il se produit 0.0150 - 0.0025 ou 0.0075 - 0.0025
         # Cela donne un chiffre inexacte et donc on le remet sur une valeur fixe
         if "499999999999999" in str(gain_ordrelimite):
-            gain_ordrelimite = float(str(gain_ordrelimite).replace("499999999999999", "5"))
+            gain_ordrelimite = float(
+                str(gain_ordrelimite).replace("499999999999999", "5"))
 
         # Si on descent à zéro, alors on ne replace plus l'ordre
         if gain_ordrelimite > 0.0:
-
             kucoin.ordre_vente_seuil(
                 symbol_stoploss, gain_ordrelimite)
 
