@@ -1,6 +1,6 @@
+from main import Kucoin, Message_discord, os, Process, traceback
 from subprocess import Popen, PIPE
 from discord.ext import commands
-from main import *
 import asyncio
 import runpy
 
