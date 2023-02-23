@@ -161,7 +161,7 @@ class IA:
 
             fichier.close()
 
-    def validation_achat(self, prix: float, prix_up: float, prix_down: float, prediction: float, prediction_up: float, prediction_down: float) -> bool or None:
+    def validation_achat(self, prix: float, prix_up: float, prix_down: float, prediction: float, prediction_up: float, prediction_down: float) -> int or None:
         """
         Fonction qui valide ou non l'achat d'une crypto
         """
