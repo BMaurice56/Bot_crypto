@@ -165,8 +165,8 @@ class Kucoin:
         self.kucoin_api_secret = "d125b0df-e2eb-4532-8ed1-049d01dc18b8"
         self.kucoin_phrase_securite = "c5%Pnp8o$FE%^CEM7jwFp9PaTtW4kq"
 
-        self.pourcentage_gain = 0.0150
-        self.precedant_gain = 0.0150
+        self.pourcentage_gain = 0.02
+        self.precedant_gain = 0.02
 
         # Les prix des cryptos de kucoin sont l'inverse de binance
         self.minimum_crypto_up = 5000
