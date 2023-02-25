@@ -602,13 +602,15 @@ class Kucoin:
         # Puis on vient envoyer un message sur le discord
         if achat_ou_vente == True:
             msg = f"Prise de position avec {montant} usdt au prix de {prix}$, crypto : {symbol}"
-            self.msg_discord.message_prise_position(msg, True)
+            self.msg_discord.message_canal_prise_position(
+                msg, 'Prise de position')
 
         else:
             argent = self.montant_compte('USDT')
 
             msg = f"Vente de position au prix de {prix}$, il reste {argent} usdt"
-            self.msg_discord.message_prise_position(msg, False)
+            self.msg_discord.message_canal_prise_position(
+                msg, 'Vente de position')
 
     def ordre_vente_seuil(self, symbol: str, nouveau_gain: Optional[float] = None) -> None:
         """
@@ -617,9 +619,9 @@ class Kucoin:
         symbol : BTC3S-USDT
         nouveau_gain (optionnel) : 0.002, 0.0175...
         """
+        ###################### Calcul du prix de l'ordre ###############################
         # Récupération des prix de marchés
         prix = self.prix_temps_reel_kucoin(symbol)
-        prix_marche = self.prix_temps_reel_kucoin(self.symbol)
 
         zero_apres_virgule = "0.0001"
 
@@ -634,11 +636,28 @@ class Kucoin:
         nv_prix = self.arrondi(
             str(prix * (1 + gain)), zero_apres_virgule)
 
-        # S'il on lui passe un nouveau pourcentage de gain, on recalcule le prix
+        ##################################################################################
+
+        ############ Calcul de la baisse de l'ordre si descente souhaité##################
         if nouveau_gain != None:
             gain = nouveau_gain
 
+            # On récupère l'ancien prix pour le calcul de la descente
             ancien_prix = float(self.presence_position(symbol)["price"])
+
+            # Calcul du nouveau prix
+            nv_prix = self.arrondi(
+                str(((1 + gain) * ancien_prix) / (1 + self.precedant_gain)), zero_apres_virgule)
+
+            # Si le nouveau prix est inférieur au prix de la crypto
+            # Alors on vend directement au lieu de placer un nouvel ordre
+            if nv_prix <= prix:
+                # On récupère le montant du compte pour pouvoir vendre
+                montant = self.montant_compte(dico_symbol_simple[symbol])
+
+                self.achat_vente(montant, symbol, False)
+
+                return
 
             # On le met a True pour que quand on replace l'ordre
             # Il n'y a pas entre temps un message de vente de l'ordre limite
@@ -647,15 +666,19 @@ class Kucoin:
             # On supprime l'ancien ordre limite
             self.suppression_ordre()
 
-            # Calcul du nouveau prix
-            nv_prix = self.arrondi(
-                str(((1 + gain) * ancien_prix) / (1 + self.precedant_gain)), zero_apres_virgule)
-
             # Envoit d'un message sur le canal discord
-            self.msg_discord.message_changement_ordre(gain)
+            msg = "Baisse de l'ordre limite, l'estimation du prix de revente risque d'être fausse !\n" + \
+                f"Nouveau gain : {gain}"
+            self.msg_discord.message_canal_prise_position(
+                msg, "Modification de l'ordre limite")
+
+        ###################################################################################
 
         # Puis on garde en mémoire le précedant gain, au cas où on souhaite baisser le prix
         self.precedant_gain = gain
+
+        ##################"" Calcul prix de vente estimer ###############################
+        prix_marche = self.prix_temps_reel_kucoin(self.symbol)
 
         # On stock dans le dictionaire partagé le prix estimer de vente sur le marché de base
         if "3L" in symbol:
@@ -665,6 +688,9 @@ class Kucoin:
             self.dico_partage["prix_estimer"] = prix_marche * \
                 (1 - (self.pourcentage_gain/3))
 
+        ##################################################################################
+
+        ################################# Requête ########################################
         # Besoin d'un id pour l'achat des cryptos
         id_position = randint(0, 100_000_000)
 
@@ -690,6 +716,8 @@ class Kucoin:
         # On exécute la requête
         content = self.requete('POST', endpoint, "requete", param)
 
+        ##################################################################################
+
         if content["code"] != "200000":
             self.msg_discord.message_erreur(
                 f"{str(content)}", "Echec du placement de l'ordre limite")
@@ -697,7 +725,7 @@ class Kucoin:
         # Puis on vient écrire l'id de l'ordre dans un fichier pour faciliter la suppresion de celui-ci
         self.écriture_fichier(content["data"]["orderId"])
 
-        # Et on supprime la valeur du dictionnaire
+        # Et on supprime la valeur du dictionnaire (si descente de l'ordre limite)
         if f"vente_manuelle_{self.symbol_base}" in self.dico_partage:
             del self.dico_partage[f"vente_manuelle_{self.symbol_base}"]
 
@@ -743,8 +771,9 @@ class Kucoin:
 
                     # Si la crypto dépasse le stoploss fixé, alors on vend
                     if self.comparaisons(prix, prix_stop, type_marche) == False:
-                        # Message sur le discord
-                        self.msg_discord.message_vente_stoploss()
+                        # Message sur le discords
+                        self.msg_discord.message_canal_prise_position(
+                            "Vente des cryptos via le stoploss", "Exécution du stoploss")
 
                         self.achat_vente(crypto, symbol, False)
 
@@ -791,8 +820,10 @@ class Kucoin:
 
                         # alors soit l'ordre est exécuté
                         if f"vente_manuelle_{self.symbol_base}" not in self.dico_partage:
-                            self.msg_discord.message_vente_ordre(
-                                self.montant_compte(self.devise))
+                            montant = self.montant_compte(self.devise)
+
+                            self.msg_discord.message_canal_prise_position(
+                                f"Vente de l'ordre limite, il reste {montant} USDT !", "Vente de l'ordre limite")
 
                         # Soit c'est une vente manuelle
                         else:

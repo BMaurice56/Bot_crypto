@@ -64,7 +64,7 @@ class Botcrypto(commands.Bot):
             Et de renvoyer l'erreur sur le serveur s'il y en a une qui apparait
             """
             try:
-                self.msg_discord.message_status_général("Le bot est lancé !")
+                self.msg_discord.message_canal_general("Le bot est lancé !")
                 runpy.run_path("app.py")
             except:
                 erreur = traceback.format_exc()
@@ -74,7 +74,7 @@ class Botcrypto(commands.Bot):
 
                 arret_bot()
 
-                self.msg_discord.message_status_général(
+                self.msg_discord.message_canal_general(
                     "Le bot s'est arrêté !")
 
         async def suppression_auto_message():
@@ -394,7 +394,7 @@ class Botcrypto(commands.Bot):
         for elt in processus:
             os.system(f"kill -9 {elt}")
 
-        self.msg_discord.message_status_général("Bot démarré !")
+        self.msg_discord.message_canal_general("Bot démarré !")
 
 
 if __name__ == "__main__":
