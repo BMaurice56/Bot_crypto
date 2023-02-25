@@ -182,6 +182,10 @@ class Kucoin:
         self.symbol_down_simple = f"{crypto}3S"
         self.devise = "USDT"
 
+        # Donne le symbol simple
+        self.dico_symbol_simple = {self.symbol_up: self.symbol_up_simple,
+                                   self.symbol_down: self.symbol_down_simple}
+
         # Message discord
         self.msg_discord = Message_discord()
 
@@ -619,10 +623,6 @@ class Kucoin:
         symbol : BTC3S-USDT
         nouveau_gain (optionnel) : 0.002, 0.0175...
         """
-        # Donne le symbol simple
-        dico_symbol_simple = {self.symbol_up: self.symbol_up_simple,
-                              self.symbol_down: self.symbol_down_simple}
-        
         ###################### Calcul du prix de l'ordre ###############################
         # Récupération des prix de marchés
         prix = self.prix_temps_reel_kucoin(symbol)
@@ -657,7 +657,7 @@ class Kucoin:
             # Alors on vend directement au lieu de placer un nouvel ordre
             if nv_prix <= prix:
                 # On récupère le montant du compte pour pouvoir vendre
-                montant = self.montant_compte(dico_symbol_simple[symbol])
+                montant = self.montant_compte(self.dico_symbol_simple[symbol])
 
                 self.achat_vente(montant, symbol, False)
 
@@ -702,7 +702,7 @@ class Kucoin:
         endpoint = "/api/v1/orders"
 
         # On récupère le montant du compte pour pouvoir placer l'ordre
-        montant = self.montant_compte(dico_symbol_simple[symbol])
+        montant = self.montant_compte(self.dico_symbol_simple[symbol])
 
         # Définition de tous les paramètres nécessaires
         param = {"clientOid": id_position,
@@ -749,15 +749,12 @@ class Kucoin:
                 dico_minimum = {self.symbol_up: self.minimum_crypto_up,
                                 self.symbol_down: self.minimum_crypto_down}
 
-                dico_symbol_simple = {self.symbol_up: self.symbol_up_simple,
-                                      self.symbol_down: self.symbol_down_simple}
-
                 # On attribut les bonnes valeurs aux variables
                 type_marche = dico_type_marché[symbol]
 
                 minimum = dico_minimum[symbol]
 
-                symbol_simple = dico_symbol_simple[symbol]
+                symbol_simple = self.dico_symbol_simple[symbol]
 
                 while True:
                     # On vérifie s'il y a toujours une crypto, s'il elle a été vendu on peut arrêter la fonction
