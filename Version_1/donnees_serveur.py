@@ -619,6 +619,10 @@ class Kucoin:
         symbol : BTC3S-USDT
         nouveau_gain (optionnel) : 0.002, 0.0175...
         """
+        # Donne le symbol simple
+        dico_symbol_simple = {self.symbol_up: self.symbol_up_simple,
+                              self.symbol_down: self.symbol_down_simple}
+        
         ###################### Calcul du prix de l'ordre ###############################
         # Récupération des prix de marchés
         prix = self.prix_temps_reel_kucoin(symbol)
@@ -696,10 +700,6 @@ class Kucoin:
 
         # Point de terminaison de la requête
         endpoint = "/api/v1/orders"
-
-        # Donne le symbol simple
-        dico_symbol_simple = {self.symbol_up: self.symbol_up_simple,
-                              self.symbol_down: self.symbol_down_simple}
 
         # On récupère le montant du compte pour pouvoir placer l'ordre
         montant = self.montant_compte(dico_symbol_simple[symbol])
