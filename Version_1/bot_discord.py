@@ -36,10 +36,8 @@ class Botcrypto(commands.Bot):
         # Variable qui permet de savoir si le bot est déjà lancé ou non
         self.statut_bot_crypto = False
 
-        fichier = open("Autre_fichiers/crypto.txt", "r")
-        text = fichier.read()
-
-        self.listes_crypto = text.split(";")
+        with open("Autre_fichiers/crypto_supporter.txt", "r") as f:
+            self.crypto_supporter = f.read().split(";")
 
         def arret_bot():
             """
@@ -154,8 +152,6 @@ class Botcrypto(commands.Bot):
 
             prix : donne le prix actuel de la cryptomonnaie voulus
 
-            liste : liste les pairs de cryptomonnais possible
-
             statut : affiche le statut du bot discord et du bot crypto
 
             vente : vend toutes les cryptomonnais du compte
@@ -163,6 +159,8 @@ class Botcrypto(commands.Bot):
             montant : renvoie le montant des cryptos du compte
 
             redemarrage : redémarre le bot en mettant à jour les fichiers de celui-ci
+
+            estimation : donne le prix estimer de l'ordre limite sur le marché de base
 
             """
 
@@ -172,23 +170,6 @@ class Botcrypto(commands.Bot):
         async def prix(ctx):
             """
             Fonction qui affiche le prix en temps réel de la crypto
-            """
-            """
-            await ctx.send("Quelles crypto ? BTCEUR ? ETHEUR ? BATBUSD ?")
-
-            # Vérifie que le message n'est pas celui envoyé par le bot
-            def check(m):
-                return m.content != "Quelles crypto ? BTCEUR ? ETHEUR ? BATBUSD ?" and m.channel == ctx.channel
-
-            # On attend la réponse
-            msg = await self.wait_for("message", check=check)
-
-            # Puis on vérifie que la cryptomonnaie existe bien
-            crypto = msg.content
-            if crypto in listes_crypto:
-                await ctx.send(f"Le prix de la crypto est de : {self.kucoin.prix_temps_reel_kucoin(crypto)}")
-            else:
-                await ctx.send("La cryptomonnaie n'existe pas")
             """
             crypto = "BTC-USDT"
 
@@ -241,46 +222,6 @@ class Botcrypto(commands.Bot):
 
             await ctx.send("Bot arrêté")
 
-        @self.command(name="liste")
-        async def crypto(ctx):
-            """
-            Fonction qui permet de lister les cryptos voulus
-            """
-            await ctx.send("Quelles pair de crypto voulus ? BTC ? ETH ? BAT ? LUNA ? EUR ?")
-
-            # Vérifie que le message n'est pas celui envoyé par le bot
-            def check(m):
-                return m.content != "Quelles pair de crypto voulus ? BTC ? ETH ? BAT ? LUNA ? EUR ?" and m.channel == ctx.channel
-
-            # On attend la réponse
-            msg = await bot.wait_for("message", check=check)
-
-            # Puis on vérifie que la cryptomonnaie existe bien
-            crypto = msg.content
-
-            crypto_voulu = ""
-            for cr in self.listes_crypto:
-                if crypto in cr:
-                    crypto_voulu += cr + ", "
-
-            if crypto_voulu == "":
-                await ctx.send("Aucune crypto de ce type")
-            else:
-                crypto_voulu = crypto_voulu[:-2]
-                await ctx.send("Voici les cryptomonnais disponibles : ")
-                if len(crypto_voulu) < 2000:
-                    await ctx.send(crypto_voulu)
-                else:
-                    liste_crypto_voulu = []
-
-                    while len(crypto_voulu) >= 2000:
-                        liste_crypto_voulu.append(crypto_voulu[:2000])
-                        crypto_voulu = crypto_voulu[2000:]
-
-                    liste_crypto_voulu.append(crypto_voulu)
-                    for elt in liste_crypto_voulu:
-                        await ctx.send(elt)
-
         @self.command(name="statut")
         async def statut(ctx):
             """
@@ -332,11 +273,14 @@ class Botcrypto(commands.Bot):
             Fonction qui renvoie le montant du compte des cryptos
             """
 
-            argent = self.kucoin.montant_compte("USDT")
-            btcup = self.kucoin.montant_compte("BTC3L")
-            btcdown = self.kucoin.montant_compte("BTC3S")
+            argent = self.kucoin.montant_compte(self.kucoin.devise)
+            await ctx.send(f"Le compte possède {argent} USDT")
 
-            await ctx.send(f"Le compte possède {argent} USDT, {btcup} crypto up, {btcdown} crypto down !")
+            for crypto in self.crypto_supporter:
+                crypto_up = self.kucoin.montant_compte(f"{crypto}3L")
+                crypto_down = self.kucoin.montant_compte(f"{crypto}3S")
+
+                await ctx.send(f"Le compte possède {crypto_up} {crypto}_UP, {crypto_down} {crypto}_DOWN")
 
         @self.command(name="redemarrage")
         async def redemarrage(ctx):
