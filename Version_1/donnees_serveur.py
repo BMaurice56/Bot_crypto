@@ -12,6 +12,7 @@ from time import sleep
 import traceback
 import requests
 import hashlib
+import asyncio
 import base64
 import pandas
 import locale
@@ -165,8 +166,8 @@ class Kucoin:
         self.kucoin_api_secret = "d125b0df-e2eb-4532-8ed1-049d01dc18b8"
         self.kucoin_phrase_securite = "c5%Pnp8o$FE%^CEM7jwFp9PaTtW4kq"
 
-        self.pourcentage_gain = 0.02
-        self.precedant_gain = 0.02
+        self.pourcentage_gain = 0.017
+        self.precedant_gain = 0.017
 
         # Les prix des cryptos de kucoin sont l'inverse de binance
         self.minimum_crypto_up = 5000
@@ -192,14 +193,18 @@ class Kucoin:
         # Diction partagé entre programme
         self.dico_partage = SharedMemoryDict(name="dico", size=1024)
 
+        # Boucle qui va permettre de lancer les fonctions qui tourne en continue
+        # De façon asynchrone et sans processus
+        # (Utilisation de asyncio au lieu de processus car si le processus parent est arrêté,
+        # ce n'est pas sur que les processus enfants sont arrêtés eux aussi)
+        self.loop = asyncio.get_event_loop_policy().get_event_loop()
+
         # Si on créer un objet Kucoin en dehors de discord -> bot de trading
         # Permet de garder l'id à jour dans le fichier
         if processus == None:
-            p = Process(target=self.update_id_ordre_limite)
-            p.start()
+            self.loop.create_task(self.update_id_ordre_limite())
 
-            p2 = Process(target=self.analyse_fichier)
-            p2.start()
+            self.loop.create_task(self.analyse_fichier())
 
     def arrondi(self, valeur: float or str, zero_apres_virgule: Optional[float] = None) -> float:
         """
@@ -321,12 +326,13 @@ class Kucoin:
 
         fichier.close()
 
-    def analyse_fichier(self):
+    async def analyse_fichier(self):
         """
         Fonction qui analyse le fichier et renvoie tous les problèmes
         """
         fichier_en_cours = ""
         try:
+            raise Exception("toto")
             # Les noms des trois fichiers log de requêtes
             nom = [f"log_requete_{self.symbol_base}.txt", f"log_stoploss_manuel_{self.symbol_base}.txt",
                    f"log_update_id_position_{self.symbol_base}.txt"]
@@ -387,7 +393,7 @@ class Kucoin:
                     f'echo "" > /home/Bot_crypto/Version_1/fichier_log/log_update_id_position_{self.symbol_base}.txt')
 
                 # Et faire dormir le programme
-                sleep(60 * 60 * 3)
+                asyncio.sleep(60 * 60 * 3)
         except:
             # On récupère l'erreur
             erreur = traceback.format_exc()
@@ -795,7 +801,7 @@ class Kucoin:
 
         return p
 
-    def update_id_ordre_limite(self) -> None:
+    async def update_id_ordre_limite(self) -> None:
         """
         Fonction qui maintien à jour l'id de l'ordre limite dans le fichier
         S'il l'ordre a été executé alors on enlève l'id du fichier
@@ -836,7 +842,7 @@ class Kucoin:
                     self.écriture_fichier(sl_3S['id'])
                     id_ordrelimite = sl_3S['id']
 
-                sleep(20)
+                asyncio.sleep(20)
 
         except:
             # On récupère l'erreur
@@ -847,4 +853,4 @@ class Kucoin:
                 erreur, "Erreur survenu dans la fonction update_id_ordre_limite, aucune interruption du programme, fonction relancée")
 
             # Et enfin on relance la fonction
-            self.update_id_ordre_limite()
+            await self.update_id_ordre_limite()

@@ -1,6 +1,9 @@
 from time import perf_counter
 from main import *
 
+while True:
+    pass
+
 symbol = "BTC"
 dodo = 60*60
 
