@@ -1,6 +1,7 @@
-from main import Kucoin, Message_discord, os, Process, traceback, asyncio
+from main import Kucoin, Message_discord, os, Process, traceback
 from subprocess import Popen, PIPE
 from discord.ext import commands
+import asyncio
 import runpy
 
 # A réactiver et à mettre en premier si le bot discord est un cran au dessus
