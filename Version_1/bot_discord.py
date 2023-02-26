@@ -1,7 +1,6 @@
-from main import Kucoin, Message_discord, os, Process, traceback
+from main import Kucoin, Message_discord, os, Process, traceback, asyncio
 from subprocess import Popen, PIPE
 from discord.ext import commands
-import asyncio
 import runpy
 
 # A réactiver et à mettre en premier si le bot discord est un cran au dessus
@@ -14,10 +13,6 @@ sys.path[:0] = ['Version_1/']
 # Commande d'arret des programmes
 commande_bot_terminale = """ps -aux | grep "bot_discord.py"| awk -F " " '{ print $2 }' """
 commande_redemarrage_terminale = """ps -aux | grep "redemarrage.py"| awk -F " " '{ print $2 }' """
-
-# Boucle qui permet de lancer la suppression automatique des messages
-loop = asyncio.get_event_loop()
-
 
 class Botcrypto(commands.Bot):
 
@@ -36,6 +31,10 @@ class Botcrypto(commands.Bot):
         # Variable qui permet de savoir si le bot est déjà lancé ou non
         self.statut_bot_crypto = False
 
+        # Boucle qui permet de lancer la suppression automatique des messages
+        self.loop = asyncio.get_event_loop_policy().get_event_loop()
+
+        # Liste des cryptos supportées
         with open("Autre_fichiers/crypto_supporter.txt", "r") as f:
             self.crypto_supporter = f.read().split(";")
 
@@ -117,11 +116,11 @@ class Botcrypto(commands.Bot):
                     await asyncio.sleep(60 * 60)
 
             # Démarrage suppression dans les deux canaux
-            loop.create_task(suppression_messages(etat_bot))
-            loop.create_task(suppression_messages(prise_position))
+            self.loop.create_task(suppression_messages(etat_bot))
+            self.loop.create_task(suppression_messages(prise_position))
 
         # Démarrage tache suppression auto message
-        loop.create_task(suppression_auto_message())
+        self.loop.create_task(suppression_auto_message())
 
         @self.command(name="del")
         async def delete(ctx):
