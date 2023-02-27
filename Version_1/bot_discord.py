@@ -1,4 +1,4 @@
-from main import Kucoin, Message_discord, os, Process, traceback
+from main import Kucoin, Message_discord, os, Process, traceback, kill_process
 from subprocess import Popen, PIPE
 from discord.ext import commands
 import asyncio
@@ -15,6 +15,7 @@ sys.path[:0] = ['Version_1/']
 commande_bot_terminale = """ps -aux | grep "bot_discord.py"| awk -F " " '{ print $2 }' """
 commande_redemarrage_terminale = """ps -aux | grep "redemarrage.py"| awk -F " " '{ print $2 }' """
 
+
 class Botcrypto(commands.Bot):
 
     def __init__(self):
@@ -29,8 +30,9 @@ class Botcrypto(commands.Bot):
         # Message discord
         self.msg_discord = Message_discord()
 
-        # Variable qui permet de savoir si le bot est déjà lancé ou non
-        self.statut_bot_crypto = False
+        # Stocke tous les bots lancés
+        self.liste_bot_lancé = []
+        self.liste_symbol_bot_lancé = []
 
         # Boucle qui permet de lancer la suppression automatique des messages
         self.loop = asyncio.get_event_loop_policy().get_event_loop()
@@ -39,22 +41,17 @@ class Botcrypto(commands.Bot):
         with open("Autre_fichiers/crypto_supporter.txt", "r") as f:
             self.crypto_supporter = f.read().split(";")
 
-        def arret_bot():
+        def arret_bot(symbol):
             """
             Fonction qui arrête le bot
             """
-            proc = Popen(commande_bot_terminale,
-                         shell=True, stdout=PIPE, stderr=PIPE)
+            for p in self.liste_bot_lancé:
+                if p.name == symbol:
+                    kill_process(p)
 
-            sortie, autre = proc.communicate()
+                    self.liste_bot_lancé.remove(p)
 
-            processus = sortie.decode('utf-8').split("\n")[2:-1]
-
-            for elt in processus:
-                os.system(f"kill -9 {elt}")
-
-            # Une fois le bot arrêté, on peut passer la variable a False
-            self.statut_bot_crypto = False
+            self.liste_symbol_bot_lancé.remove(symbol)
 
         def lancement_bot():
             """
@@ -195,19 +192,14 @@ class Botcrypto(commands.Bot):
             # Puis on vérifie que la cryptomonnaie existe bien
             crypto = msg.content
             """
-            """
-            crypto = 'BTC'
-            if crypto in ['BTC', 'BNB']:
-                sys.argv = ['', crypto]
-            
-            else:
-                await ctx.send("La cryptomonnaie n'existe pas")
-            """
+            symbol = "BTC"
 
-            if self.statut_bot_crypto == False:
-                self.statut_bot_crypto = True
-                process = Process(target=lancement_bot)
+            if symbol not in self.liste_symbol_bot_lancé:
+                process = Process(target=lancement_bot, name=symbol)
                 process.start()
+
+                self.liste_bot_lancé.append(process)
+                self.liste_symbol_bot_lancé.append(symbol)
 
             else:
                 await ctx.send("Le bot est déjà lancé !")
@@ -218,7 +210,7 @@ class Botcrypto(commands.Bot):
             Fonction qui stop le bot
             Tue le processus du bot ainsi que les processus qui chargent la bdd si ce n'est pas fini
             """
-            arret_bot()
+            arret_bot("BTC")
 
             await ctx.send("Bot arrêté")
 

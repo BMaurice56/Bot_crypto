@@ -1,8 +1,6 @@
 from time import perf_counter
 from main import *
 
-while True:
-    pass
 
 symbol = "BTC"
 dodo = 60*60
@@ -21,6 +19,9 @@ dico_pourcentage_stoploss = {1: 0.98, 0: 1.02}  # Prix stoploss up et down
 # Message discord
 msg_discord = Message_discord()
 
+# Drapeau qui permet de stopper les threads
+event = Event()
+
 # Chargement des modèles d'ia pour les prédictions
 loaded_model, loaded_model_up, loaded_model_down = ia.chargement_modele()
 
@@ -28,8 +29,8 @@ loaded_model, loaded_model_up, loaded_model_down = ia.chargement_modele()
 symbol_stoploss = ""
 prix_stoploss = 0.0
 
-# Création de la variable avec le processus de stoploss manuel
-process = kucoin.stoploss_manuel(symbol_stoploss, prix_stoploss)
+# Création de la variable avec le thread de stoploss manuel
+thread = kucoin.stoploss_manuel(symbol_stoploss, prix_stoploss, event)
 
 # On récupère l'état précédent du bot (Heure et stoploss)
 etat = ia.etat_bot("lecture")
@@ -67,8 +68,8 @@ if len(etat) > 0:
     # S'il y a des cryptos en cours, alors on relance le stoploss
     if crypto_up > kucoin.minimum_crypto_up or crypto_down > kucoin.minimum_crypto_down:
         if symbol_stoploss != "" and prix_stoploss != 0.0:
-            process = kucoin.stoploss_manuel(
-                symbol_stoploss, prix_stoploss, True)
+            thread = kucoin.stoploss_manuel(
+                symbol_stoploss, prix_stoploss, event, True)
 
     # Si le bot n'a pas attendu l'heure, alors il attend
     if date - ancienne_date < 3600:
@@ -131,9 +132,9 @@ while True:
     # S'il y a bien un signal d'achat, alors on peut passer à la suite
     if résultat_achat != None:
         if dico_montant[résultat_achat] < dico_minimum[résultat_achat]:
-            # Si le processus du stoploss est toujours en vie
+            # Si le thread du stoploss est toujours en vie
             # On l'arrête avant d'en créer un nouveau
-            kill_process(process)
+            kill_thread(thread, event)
 
             # Si on possède toujours de l'autre crypto, on la vend
             if dico_montant[not résultat_achat] > dico_minimum[not résultat_achat]:
@@ -150,8 +151,8 @@ while True:
             kucoin.achat_vente(argent, dico_symbol[résultat_achat], True)
 
             # Gère le stoploss de façon manuel
-            process = kucoin.stoploss_manuel(
-                symbol_stoploss, prix_stoploss, True)
+            thread = kucoin.stoploss_manuel(
+                symbol_stoploss, prix_stoploss, event, True)
 
             buy_sell = True
 
@@ -160,13 +161,13 @@ while True:
         # Et que on a pas acheté et qu'on a des cryptos
         # Alors on vend
         if (prix > prediction or prix_up > prediction_up or prix_down < prediction_down) and crypto_up > kucoin.minimum_crypto_up:
-            kill_process(process)
+            kill_thread(thread, event)
 
             kucoin.achat_vente(crypto_up, kucoin.symbol_up, False)
             buy_sell = True
 
         if (prix < prediction or prix_up < prediction_up or prix_down > prediction_down) and crypto_down > kucoin.minimum_crypto_down:
-            kill_process(process)
+            kill_thread(thread, event)
 
             kucoin.achat_vente(crypto_down, kucoin.symbol_down, False)
             buy_sell = True
@@ -177,11 +178,11 @@ while True:
         gain_ordrelimite = kucoin.pourcentage_gain
 
     # Si cela fait trop longtemps que l'ordre a été placé sans être vendu, on le descent
-    if temps_derniere_position >= 3:
-        gain_ordrelimite -= 0.003
+    if temps_derniere_position >= 4:
+        gain_ordrelimite -= 0.0025
 
         # On arrondie a la troisième décimale pour éviter tout une suite de zéro
-        gain_ordrelimite = round(gain_ordrelimite, 3)
+        gain_ordrelimite = round(gain_ordrelimite, 4)
 
         # Si on descent à zéro, alors on ne replace plus l'ordre
         if gain_ordrelimite > 0.0:

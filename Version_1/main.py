@@ -186,3 +186,19 @@ def kill_process(p: Process) -> None:
     # S'il est en vie, on le tue
     if statut == True:
         p.kill()
+
+
+def kill_thread(th: Thread, event: Event):
+    """
+    Fonction qui tue le thread passé en argument
+    """
+    # Etat du thread
+    statut = th.is_alive()
+
+    # S'il est en vie, on l'arrête
+    if statut == True:
+        event.set()
+
+        th.join()
+
+        event.clear()

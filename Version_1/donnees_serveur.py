@@ -2,6 +2,7 @@ from tenacity import retry, retry_if_exception_type, stop_after_attempt
 from shared_memory_dict import SharedMemoryDict
 from multiprocessing import Process, Manager
 from decimal import Decimal, ROUND_DOWN
+from threading import Thread, Event
 from binance.client import Client
 from zoneinfo import ZoneInfo
 from datetime import datetime
@@ -154,7 +155,7 @@ class Kucoin:
     Classe qui permet d'interagir avec les données des serveurs de kucoin
     """
 
-    def __init__(self, crypto, processus: Optional[bool] = None) -> None:
+    def __init__(self, crypto, thread: Optional[bool] = None) -> None:
         """
         Initialise un objet kucoin pour interagir avec leurs serveurs
         """
@@ -165,8 +166,8 @@ class Kucoin:
         self.kucoin_api_secret = "d125b0df-e2eb-4532-8ed1-049d01dc18b8"
         self.kucoin_phrase_securite = "c5%Pnp8o$FE%^CEM7jwFp9PaTtW4kq"
 
-        self.pourcentage_gain = 0.017
-        self.precedant_gain = 0.017
+        self.pourcentage_gain = 0.015
+        self.precedant_gain = 0.015
 
         # Les prix des cryptos de kucoin sont l'inverse de binance
         self.minimum_crypto_up = 5000
@@ -194,12 +195,12 @@ class Kucoin:
 
         # Si on créer un objet Kucoin en dehors de discord -> bot de trading
         # Permet de garder l'id à jour dans le fichier
-        if processus == None:
-            p = Process(target=self.update_id_ordre_limite)
-            p.start()
+        if thread == None:
+            th = Thread(target=self.update_id_ordre_limite)
+            th.start()
 
-            p2 = Process(target=self.analyse_fichier)
-            p2.start()
+            th2 = Thread(target=self.analyse_fichier)
+            th2.start()
 
     def arrondi(self, valeur: float or str, zero_apres_virgule: Optional[float] = None) -> float:
         """
@@ -730,7 +731,7 @@ class Kucoin:
             del self.dico_partage[f"vente_manuelle_{self.symbol_base}"]
 
     # Fonction qui tourne en continue
-    def stoploss_manuel(self, symbol: str, prix_stop: float, start: Optional[bool] = None) -> Process:
+    def stoploss_manuel(self, symbol: str, prix_stop: float, event: Event, start: Optional[bool] = None) -> Thread:
         """
         Fonction qui fait office de stoploss mais de façon manuel
         Basé sur le prix du marché normal, pas celui des jetons à effet de levier
@@ -740,7 +741,7 @@ class Kucoin:
         start : True pour démarrer ou laisser à None
         """
 
-        def stoploss_processus(symbol: str, prix_stop: float):
+        def stoploss_thread(symbol: str, prix_stop: float, event: Event):
             try:
                 # Dictionnaire qui donne les bonnes valeurs et symbol au stoploss
                 dico_type_marché = {self.symbol_up: True,
@@ -757,6 +758,10 @@ class Kucoin:
                 symbol_simple = self.dico_symbol_simple[symbol]
 
                 while True:
+                    # Stop le thread sur demande
+                    if event.is_set():
+                        break
+
                     # On vérifie s'il y a toujours une crypto, s'il elle a été vendu on peut arrêter la fonction
                     crypto = self.montant_compte(symbol_simple, "stoploss")
 
@@ -788,12 +793,13 @@ class Kucoin:
                 # Et enfin on relance la fonction
                 self.stoploss_manuel(symbol, prix_stop)
 
-        p = Process(target=stoploss_processus, args=[symbol, prix_stop])
+        th = Thread(target=stoploss_thread, args=[
+            symbol, prix_stop, event])
 
         if start != None:
-            p.start()
+            th.start()
 
-        return p
+        return th
 
     def update_id_ordre_limite(self) -> None:
         """
