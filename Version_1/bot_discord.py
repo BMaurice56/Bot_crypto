@@ -319,17 +319,6 @@ class Botcrypto(commands.Bot):
         Fonction qui affiche dans la console "Bot crypto est prêt" lorsqu'il est opérationnel 
         Et enlève des processus le code python redemarrage si le programme est redémarré
         """
-        # D'abord on tue le ou les processus de redémarrage
-        proc = Popen(commande_redemarrage_terminale,
-                     shell=True, stdout=PIPE, stderr=PIPE)
-
-        sortie, autre = proc.communicate()
-
-        processus = sortie.decode('utf-8').split("\n")[:-1]
-
-        for elt in processus:
-            os.system(f"kill -9 {elt}")
-
         self.msg_discord.message_canal_general("Bot démarré !")
 
 
