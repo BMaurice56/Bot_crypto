@@ -221,15 +221,13 @@ class Botcrypto(commands.Bot):
             """
             await ctx.send("Bot discord toujours en cours d'exécution !")
 
-            proc = Popen(commande_bot_terminale,
-                         shell=True, stdout=PIPE, stderr=PIPE)
+            if self.liste_symbol_bot_lancé != []:
+                crypto = ""
 
-            sortie, autre = proc.communicate()
+                for symbol in self.liste_symbol_bot_lancé:
+                    crypto += f"{symbol} "
 
-            processus = sortie.decode('utf-8').split("\n")[2:-3]
-
-            if processus != []:
-                await ctx.send("Bot crypto lancé !")
+                await ctx.send(f"Bot lancé : {crypto}")
             else:
                 await ctx.send("Bot crypto arrêté !")
 
