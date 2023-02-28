@@ -1,8 +1,9 @@
-from main import Kucoin, Message_discord, os, Process, traceback, kill_process
+from main import Kucoin, Message_discord, os, Process, traceback, kill_process, sleep, Thread
 from subprocess import Popen, PIPE
 from discord.ext import commands
 import asyncio
 import runpy
+import sys
 
 # A réactiver et à mettre en premier si le bot discord est un cran au dessus
 # dans l'arborescence de fichier pour gérer les deux versions du bot
@@ -13,7 +14,6 @@ sys.path[:0] = ['Version_1/']
 
 # Commande d'arret des programmes
 commande_bot_terminale = """ps -aux | grep "bot_discord.py"| awk -F " " '{ print $2 }' """
-commande_redemarrage_terminale = """ps -aux | grep "redemarrage.py"| awk -F " " '{ print $2 }' """
 
 
 class Botcrypto(commands.Bot):
@@ -41,25 +41,29 @@ class Botcrypto(commands.Bot):
         with open("Autre_fichiers/crypto_supporter.txt", "r") as f:
             self.crypto_supporter = f.read().split(";")
 
-        def arret_bot(symbol):
+        def remove_liste(symbol):
+            for p in self.liste_bot_lancé.keys():
+                if p.name == symbol:
+                    del self.liste_bot_lancé[p]
+                    del self.liste_symbol_bot_lancé[symbol]
+
+                    return p
+
+        def arret_bot(p):
             """
             Fonction qui arrête le bot
             """
-            for p in self.liste_bot_lancé:
-                if p.name == symbol:
-                    kill_process(p)
+            # On recherche le processus du bot et on l'arrête
+            os.kill(p.ident, 9)
 
-                    self.liste_bot_lancé.remove(p)
-
-            self.liste_symbol_bot_lancé.remove(symbol)
-
-        def lancement_bot():
+        def lancement_bot(symbol):
             """
             Fonction qui permet de lancer le bot
             Et de renvoyer l'erreur sur le serveur s'il y en a une qui apparait
             """
             try:
                 self.msg_discord.message_canal_general("Le bot est lancé !")
+                sys.argv = ['', symbol]
                 runpy.run_path("app.py")
             except:
                 erreur = traceback.format_exc()
@@ -67,7 +71,8 @@ class Botcrypto(commands.Bot):
                 self.msg_discord.message_erreur(
                     erreur, "Erreur survenue au niveau du bot, arrêt du programme")
 
-                arret_bot()
+                tt = remove_liste(symbol)
+                arret_bot(tt)
 
                 self.msg_discord.message_canal_general(
                     "Le bot s'est arrêté !")
@@ -76,7 +81,7 @@ class Botcrypto(commands.Bot):
             """
             Fonction qui supprime automatiquement les messages sur les canal état-bot et prise-position
             s'il y a plus de 10 messages
-            Evite que les canaux soient trop chargé par les messages du bot 
+            Evite que les canaux soient trop chargé par les messages du bot
             Evite la suppresion manuel et total des messages
             """
             id_etat_bot = 972545416786751488
@@ -117,10 +122,14 @@ class Botcrypto(commands.Bot):
             self.loop.create_task(suppression_messages(etat_bot))
             self.loop.create_task(suppression_messages(prise_position))
 
+        @ self.command(name="toto")
+        async def toto(ctx):
+            print(self.liste_bot_lancé, self.liste_symbol_bot_lancé)
+
         # Démarrage tache suppression auto message
         self.loop.create_task(suppression_auto_message())
 
-        @self.command(name="del")
+        @ self.command(name="del")
         async def delete(ctx):
             """
             Fonction qui supprime tous les messages de la conversation
@@ -131,7 +140,7 @@ class Botcrypto(commands.Bot):
                 await each_message.delete()
                 await asyncio.sleep(0.2)
 
-        @self.command(name="aide")
+        @ self.command(name="aide")
         async def aide(ctx):
             """
             Fonction complémentaire de la fonction de base "help" de discord
@@ -163,64 +172,99 @@ class Botcrypto(commands.Bot):
 
             await ctx.send(commandes)
 
-        @self.command(name="prix")
+        @ self.command(name="prix")
         async def prix(ctx):
             """
             Fonction qui affiche le prix en temps réel de la crypto
             """
-            crypto = "BTC-USDT"
+            for crypto in self.crypto_supporter:
+                await ctx.send(f"Le prix de {crypto} est de : {self.kucoin.prix_temps_reel_kucoin(crypto)}")
 
-            await ctx.send(f"Le prix de la crypto est de : {self.kucoin.prix_temps_reel_kucoin(crypto)}")
-
-        @self.command(name="start")
+        @ self.command(name="start")
         async def start(ctx):
             """
             Fonction qui lance en processus le bot de crypto
             Permet de ne pas bloquer le bot discord et donc d'executre d'autre commandes à coté
             Comme l'arrêt du bot ou le relancer, le prix à l'instant T, etc...
             """
-            """
-            await ctx.send("Sur quelles crypto trader ? BTC ou BNB ?")
+            question = "Sur quelles crypto trader ? BTC ? BNB ?"
+
+            await ctx.send(question)
 
             # Vérifie que le message n'est pas celui envoyé par le bot
             def check(m):
-                return m.content != "Sur quelles crypto trader ? BTC ou BNB ?" and m.channel == ctx.channel
+                return m.content != question and m.channel == ctx.channel
 
             # On attend la réponse
             msg = await bot.wait_for("message", check=check)
 
-            # Puis on vérifie que la cryptomonnaie existe bien
+            # On récupère la crypto
             crypto = msg.content
-            """
-            symbol = "BTC"
 
-            if symbol not in self.liste_symbol_bot_lancé:
-                process = Process(target=lancement_bot, name=symbol)
-                process.start()
+            # Si elle est supporter et pas lancé, alors on lance le bot
+            if crypto in self.crypto_supporter:
+                if crypto not in self.liste_symbol_bot_lancé:
+                    p = Process(target=lancement_bot,
+                                name=crypto, args=[crypto])
 
-                self.liste_bot_lancé.append(process)
-                self.liste_symbol_bot_lancé.append(symbol)
+                    # Puis on ajoute le processus du bot dans les listes pour garder une trace de tous les bots lancés
+                    self.liste_bot_lancé.append(p)
+                    self.liste_symbol_bot_lancé.append(crypto)
+
+                    p.start()
+
+                else:
+                    await ctx.send("Le bot est déjà lancé !")
 
             else:
-                await ctx.send("Le bot est déjà lancé !")
+                await ctx.send("Le bot n'existe pas !")
 
-        @self.command(name="stop")
+        @ self.command(name="stop")
         async def stop(ctx):
             """
             Fonction qui stop le bot
             Tue le processus du bot ainsi que les processus qui chargent la bdd si ce n'est pas fini
             """
-            arret_bot("BTC")
+            question = "Quel bot arrêté ?"
+            bot_lancé = "Bot lancé : "
 
-            await ctx.send("Bot arrêté")
+            # On récupère tous les bots déjà lancés
+            for symbol in self.liste_symbol_bot_lancé:
+                bot_lancé += f"{symbol} "
 
-        @self.command(name="statut")
+            await ctx.send(question)
+            await ctx.send(bot_lancé)
+
+            # Vérifie que le message n'est pas celui envoyé par le bot
+            def check(m):
+                return m.content not in [question, bot_lancé] and m.channel == ctx.channel
+
+            # On attend la réponse
+            msg = await bot.wait_for("message", check=check)
+
+            # On récupère la crypto
+            crypto = msg.content
+
+            # Puis on l'arrête si le bot est lancé
+            if crypto in self.crypto_supporter:
+                if crypto in self.liste_symbol_bot_lancé:
+                    arret_bot(crypto)
+
+                    await ctx.send("Bot arrêté !")
+                else:
+                    await ctx.send("Bot déjà à l'arrêt !")
+
+            else:
+                await ctx.send("Bot inexistant !")
+
+        @ self.command(name="statut")
         async def statut(ctx):
             """
             Fonction qui renvoie le statut du bot discord et celui de la crypto
             """
             await ctx.send("Bot discord toujours en cours d'exécution !")
 
+            # Regarde s'il y a des bots lancés ou non
             if self.liste_symbol_bot_lancé != []:
                 crypto = ""
 
@@ -229,9 +273,9 @@ class Botcrypto(commands.Bot):
 
                 await ctx.send(f"Bot lancé : {crypto}")
             else:
-                await ctx.send("Bot crypto arrêté !")
+                await ctx.send("Aucun Bot lancé !")
 
-        @self.command(name="vente")
+        @ self.command(name="vente")
         async def vente(ctx):
             """
             Fonction qui permet de vendre les cryptomonaies du bot à distance
@@ -257,7 +301,7 @@ class Botcrypto(commands.Bot):
             # Et on renvoie les nouveaux montants sur le discord
             await montant(ctx)
 
-        @self.command(name="montant")
+        @ self.command(name="montant")
         async def montant(ctx):
             """
             Fonction qui renvoie le montant du compte des cryptos
@@ -272,7 +316,7 @@ class Botcrypto(commands.Bot):
 
                 await ctx.send(f"Le compte possède {crypto_up} {crypto}_UP, {crypto_down} {crypto}_DOWN")
 
-        @self.command(name="redemarrage")
+        @ self.command(name="redemarrage")
         async def redemarrage(ctx):
             """
             Fonction qui redemarre le bot discord et met à jour ses fichiers
@@ -280,7 +324,7 @@ class Botcrypto(commands.Bot):
 
             Popen("nohup python3 redemarrage.py >/dev/null 2>&1", shell=True)
 
-        @self.command(name="message")
+        @ self.command(name="message")
         async def message(ctx):
             """
             Fonction qui permet d'enregistrer l'état du bot, des prédictions ainsi que le prix des cryptos
@@ -301,7 +345,7 @@ class Botcrypto(commands.Bot):
             for elt in ls:
                 fichier.write(elt)
 
-        @self.command(name="estimation")
+        @ self.command(name="estimation")
         async def estimation(ctx):
             """
             Fonction qui renvoi le prix estimer de vente de la crypto
@@ -314,7 +358,7 @@ class Botcrypto(commands.Bot):
 
     async def on_ready(self):
         """
-        Fonction qui affiche dans la console "Bot crypto est prêt" lorsqu'il est opérationnel 
+        Fonction qui affiche dans la console "Bot crypto est prêt" lorsqu'il est opérationnel
         Et enlève des processus le code python redemarrage si le programme est redémarré
         """
         self.msg_discord.message_canal_general("Bot démarré !")

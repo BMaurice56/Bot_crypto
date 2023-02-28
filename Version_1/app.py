@@ -1,8 +1,12 @@
 from time import perf_counter
 from main import *
+import sys
 
+sleep(1)
 
-symbol = "BTC"
+raise Exception("toto")
+
+symbol = sys.argv[1]
 dodo = 60*60
 
 # Création d'un objet binance et kucoin pour interagir avec leurs serveurs
