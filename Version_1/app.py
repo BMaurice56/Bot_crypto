@@ -2,10 +2,6 @@ from time import perf_counter
 from main import *
 import sys
 
-sleep(1)
-
-raise Exception("toto")
-
 symbol = sys.argv[1]
 dodo = 60*60
 
