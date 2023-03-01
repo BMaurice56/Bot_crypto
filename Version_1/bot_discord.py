@@ -41,20 +41,20 @@ class Botcrypto(commands.Bot):
         with open("Autre_fichiers/crypto_supporter.txt", "r") as f:
             self.crypto_supporter = f.read().split(";")
 
-        def remove_liste(symbol):
-            for p in self.liste_bot_lancé.keys():
-                if p.name == symbol:
-                    del self.liste_bot_lancé[p]
-                    del self.liste_symbol_bot_lancé[symbol]
-
-                    return p
-
-        def arret_bot(p):
+        def arret_manuel_bot(symbol):
             """
             Fonction qui arrête le bot
             """
-            # On recherche le processus du bot et on l'arrête
-            os.kill(p.ident, 9)
+            for p in self.liste_bot_lancé:
+                if p.name == symbol:
+                    # On supprime le processus des listes
+                    self.liste_bot_lancé.remove(p)
+                    self.liste_symbol_bot_lancé.remove(symbol)
+
+                    # On récupère l'id du processus du bot et on l'arrête
+                    os.kill(p.ident, 9)
+
+                    break
 
         def lancement_bot(symbol):
             """
@@ -71,11 +71,24 @@ class Botcrypto(commands.Bot):
                 self.msg_discord.message_erreur(
                     erreur, "Erreur survenue au niveau du bot, arrêt du programme")
 
-                tt = remove_liste(symbol)
-                arret_bot(tt)
-
                 self.msg_discord.message_canal_general(
                     "Le bot s'est arrêté !")
+
+        async def arret_auto_bot():
+            """
+            Fonction qui supprime automatiquement de la liste les processus arrêté
+            """
+            while True:
+                for process in self.liste_bot_lancé:
+                    if process.exitcode != None:
+                        symbol = process.name
+
+                        kill_process(process)
+
+                        self.liste_bot_lancé.remove(process)
+                        self.liste_symbol_bot_lancé.remove(symbol)
+
+                await asyncio.sleep(2)
 
         async def suppression_auto_message():
             """
@@ -122,12 +135,9 @@ class Botcrypto(commands.Bot):
             self.loop.create_task(suppression_messages(etat_bot))
             self.loop.create_task(suppression_messages(prise_position))
 
-        @ self.command(name="toto")
-        async def toto(ctx):
-            print(self.liste_bot_lancé, self.liste_symbol_bot_lancé)
-
-        # Démarrage tache suppression auto message
+        # Démarrage tache async
         self.loop.create_task(suppression_auto_message())
+        self.loop.create_task(arret_auto_bot())
 
         @ self.command(name="del")
         async def delete(ctx):
@@ -248,7 +258,7 @@ class Botcrypto(commands.Bot):
             # Puis on l'arrête si le bot est lancé
             if crypto in self.crypto_supporter:
                 if crypto in self.liste_symbol_bot_lancé:
-                    arret_bot(crypto)
+                    arret_manuel_bot(crypto)
 
                     await ctx.send("Bot arrêté !")
                 else:
@@ -281,22 +291,37 @@ class Botcrypto(commands.Bot):
             Fonction qui permet de vendre les cryptomonaies du bot à distance
             Sans devoir accéder à la platforme
             """
-            # On regarde le montant des deux cryptos
-            btcup = self.kucoin.montant_compte("BTC3L")
-            btcdown = self.kucoin.montant_compte("BTC3S")
+            question = "Quelle crypto ? BTC ? BNB ?"
 
-            kk = Kucoin("BTC", False)
+            await ctx.send(question)
+
+            # Vérifie que le message n'est pas celui envoyé par le bot
+            def check(m):
+                return m.content != question and m.channel == ctx.channel
+
+            # On attend la réponse
+            msg = await bot.wait_for("message", check=check)
+
+            # On récupère la crypto
+            crypto_symbol = msg.content
+
+            # On regarde le montant des deux cryptos
+            crypto_up = self.kucoin.montant_compte(f"{crypto_symbol}3L")
+            crypto_down = self.kucoin.montant_compte(f"{crypto_symbol}3S")
+
+            kucoin = Kucoin(crypto_symbol, False)
 
             # Et on vend la ou les cryptos en supprimant les ordres placés
-            if btcup > self.kucoin.minimum_crypto_up:
-                kk.achat_vente(btcup, "BTC3L-USDT", False)
+            if crypto_up > self.kucoin.minimum_crypto_up:
+                kucoin.achat_vente(crypto_up, f"{crypto_symbol}3L-USDT", False)
 
-                await ctx.send(f"{btcup} crypto up vendu !")
+                await ctx.send(f"{crypto_up} crypto up vendu !")
 
-            if btcdown > self.kucoin.minimum_crypto_down:
-                kk.achat_vente(btcdown, "BTC3S-USDT", False)
+            if crypto_down > self.kucoin.minimum_crypto_down:
+                kucoin.achat_vente(
+                    crypto_down, f"{crypto_symbol}3S-USDT", False)
 
-                await ctx.send(f"{btcdown} crypto down vendu !")
+                await ctx.send(f"{crypto_down} crypto down vendu !")
 
             # Et on renvoie les nouveaux montants sur le discord
             await montant(ctx)
