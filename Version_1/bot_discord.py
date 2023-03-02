@@ -372,18 +372,26 @@ class Botcrypto(commands.Bot):
             """
             Fonction qui renvoi le prix estimer de vente de la crypto
             """
-            if "prix_estimer" in self.kucoin.dico_partage:
-                await ctx.send(f"Le prix de vente estimer est de {self.kucoin.dico_partage['prix_estimer']}")
-                await ctx.send(f"Le prix de marché est de {self.kucoin.prix_temps_reel_kucoin('BTC-USDT')}")
-            else:
+            prix_estimer = False
+
+            # On parcours le dictionnaire à la recherche de prix estimer
+            for cle, valeur in self.kucoin.dico_partage.items():
+                if "prix_estimer_" in cle:
+                    crypto = cle.split("_")[-1]
+                    await ctx.send(f"Le prix de vente estimer de {crypto} est de {valeur}")
+                    await ctx.send(f"Le prix de marché est de {self.kucoin.prix_temps_reel_kucoin(f'{crypto}-USDT')}")
+
+                    # S'il y a bien un prix estimé, alors le message d'en dessous ne sert à rien
+                    prix_estimer = True
+
+            if prix_estimer == False:
                 await ctx.send("Il n'y a pas de position prise à l'heure actuel ou de prix enregistrer")
 
     async def on_ready(self):
         """
-        Fonction qui affiche dans la console "Bot crypto est prêt" lorsqu'il est opérationnel
-        Et enlève des processus le code python redemarrage si le programme est redémarré
+        Fonction qui affiche dans le canal général "Bot Discord démarré !" lorsqu'il est opérationnel
         """
-        self.msg_discord.message_canal_general("Bot démarré !")
+        self.msg_discord.message_canal_general("Bot Discord démarré !")
 
 
 if __name__ == "__main__":

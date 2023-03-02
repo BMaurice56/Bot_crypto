@@ -685,10 +685,10 @@ class Kucoin:
 
         # On stock dans le dictionaire partagé le prix estimer de vente sur le marché de base
         if "3L" in symbol:
-            self.dico_partage["prix_estimer"] = prix_marche * \
+            self.dico_partage[f"prix_estimer_{self.symbol_base}"] = prix_marche * \
                 (1 + (self.pourcentage_gain/3))
         else:
-            self.dico_partage["prix_estimer"] = prix_marche * \
+            self.dico_partage[f"prix_estimer_{self.symbol_base}"] = prix_marche * \
                 (1 - (self.pourcentage_gain/3))
 
         ##################################################################################
