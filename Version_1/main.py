@@ -14,10 +14,7 @@ class IA:
         Ex param :
         symbol : "BTC"
         """
-        self.symbol_base = symbol
-        self.symbol = f"{symbol}-USDT"
-        self.symbol_up = f"{symbol}3L-USDT"
-        self.symbol_down = f"{symbol}3S-USDT"
+        self.symbol = symbol
 
     # Fonction d'entrainement
 
@@ -99,11 +96,11 @@ class IA:
         """
 
         json_file = open(
-            f'Modele_1h_2.0/SPOT/{self.symbol_base}USDT/modele.json', 'r')
+            f'Modele_1h_2.0/SPOT/{self.symbol}USDT/modele.json', 'r')
         json_file_up = open(
-            f'Modele_1h_2.0/SPOT_EFFET_LEVIER/{self.symbol_base}UPUSDT/modele.json', 'r')
+            f'Modele_1h_2.0/SPOT_EFFET_LEVIER/{self.symbol}UPUSDT/modele.json', 'r')
         json_file_down = open(
-            f'Modele_1h_2.0/SPOT_EFFET_LEVIER/{self.symbol_base}DOWNUSDT/modele.json', 'r')
+            f'Modele_1h_2.0/SPOT_EFFET_LEVIER/{self.symbol}DOWNUSDT/modele.json', 'r')
 
         loaded_model_json = json_file.read()
         loaded_model_json_up = json_file_up.read()
@@ -118,11 +115,11 @@ class IA:
         loaded_model_down = model_from_json(loaded_model_json_down)
 
         loaded_model.load_weights(
-            f"Modele_1h_2.0/SPOT/{self.symbol_base}USDT/modele.h5")
+            f"Modele_1h_2.0/SPOT/{self.symbol}USDT/modele.h5")
         loaded_model_up.load_weights(
-            f"Modele_1h_2.0/SPOT_EFFET_LEVIER/{self.symbol_base}UPUSDT/modele.h5")
+            f"Modele_1h_2.0/SPOT_EFFET_LEVIER/{self.symbol}UPUSDT/modele.h5")
         loaded_model_down.load_weights(
-            f"Modele_1h_2.0/SPOT_EFFET_LEVIER/{self.symbol_base}DOWNUSDT/modele.h5")
+            f"Modele_1h_2.0/SPOT_EFFET_LEVIER/{self.symbol}DOWNUSDT/modele.h5")
 
         loaded_model.compile(
             loss='mean_squared_logarithmic_error', optimizer='adam')
@@ -144,7 +141,7 @@ class IA:
         if lecture_ecriture == "lecture":
             # On utilise try dans le cas où le fichier n'existe pas
             try:
-                fichier = open(f"etat_bot_{self.symbol_base}.txt", "r")
+                fichier = open(f"etat_bot_{self.symbol}.txt", "r")
 
                 elt = fichier.read()
 
@@ -155,7 +152,7 @@ class IA:
                 return ""
 
         elif lecture_ecriture == "écriture":
-            fichier = open(f"etat_bot_{self.symbol_base}.txt", "w")
+            fichier = open(f"etat_bot_{self.symbol}.txt", "w")
 
             fichier.write(to_write)
 
