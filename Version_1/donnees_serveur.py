@@ -183,6 +183,8 @@ class Kucoin:
         self.symbol_down_simple = f"{crypto}3S"
         self.devise = "USDT"
 
+        self.vente_manuelle = f"vente_manuelle_{self.symbol_base}"
+
         # Donne le symbol simple
         self.dico_symbol_simple = {self.symbol_up: self.symbol_up_simple,
                                    self.symbol_down: self.symbol_down_simple}
@@ -500,7 +502,7 @@ class Kucoin:
         # Lorsque l'on vend, on enlève l'ordre limit car soit il a été exécuté, soit il est toujours là
         if info["achat_vente"] == False:
             # Sert a savoir si c'est une vente manuelle ou l'ordre limite qui est exécuté
-            self.dico_partage[f"vente_manuelle_{self.symbol_base}"] = True
+            self.dico_partage[self.vente_manuelle] = True
 
             self.suppression_ordre()
 
@@ -536,8 +538,8 @@ class Kucoin:
             self.ordre_vente_seuil(info["symbol"])
 
             # On repasse la variable a False pour l'ordre limite
-            if f"vente_manuelle_{self.symbol_base}" in self.dico_partage:
-                del self.dico_partage[f"vente_manuelle_{self.symbol_base}"]
+            if self.vente_manuelle in self.dico_partage:
+                del self.dico_partage[self.vente_manuelle]
 
     def presence_position(self, symbol: str) -> dict or None:
         """
@@ -664,7 +666,7 @@ class Kucoin:
 
             # On le met a True pour que quand on replace l'ordre
             # Il n'y a pas entre temps un message de vente de l'ordre limite
-            self.dico_partage[f"vente_manuelle_{self.symbol_base}"] = True
+            self.dico_partage[self.vente_manuelle] = True
 
             # On supprime l'ancien ordre limite
             self.suppression_ordre()
@@ -725,8 +727,8 @@ class Kucoin:
         self.écriture_fichier(content["data"]["orderId"])
 
         # Et on supprime la valeur du dictionnaire (si descente de l'ordre limite)
-        if f"vente_manuelle_{self.symbol_base}" in self.dico_partage:
-            del self.dico_partage[f"vente_manuelle_{self.symbol_base}"]
+        if self.vente_manuelle in self.dico_partage:
+            del self.dico_partage[self.vente_manuelle]
 
     # Fonction qui tourne en continue
     def stoploss_manuel(self, symbol: str, prix_stop: float, event: Event, start: Optional[bool] = None) -> Thread:
@@ -820,7 +822,7 @@ class Kucoin:
                         id_ordrelimite = ""
 
                         # alors soit l'ordre est exécuté
-                        if f"vente_manuelle_{self.symbol_base}" not in self.dico_partage:
+                        if self.vente_manuelle not in self.dico_partage:
                             montant = self.montant_compte(self.devise)
 
                             self.msg_discord.message_canal_prise_position(
@@ -828,7 +830,7 @@ class Kucoin:
 
                         # Soit c'est une vente manuelle
                         else:
-                            del self.dico_partage[f"vente_manuelle_{self.symbol_base}"]
+                            del self.dico_partage[self.vente_manuelle]
 
                 # Sinon par sécurité, on remet l'id du stoploss dans le fichier
                 elif sl_3L != None:
