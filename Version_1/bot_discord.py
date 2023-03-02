@@ -51,7 +51,7 @@ class Botcrypto(commands.Bot):
                 erreur = traceback.format_exc()
 
                 self.msg_discord.message_erreur(
-                    erreur, "Erreur survenue au niveau du bot, arrêt du programme")
+                    erreur, f"Erreur survenue au niveau du bot {symbol}, arrêt du programme")
 
                 self.msg_discord.message_canal_general(
                     "Le bot s'est arrêté !")
