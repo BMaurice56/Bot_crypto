@@ -612,7 +612,7 @@ class Kucoin:
                 msg, 'Prise de position')
 
         else:
-            argent = self.montant_compte('USDT')
+            argent = self.montant_compte(self.devise)
 
             msg = f"Vente de position au prix de {prix}$, il reste {argent} usdt"
             self.msg_discord.message_canal_prise_position(
