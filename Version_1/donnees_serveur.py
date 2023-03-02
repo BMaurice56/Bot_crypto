@@ -188,7 +188,7 @@ class Kucoin:
                                    self.symbol_down: self.symbol_down_simple}
 
         # On récupère le priceIncrement de chaque crypto
-        with open("Autre_fichiers/priceIncrement", "r") as f:
+        with open("Autre_fichiers/priceIncrement.txt", "r") as f:
             self.dico_priceIncrement = json.loads(f.read())
 
         # Message discord
