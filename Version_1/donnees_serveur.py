@@ -187,6 +187,10 @@ class Kucoin:
         self.dico_symbol_simple = {self.symbol_up: self.symbol_up_simple,
                                    self.symbol_down: self.symbol_down_simple}
 
+        # On récupère le priceIncrement de chaque crypto
+        with open("Autre_fichiers/priceIncrement", "r") as f:
+            self.dico_priceIncrement = json.loads(f.read())
+
         # Message discord
         self.msg_discord = Message_discord()
 
@@ -202,18 +206,15 @@ class Kucoin:
             th2 = Thread(target=self.analyse_fichier)
             th2.start()
 
-    def arrondi(self, valeur: float or str, zero_apres_virgule: Optional[float] = None) -> float:
+    def arrondi(self, valeur: float or str, zero_apres_virgule: str) -> float:
         """
         Fonction qui prend en argument un décimal et renvoie ce décimal arrondi à 0,00001
         """
         # On transforme la valeur reçu en objet décimal
         val = Decimal(str(valeur))
 
-        # S'il y a pas de nombre après la virgule spécifié, on change rien
         # Puis on arrondi vers le bas le nombre que l'on renvoit sous forme d'un float
-        if zero_apres_virgule != None:
-            return float(val.quantize(Decimal(str(zero_apres_virgule)), ROUND_DOWN))
-        return float(val.quantize(Decimal('0.0001'), ROUND_DOWN))
+        return float(val.quantize(Decimal(str(zero_apres_virgule)), ROUND_DOWN))
 
     def headers(self, methode: str, endpoint: str, param: Optional[str] = None) -> dict:
         """
@@ -456,7 +457,7 @@ class Kucoin:
         # Avec seulement 99,9% de sa quantité initiale car pour l'achat des cryptos
         # -> aucun problème avec le nb de chiffres après la virgule et les frais de la platforme
         if argent != []:
-            money = self.arrondi(float(argent[0]['balance']) * 0.999)
+            money = self.arrondi(float(argent[0]['balance']) * 0.999, '0.0001')
             return money
         else:
             return 0
@@ -628,11 +629,8 @@ class Kucoin:
         # Récupération des prix de marchés
         prix = self.prix_temps_reel_kucoin(symbol)
 
-        zero_apres_virgule = "0.0001"
-
-        # Si crypto montante, elle autorise un nombre chiffre après virgule plus importante
-        if "3L" in symbol:
-            zero_apres_virgule = '0.000001'
+        # On récupère le priceIncrement de la crypto en question
+        zero_apres_virgule = self.dico_priceIncrement[symbol]
 
         # On stock le pourcentage de gain actuel dans une variable
         gain = self.pourcentage_gain
@@ -682,7 +680,7 @@ class Kucoin:
         # Puis on garde en mémoire le précedant gain, au cas où on souhaite baisser le prix
         self.precedant_gain = gain
 
-        ##################"" Calcul prix de vente estimer ###############################
+        #################### Calcul prix de vente estimer ###############################
         prix_marche = self.prix_temps_reel_kucoin(self.symbol)
 
         # On stock dans le dictionaire partagé le prix estimer de vente sur le marché de base
