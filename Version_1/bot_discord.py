@@ -38,21 +38,6 @@ class Botcrypto(commands.Bot):
         with open("Autre_fichiers/crypto_supporter.txt", "r") as f:
             self.crypto_supporter = f.read().split(";")
 
-        def arret_manuel_bot(symbol):
-            """
-            Fonction qui arrête le bot
-            """
-            for p in self.liste_bot_lancé:
-                if p.name == symbol:
-                    # On supprime le processus des listes
-                    self.liste_bot_lancé.remove(p)
-                    self.liste_symbol_bot_lancé.remove(symbol)
-
-                    # On récupère l'id du processus du bot et on l'arrête
-                    os.kill(p.ident, 9)
-
-                    break
-
         def lancement_bot(symbol):
             """
             Fonction qui permet de lancer le bot
@@ -70,6 +55,21 @@ class Botcrypto(commands.Bot):
 
                 self.msg_discord.message_canal_general(
                     "Le bot s'est arrêté !")
+
+        def arret_manuel_bot(symbol):
+            """
+            Fonction qui arrête le bot
+            """
+            for p in self.liste_bot_lancé:
+                if p.name == symbol:
+                    # On supprime le processus des listes
+                    self.liste_bot_lancé.remove(p)
+                    self.liste_symbol_bot_lancé.remove(symbol)
+
+                    # On récupère l'id du processus du bot et on l'arrête
+                    os.kill(p.ident, 9)
+
+                    break
 
         async def arret_auto_bot():
             """

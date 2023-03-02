@@ -188,7 +188,7 @@ def kill_process(p: Process) -> None:
         p.kill()
 
 
-def kill_thread(th: Thread, event: Event):
+def kill_thread(th: Thread, event: Event) -> None:
     """
     Fonction qui tue le thread passé en argument
     """
