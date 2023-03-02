@@ -12,9 +12,6 @@ import sys
 sys.path[:0] = ['Version_1/']
 """
 
-# Commande d'arret des programmes
-commande_bot_terminale = """ps -aux | grep "bot_discord.py"| awk -F " " '{ print $2 }' """
-
 
 class Botcrypto(commands.Bot):
 
@@ -347,7 +344,7 @@ class Botcrypto(commands.Bot):
             Fonction qui redemarre le bot discord et met à jour ses fichiers
             """
 
-            Popen("nohup python3 redemarrage.py >/dev/null 2>&1", shell=True)
+            Popen("nohup python3.10 redemarrage.py >/dev/null 2>&1", shell=True)
 
         @ self.command(name="message")
         async def message(ctx):
