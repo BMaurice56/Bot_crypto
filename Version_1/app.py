@@ -115,10 +115,10 @@ while True:
     prediction_down = ia.prédiction_keras(
         data_down, rsi_vwap_cmf_down, loaded_model_down)
 
-    état = f"programme toujours en cour d'exécution le : {date}\n" + \
-        f"prix de la crypto : {prix}, prix de la prédiction : {prediction}\n" + \
-        f"prix crypto up : {prix_up}, prix de la prédiction : {prediction_up}\n" + \
-        f"prix crypto down : {prix_down}, prix de la prédiction : {prediction_down}"
+    état = f"Bot {symbol} toujours en cour d'exécution le : {date}\n" + \
+        f"Différence de prix : {ia.différence_prix(prix, prediction)}\n" + \
+        f"Différence de prix up : {ia.différence_prix(prix_up, prediction_up)}\n" + \
+        f"Différence de prix down: {ia.différence_prix(prix_down, prediction_down)}"
 
     msg_discord.message_canal_etat_bot(état, 'Etat du bot !')
 

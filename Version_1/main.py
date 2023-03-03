@@ -154,20 +154,27 @@ class IA:
 
             fichier.close()
 
+    def différence_prix(self, prix_1: float, prix_2: float) -> float:
+        """
+        Renvoie la différence entre deux prix
+        Différence toujours positive
+        """
+        return max(prix_1, prix_2) - min(prix_1, prix_2)
+
     def validation_achat(self, prix: float, prix_up: float, prix_down: float, prediction: float, prediction_up: float, prediction_down: float) -> int or None:
         """
         Fonction qui valide ou non l'achat d'une crypto
         """
         if prix < prediction and prix_up < prediction_up and prix_down > prediction_down:
             if self.symbol == "BTC":
-                if prediction_up - prix_up >= 0.045 and prediction_down <= 0.03:
+                if self.différence_prix(prix_up, prediction_up) >= 0.045 and prediction_down <= 0.03:
                     return 1
             else:
                 return 1
 
         if prix > prediction and prix_up > prediction_up and prix_down < prediction_down:
             if self.symbol == "BTC":
-                if prix_up - prediction_up >= 0.045 and prediction_down >= 0.0245:
+                if self.différence_prix(prix_up, prediction_up) >= 0.045 and prediction_down >= 0.0245:
                     return 0
             else:
                 return 0
