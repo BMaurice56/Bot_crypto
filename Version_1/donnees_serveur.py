@@ -459,7 +459,12 @@ class Kucoin:
         # Avec seulement 99,9% de sa quantité initiale car pour l'achat des cryptos
         # -> aucun problème avec le nb de chiffres après la virgule et les frais de la platforme
         if argent != []:
+            # if symbol == self.devise:
+            #    if argent[0] > 25:
+            #        argent = [25]
+
             money = self.arrondi(float(argent[0]['balance']) * 0.999, '0.0001')
+
             return money
         else:
             return 0
