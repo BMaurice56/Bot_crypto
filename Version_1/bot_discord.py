@@ -185,7 +185,7 @@ class Botcrypto(commands.Bot):
             Affiche le prix en temps réel de la crypto
             """
             for crypto in self.crypto_supporter:
-                await ctx.send(f"Le prix de {crypto} est de : {self.kucoin.prix_temps_reel_kucoin(crypto)}")
+                await ctx.send(f"Le prix de {crypto} est de : {self.kucoin.prix_temps_reel_kucoin(f'{crypto}-USDT')}")
 
         @ self.command(name="start")
         async def start(ctx):
