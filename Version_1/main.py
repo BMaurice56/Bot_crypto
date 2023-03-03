@@ -88,39 +88,35 @@ class IA:
 
     # Fonction de chargement des modèles
 
-    def chargement_modele(self):
+    def chargement_modele(self) -> None:
         """
         Fonction qui charge et renvoie les trois modèles
-        Ex param :
-        symbol : "BTC"
         """
+        # Emplacement des réseaux de neuronnes
+        emplacement = f"Modele_1h_2.0/SPOT/{self.symbol}USDT/"
+        emplacement_up = f"Modele_1h_2.0/SPOT_EFFET_LEVIER/{self.symbol}UPUSDT/"
+        emplacement_down = f"Modele_1h_2.0/SPOT_EFFET_LEVIER/{self.symbol}DOWNUSDT/"
 
-        json_file = open(
-            f'Modele_1h_2.0/SPOT/{self.symbol}USDT/modele.json', 'r')
-        json_file_up = open(
-            f'Modele_1h_2.0/SPOT_EFFET_LEVIER/{self.symbol}UPUSDT/modele.json', 'r')
-        json_file_down = open(
-            f'Modele_1h_2.0/SPOT_EFFET_LEVIER/{self.symbol}DOWNUSDT/modele.json', 'r')
+        # Fichiers
+        fichier_json = "modele.json"
+        fichier_h5 = "modele.h5"
 
-        loaded_model_json = json_file.read()
-        loaded_model_json_up = json_file_up.read()
-        loaded_model_json_down = json_file_down.read()
+        # Chargement de la configuration du réseau
+        with open(emplacement + fichier_json, "r") as f:
+            loaded_model = model_from_json(f.read())
 
-        json_file.close()
-        json_file_up.close()
-        json_file_down.close()
+        with open(emplacement_up + fichier_json, "r") as f_up:
+            loaded_model_up = model_from_json(f_up.read())
 
-        loaded_model = model_from_json(loaded_model_json)
-        loaded_model_up = model_from_json(loaded_model_json_up)
-        loaded_model_down = model_from_json(loaded_model_json_down)
+        with open(emplacement_down + fichier_json, "r") as f_down:
+            loaded_model_down = model_from_json(f_down.read())
 
-        loaded_model.load_weights(
-            f"Modele_1h_2.0/SPOT/{self.symbol}USDT/modele.h5")
-        loaded_model_up.load_weights(
-            f"Modele_1h_2.0/SPOT_EFFET_LEVIER/{self.symbol}UPUSDT/modele.h5")
-        loaded_model_down.load_weights(
-            f"Modele_1h_2.0/SPOT_EFFET_LEVIER/{self.symbol}DOWNUSDT/modele.h5")
+        # Chargement des poids
+        loaded_model.load_weights(emplacement + fichier_h5)
+        loaded_model_up.load_weights(emplacement_up + fichier_h5)
+        loaded_model_down.load_weights(emplacement_down + fichier_h5)
 
+        # Configurations des modèles
         loaded_model.compile(
             loss='mean_squared_logarithmic_error', optimizer='adam')
         loaded_model_up.compile(
@@ -163,11 +159,17 @@ class IA:
         Fonction qui valide ou non l'achat d'une crypto
         """
         if prix < prediction and prix_up < prediction_up and prix_down > prediction_down:
-            if prediction_up - prix_up >= 0.045 and prediction_down <= 0.03:
+            if self.symbol == "BTC":
+                if prediction_up - prix_up >= 0.045 and prediction_down <= 0.03:
+                    return 1
+            else:
                 return 1
 
         if prix > prediction and prix_up > prediction_up and prix_down < prediction_down:
-            if prix_up - prediction_up >= 0.045 and prediction_down >= 0.0245:
+            if self.symbol == "BTC":
+                if prix_up - prediction_up >= 0.045 and prediction_down >= 0.0245:
+                    return 0
+            else:
                 return 0
 
         return None
