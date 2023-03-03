@@ -11,6 +11,7 @@ class IA:
     def __init__(self, symbol) -> None:
         """
         Initialise un objet IA permet d'interagir avec ou de les créer
+
         Ex param :
         symbol : "BTC"
         """
@@ -20,7 +21,7 @@ class IA:
 
     def training_keras(self) -> None:
         """
-        Fonction qui entraine les neurones et les sauvegardes
+        Entraine les neurones et les sauvegardes
         """
 
         X, y = select_donnée_bdd("numpy")
@@ -50,7 +51,7 @@ class IA:
 
     def prédiction_keras(self, donnée_serveur_data: pandas.DataFrame, donnée_serveur_rsi: pandas.DataFrame, Modèle) -> float:
         """
-        Fonction qui fait les prédiction et renvoie le prix potentiel de la crypto
+        Fait les prédiction et renvoie le prix potentiel de la crypto
         """
 
         ls = [SMA(donnée_serveur_data), EMA(donnée_serveur_data), ADX(donnée_serveur_data),
@@ -90,7 +91,7 @@ class IA:
 
     def chargement_modele(self) -> None:
         """
-        Fonction qui charge et renvoie les trois modèles
+        Charge et renvoie les trois modèles
         """
         # Emplacement des réseaux de neuronnes
         emplacement = f"Modele_1h_2.0/SPOT/{self.symbol}USDT/"
@@ -128,16 +129,19 @@ class IA:
 
     def etat_bot(self, lecture_ecriture: str, to_write: Optional[str] = None) -> str or None:
         """
-        Fonction qui écrit ou lit dans un fichier l'état du bot (prédiction, heure)
+        Ecrit ou lit dans un fichier l'état du bot (prédiction, heure)
         Pour que quand le bot démarre, sait s'il doit attendre l'heure et si on sors d'une divergence
-        Ex param :
+
+        Ex params :
         lecture_ecriture : lecture ou écriture
+        to_write (optionnel) : élément à écrire dans le fichier
         """
+        fichier = f"etat_bot_{self.symbol}.txt"
 
         if lecture_ecriture == "lecture":
             # On utilise try dans le cas où le fichier n'existe pas
             try:
-                fichier = open(f"etat_bot_{self.symbol}.txt", "r")
+                fichier = open(fichier, "r")
 
                 elt = fichier.read()
 
@@ -148,7 +152,7 @@ class IA:
                 return ""
 
         elif lecture_ecriture == "écriture":
-            fichier = open(f"etat_bot_{self.symbol}.txt", "w")
+            fichier = open(fichier, "w")
 
             fichier.write(to_write)
 
@@ -163,7 +167,7 @@ class IA:
 
     def validation_achat(self, prix: float, prix_up: float, prix_down: float, prediction: float, prediction_up: float, prediction_down: float) -> int or None:
         """
-        Fonction qui valide ou non l'achat d'une crypto
+        Valide ou non l'achat d'une crypto
         """
         if prix < prediction and prix_up < prediction_up and prix_down > prediction_down:
             if self.symbol == "BTC":
@@ -184,7 +188,7 @@ class IA:
 
 def kill_process(p: Process) -> None:
     """
-    Fonction qui tue le processus passé en argument
+    Tue le processus passé en argument
     """
     # Etat du processus
     statut = p.is_alive()
@@ -196,7 +200,7 @@ def kill_process(p: Process) -> None:
 
 def kill_thread(th: Thread, event: Event) -> None:
     """
-    Fonction qui tue le thread passé en argument
+    Tue le thread passé en argument
     """
     # Etat du thread
     statut = th.is_alive()

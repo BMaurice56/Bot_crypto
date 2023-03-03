@@ -3,7 +3,7 @@ import paramiko
 
 def récupération_fichier():
     """
-    Fonction qui récupère les fichiers logs sur le serveur
+    Récupère les fichiers logs sur le serveur
     """
 
     # Créer une instance de la classe Paramiko SSHClient

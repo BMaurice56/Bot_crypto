@@ -40,8 +40,8 @@ class Botcrypto(commands.Bot):
 
         def lancement_bot(symbol):
             """
-            Fonction qui permet de lancer le bot
-            Et de renvoyer l'erreur sur le serveur s'il y en a une qui apparait
+            Permet de lancer le bot
+            Renvoit l'erreur sur le serveur s'il y en a une qui apparait
             """
             try:
                 self.msg_discord.message_canal_general("Le bot est lancé !")
@@ -58,7 +58,7 @@ class Botcrypto(commands.Bot):
 
         def arret_manuel_bot(symbol):
             """
-            Fonction qui arrête le bot
+            Arrête le bot
             """
             for p in self.liste_bot_lancé:
                 if p.name == symbol:
@@ -73,7 +73,7 @@ class Botcrypto(commands.Bot):
 
         async def arret_auto_bot():
             """
-            Fonction qui supprime automatiquement de la liste les processus arrêté
+            Supprime automatiquement de la liste les processus arrêté
             """
             while True:
                 for process in self.liste_bot_lancé:
@@ -89,7 +89,7 @@ class Botcrypto(commands.Bot):
 
         async def suppression_auto_message():
             """
-            Fonction qui supprime automatiquement les messages sur les canal état-bot et prise-position
+            Supprime automatiquement les messages sur les canal état-bot et prise-position
             s'il y a plus de 10 messages
             Evite que les canaux soient trop chargé par les messages du bot
             Evite la suppresion manuel et total des messages
@@ -106,7 +106,7 @@ class Botcrypto(commands.Bot):
 
             async def suppression_messages(channel):
                 """
-                Fonction interne qui supprime les messages d'un canal
+                Supprime les messages d'un canal
                 """
                 while True:
                     # Récupération des messages
@@ -139,7 +139,7 @@ class Botcrypto(commands.Bot):
         @ self.command(name="del")
         async def delete(ctx):
             """
-            Fonction qui supprime tous les messages de la conversation
+            Supprime tous les messages de la conversation
             """
             messages = await ctx.channel.history().flatten()
 
@@ -182,7 +182,7 @@ class Botcrypto(commands.Bot):
         @ self.command(name="prix")
         async def prix(ctx):
             """
-            Fonction qui affiche le prix en temps réel de la crypto
+            Affiche le prix en temps réel de la crypto
             """
             for crypto in self.crypto_supporter:
                 await ctx.send(f"Le prix de {crypto} est de : {self.kucoin.prix_temps_reel_kucoin(crypto)}")
@@ -190,7 +190,7 @@ class Botcrypto(commands.Bot):
         @ self.command(name="start")
         async def start(ctx):
             """
-            Fonction qui lance en processus le bot de crypto
+            Lance en processus le bot de crypto
             Permet de ne pas bloquer le bot discord et donc d'executre d'autre commandes à coté
             Comme l'arrêt du bot ou le relancer, le prix à l'instant T, etc...
             """
@@ -229,8 +229,7 @@ class Botcrypto(commands.Bot):
         @ self.command(name="stop")
         async def stop(ctx):
             """
-            Fonction qui stop le bot
-            Tue le processus du bot ainsi que les processus qui chargent la bdd si ce n'est pas fini
+            Stop le bot (tue son processus)
             """
             question = "Quel bot arrêté ?"
             bot_lancé = "Bot lancé : "
@@ -267,7 +266,7 @@ class Botcrypto(commands.Bot):
         @ self.command(name="statut")
         async def statut(ctx):
             """
-            Fonction qui renvoie le statut du bot discord et celui de la crypto
+            Renvoie le statut du bot discord et celui de trading
             """
             await ctx.send("Bot discord toujours en cours d'exécution !")
 
@@ -285,7 +284,7 @@ class Botcrypto(commands.Bot):
         @ self.command(name="vente")
         async def vente(ctx):
             """
-            Fonction qui permet de vendre les cryptomonaies du bot à distance
+            Permet de vendre les cryptomonaies du bot à distance
             Sans devoir accéder à la platforme
             """
             question = "Quelle crypto ? BTC ? BNB ?"
@@ -326,7 +325,7 @@ class Botcrypto(commands.Bot):
         @ self.command(name="montant")
         async def montant(ctx):
             """
-            Fonction qui renvoie le montant du compte des cryptos
+            Renvoie le montant du compte des cryptos
             """
 
             argent = self.kucoin.montant_compte(self.kucoin.devise)
@@ -341,7 +340,7 @@ class Botcrypto(commands.Bot):
         @ self.command(name="redemarrage")
         async def redemarrage(ctx):
             """
-            Fonction qui redemarre le bot discord et met à jour ses fichiers
+            redemarre le bot discord et met à jour ses fichiers
             """
 
             Popen("nohup python3.10 redemarrage.py >/dev/null 2>&1", shell=True)
@@ -349,7 +348,7 @@ class Botcrypto(commands.Bot):
         @ self.command(name="message")
         async def message(ctx):
             """
-            Fonction qui permet d'enregistrer l'état du bot, des prédictions ainsi que le prix des cryptos
+            Permet d'enregistrer l'état du bot, des prédictions ainsi que le prix des cryptos
             """
 
             messages = await ctx.channel.history().flatten()
@@ -370,7 +369,7 @@ class Botcrypto(commands.Bot):
         @ self.command(name="estimation")
         async def estimation(ctx):
             """
-            Fonction qui renvoi le prix estimer de vente de la crypto
+            Renvoi le prix estimer de vente de la crypto
             """
             prix_estimer = False
 
@@ -389,7 +388,7 @@ class Botcrypto(commands.Bot):
 
     async def on_ready(self):
         """
-        Fonction qui affiche dans le canal général "Bot Discord démarré !" lorsqu'il est opérationnel
+        Affiche dans le canal général "Bot Discord démarré !" lorsqu'il est opérationnel
         """
         self.msg_discord.message_canal_general("Bot Discord démarré !")
 

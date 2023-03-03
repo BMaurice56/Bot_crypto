@@ -20,7 +20,7 @@ class Message_discord:
 
     def message_canal_general(self, message: str, titre: Optional[str] = None):
         """
-        Fonction qui envoi un message sur le canal général
+        Envoi un message sur le canal général
         """
         webhook = DiscordWebhook(
             url=self.adr_webhook_général, username=self.nom, content=message)
@@ -37,7 +37,7 @@ class Message_discord:
 
     def message_canal_etat_bot(self, message: str, titre: Optional[str] = None):
         """
-        Fonction qui envoi un message sur le canal général
+        Envoi un message sur le canal général
         """
         webhook = DiscordWebhook(
             url=self.adr_webhook_état_bot, username=self.nom, content=message)
@@ -54,7 +54,7 @@ class Message_discord:
 
     def message_canal_prise_position(self, message: str, titre: Optional[str] = None):
         """
-        Fonction qui envoi un message sur le canal général
+        Envoi un message sur le canal général
         """
         webhook = DiscordWebhook(
             url=self.adr_webhook_prise_position, username=self.nom, content=message)
@@ -71,7 +71,7 @@ class Message_discord:
 
     def message_erreur(self, erreur: str, emplacement_erreur: str) -> None:
         """
-        Fonction qui gère de recevoir une erreur et de l'envoyer sur le canal discord
+        S'occupe de recevoir une erreur et de l'envoyer sur le canal discord
         """
         fichier = open("fichier_log/log_erreur.txt", "a")
 

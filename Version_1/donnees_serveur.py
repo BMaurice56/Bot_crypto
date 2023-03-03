@@ -31,7 +31,7 @@ locale.setlocale(locale.LC_ALL, 'fr_FR.UTF-8')
 
 class Binance:
     """
-    Classe qui permet d'interagir avec les données des serveurs de binance
+    Classe Binance qui permet l'interaction avec les serveurs de binance
     """
 
     def __init__(self) -> None:
@@ -46,10 +46,11 @@ class Binance:
 
     def donnée(self, symbol: str, début: str, fin: str) -> pandas.DataFrame:
         """
-        Fonction qui prend en argument un symbol de type "BTCEUR" ou encore "ETHEUR" etc...
-        Et qui renvoie les données sous forme d'une dataframe pandas
-        Ex param :
-        symbol : 'BTCEUR'
+        Prend en argument un symbol de type "BTCUSDT" ou encore "ETHUSDT" ...
+        Renvoie les données sous forme d'une dataframe pandas
+
+        Ex params :
+        symbol : "BTCUSDT"
         début : "40 hour ago UTC" 
         fin : "0 hour ago UTC" ...
         """
@@ -78,10 +79,11 @@ class Binance:
 
     def all_data(self, symbol: str) -> dict:
         """
-        Fonction qui prend en argument un symbol
-        Et renvoie toutes les données de tous les jetons (ceux avec effet de levier aussi) sous forme d'un seul dictionnaire
+        Prend en argument un symbol
+        Renvoie un dictionnaire de avec toutes les données (+ ceux avec effet de levier)
+
         Ex param :
-        symbol : BTC
+        symbol : "BTC"
         """
         # Création du dictionnaire que recevra toutes les dataframes avec les données
         manager = Manager()
@@ -90,7 +92,13 @@ class Binance:
         @retry(retry=retry_if_exception_type((requests.exceptions.SSLError, requests.exceptions.ConnectionError)), stop=stop_after_attempt(3))
         def requete(sl: str, limit: str, dictionnaire: dict, position_list: int):
             """
-            Fonction qui récupère les données d'une crypto de façon asyncrone
+            Récupère les données d'une crypto de façon parallèle
+
+            Ex params:
+            sl : "BTCUSDT"
+            limit : 40
+            dictionnaire : dictionnaire qui gère le stockage multiprocess
+            position_liste : Emplacement dans le dictionnaire
             """
             api = """https://api.binance.com/api/v3/klines"""
 
@@ -169,7 +177,7 @@ class Kucoin:
         self.pourcentage_gain = 0.015
         self.precedant_gain = 0.015
 
-        # Les prix des cryptos de kucoin sont l'inverse de binance
+        # Prix des cryptos de kucoin -> l'inverse de binance
         self.minimum_crypto_up = 5000
         self.minimum_crypto_down = 5
 
@@ -196,7 +204,7 @@ class Kucoin:
         # Message discord
         self.msg_discord = Message_discord()
 
-        # Diction partagé entre programme
+        # Dictionnaire partagé entre programme
         self.dico_partage = SharedMemoryDict(name="dico", size=1024)
 
         # Si on créer un objet Kucoin en dehors de discord -> bot de trading
@@ -210,7 +218,11 @@ class Kucoin:
 
     def arrondi(self, valeur: float or str, zero_apres_virgule: str) -> float:
         """
-        Fonction qui prend en argument un décimal et renvoie ce décimal arrondi à 0,00001
+        Prend en argument un décimal 
+        Renvoie un décimal arrondi
+
+        Ex params:
+        valeur : 56.36 ou "56.36"
         """
         # On transforme la valeur reçu en objet décimal
         val = Decimal(str(valeur))
@@ -220,8 +232,9 @@ class Kucoin:
 
     def headers(self, methode: str, endpoint: str, param: Optional[str] = None) -> dict:
         """
-        Fonction qui fait l'entête de la requête http
-        Ex paramètre :
+        Créer l'entête de la requête http
+
+        Ex params :
         methode : 'GET'
         endpoint : 'api/v1/orders'
         param : none ou dict sous forme json.dumps() -> str
@@ -256,7 +269,7 @@ class Kucoin:
 
     def comparaisons(self, valeur_1: float, valeur_2: float, sens_comparaison: bool) -> bool:
         """
-        Fonction qui compare deux décimaux entre eux
+        Compare deux décimaux entre eux
         Sens_comparaison définit le sens dans lequel les deux valeurs doivent être comparées
         Si True : valeur_1 >= valeur_2
         Sinon : valeur_1 <= valeur_2
@@ -268,8 +281,8 @@ class Kucoin:
 
     def lecture_fichier(self) -> str or None:
         """
-        Fonction qui lit ce qu'il y a dans le fichier 
-        Et renvoie le contenu ou None s'il y a rien
+        Lit le contenu du ficher ordre_limit
+        Renvoie le contenu ou None
         """
         # On utilise try dans le cas où le fichier n'existe pas
         try:
@@ -287,9 +300,10 @@ class Kucoin:
 
     def écriture_fichier(self, str_to_write: Optional[str] = None) -> None:
         """
-        Fonction qui écrit ou écrase le fichier
+        Ecrit ou écrase le fichier
+
         Ex param :
-        str_to_write : id de l'ordre
+        str_to_write (optionnel) : id de l'ordre
         """
 
         fichier = open(f"ordre_limit_{self.symbol_base}.txt", "w")
@@ -301,9 +315,10 @@ class Kucoin:
 
     def écriture_requete(self, requete: str, emplacement: str) -> None:
         """
-        Fonction qui écrit toutes les requêtes dans un fichier (leur résultat)
+        Ecrit toutes les requêtes dans un fichier (résultat)
         Ainsi que la date
-        Ex param :
+
+        Ex params :
         requete : données de la requête
         emplacement : "requete", "presence_position", "stoploss"
         """
@@ -325,9 +340,10 @@ class Kucoin:
 
         fichier.close()
 
-    def analyse_fichier(self):
+    def analyse_fichier(self) -> None:
         """
-        Fonction qui analyse le fichier et renvoie tous les problèmes
+        Aanalyse les fichiers log
+        Ecrit toutes les erreurs dans un fichier
         """
         fichier_en_cours = ""
         try:
@@ -403,8 +419,10 @@ class Kucoin:
     @retry(retry=retry_if_exception_type((requests.exceptions.SSLError, requests.exceptions.ConnectionError, json.decoder.JSONDecodeError)), stop=stop_after_attempt(3))
     def requete(self, get_post_del: str, endpoint: str, log: str, param: Optional[dict] = None) -> dict:
         """
-        Fonction qui exécute la requête sur le serveur
-        Ex param : 
+        Exécute la requête sur le serveur
+        Renvoi un dictionnaire
+
+        Ex params : 
         get_post_del : 'GET', 'POST', 'DELETE'
         endpoint : '/api/v1/accounts...'
         log : 'requete', 'stoploss', 'presence_position'
@@ -438,9 +456,11 @@ class Kucoin:
 
     def montant_compte(self, symbol: str, type_requete: Optional[str] = None) -> float:
         """
-        Fonction qui renvoie le montant que possède le compte selon le ou les symbols voulus
-        Ex paramètre :
+        Renvoie le montant que possède le compte selon le symbol voulus
+
+        Ex params :
         symbol : USDT ou BTC3L
+        type_requete (optionnel) : "requete" ou "stoploss"
         """
         # On défini la terminaison de la requête
         endpoint = f"/api/v1/accounts?currency={symbol}&type=trade"
@@ -471,9 +491,11 @@ class Kucoin:
 
     def prix_temps_reel_kucoin(self, symbol: str, type_requete: Optional[str] = None) -> float:
         """
-        Fonction qui renvoie le prix de la crypto en temps réel
-        Ex paramètre : 
+        Renvoie le prix de la crypto en temps réel
+
+        Ex params : 
         symbol : BTC3S-USDT
+        type_requete (optionnel) : "requete" ou "stoploss"
         """
         # On défini la terminaison de la requête
         endpoint = f"/api/v1/market/orderbook/level1?symbol={symbol}"
@@ -493,11 +515,12 @@ class Kucoin:
 
     def prise_position(self, info: dict) -> None:
         """
-        Fonction qui prend une position soit d'achat soit de vente et place un stoploss
-        Quand on achète on place automatiquement un stoploss
-        Et quand on vend, on retire le stoploss et/ou l'ordre s'il n'a pas été exécuté
+        Prend une position soit d'achat soit de vente et place un stoploss
+        Place automatiquement un stoploss
+        Lorsque qu'on vend, on retire l'ordre
         Renvoie l'id de la position prise
-        Ex paramètres :
+
+        Ex params :
         info : {
         "montant" : "20",
         "symbol" : "BTC3S-USDT",
@@ -548,8 +571,9 @@ class Kucoin:
 
     def presence_position(self, symbol: str) -> dict or None:
         """
-        Fonction qui renvoie les positions en cours sur une pair de crypto précis
-        Ex paramètre :
+        Renvoie les positions en cours sur une pair de crypto précis
+
+        Ex params :
         symbol : BTC3S-USDT
 
         Sortie de la fonction :
@@ -577,7 +601,7 @@ class Kucoin:
 
     def suppression_ordre(self) -> None:
         """
-        Fonction qui supprime un ordre selon qu'il soit un stoploss ou un simple ordre
+        Supprime l'ordre s'il existe
         """
         # On récupère l'id de l'ordre
         id_ordre = self.lecture_fichier()
@@ -597,8 +621,9 @@ class Kucoin:
 
     def achat_vente(self, montant: float, symbol: str, achat_ou_vente: bool) -> None:
         """
-        Fonction qui achète ou vente les cryptomonnaies
-        Ex param :
+        Achète ou vente les cryptomonnaies
+
+        Ex params :
         Achat : montant : 200 (USDT), symbol : "BTC3L-USDT, achat_vente : True
         Vente : montant : 48 (BTC3L-USDT), "BTC3L-USDT", achat_vente : False
         """
@@ -627,8 +652,9 @@ class Kucoin:
 
     def ordre_vente_seuil(self, symbol: str, nouveau_gain: Optional[float] = None) -> None:
         """
-        Fonction qui place l'ordre limite de vente
-        Ex param
+        Place l'ordre limite de vente
+
+        Ex params :
         symbol : BTC3S-USDT
         nouveau_gain (optionnel) : 0.002, 0.0175...
         """
@@ -738,12 +764,13 @@ class Kucoin:
     # Fonction qui tourne en continue
     def stoploss_manuel(self, symbol: str, prix_stop: float, event: Event, start: Optional[bool] = None) -> Thread:
         """
-        Fonction qui fait office de stoploss mais de façon manuel
+        Fait office de stoploss mais de façon manuel
         Basé sur le prix du marché normal, pas celui des jetons à effet de levier
-        Ex param : 
+
+        Ex params : 
         symbol : BTC3S-USDT
         prix_stop : 23450.2463
-        start : True pour démarrer ou laisser à None
+        start (optionnel) : True pour démarrer ou laisser à None
         """
 
         def stoploss_thread(symbol: str, prix_stop: float, event: Event):
@@ -808,7 +835,7 @@ class Kucoin:
 
     def update_id_ordre_limite(self) -> None:
         """
-        Fonction qui maintien à jour l'id de l'ordre limite dans le fichier
+        Maintien à jour l'id de l'ordre limite dans le fichier
         S'il l'ordre a été executé alors on enlève l'id du fichier
         """
         try:

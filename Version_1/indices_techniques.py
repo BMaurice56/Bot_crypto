@@ -9,7 +9,7 @@ import math
 
 def moyenne(liste: list or dict) -> float:
     """
-    Fonction qui calcule la moyenne des éléments d'une liste d'entier ou de décimaux
+    Calcule la moyenne des éléments d'une liste d'entier ou de décimaux
     Obliger de faire la deuxième liste en deux étape car parfois, les nombres décimaux
     sont sous forme d'une chaine de caractère, et donc faut d'abord les re-transformer en décimaux
     """
@@ -26,8 +26,8 @@ def moyenne(liste: list or dict) -> float:
 
 def RSI(donnée_rsi: pandas.DataFrame) -> float:
     """
-    Fonction qui prend en argument une dataframe pandas et une durée qui est un entier
-    Et renvoie le rsi sous forme d'un float
+    Prend en argument une dataframe pandas et une durée qui est un entier
+    Renvoie le rsi sous forme d'un float
     """
     # On récupère les données de la colonne close
     data = [float(x) for x in donnée_rsi.close.values]
@@ -46,8 +46,8 @@ def RSI(donnée_rsi: pandas.DataFrame) -> float:
 
 def VWAP(donnée_vwap: pandas.DataFrame) -> float:
     """
-    Fonction qui prend en argument une dataframe pandas
-    Et qui renvoie le vwap sous forme d'une float
+    Prend en argument une dataframe pandas
+    Renvoie le vwap sous forme d'une float
     """
 
     haut = [float(x) for x in donnée_vwap.high.values]
@@ -72,8 +72,8 @@ def VWAP(donnée_vwap: pandas.DataFrame) -> float:
 
 def chaikin_money_flow(donnée_cmf: pandas.DataFrame) -> float:
     """
-    Fonction qui prend en argument une dataframe pandas
-    Et qui renvoie le cmf sous forme d'un float
+    Prend en argument une dataframe pandas
+    Renvoie le cmf sous forme d'un float
     Daily Money Flow = [((Close – Low) – (High – Close)) / (High – Low)] * Volume
     Chaikin Money Flow = 21-Day Average of Daily Money Flow / 21-Day Average of Volume
     """
@@ -104,7 +104,7 @@ def chaikin_money_flow(donnée_cmf: pandas.DataFrame) -> float:
 
 def CCI(donnée_cci: pandas.DataFrame) -> float:
     """
-    Fonction qui calcule le CCI (tente d'interpréter les signaux d'achat 
+    Calcule le CCI (tente d'interpréter les signaux d'achat 
     et de vente et peut identifier les zones de surachat et de 
     survente de l'action des prix)
     """
@@ -123,7 +123,7 @@ def CCI(donnée_cci: pandas.DataFrame) -> float:
 
 def MFI(donnée_mfi: pandas.DataFrame) -> float:
     """
-    Fonction qui calcul le MFI (utile pour confirmer les tendances 
+    Calcul le MFI (utile pour confirmer les tendances 
     des prix et avertir d'éventuels renversements de prix)
     """
     data_volume = [float(x) for x in donnée_mfi.volume.values]
@@ -143,7 +143,7 @@ def MFI(donnée_mfi: pandas.DataFrame) -> float:
 
 def LinearRegression(donnée_lr: pandas.DataFrame) -> float:
     """
-    Fonction qui calcule la régrésion linéraire
+    Calcule la régrésion linéraire
     """
     data_close = [float(x) for x in donnée_lr.close.values]
 
@@ -156,7 +156,7 @@ def LinearRegression(donnée_lr: pandas.DataFrame) -> float:
 
 def TSF(donnée_tsf: pandas.DataFrame) -> float:
     """
-    Fonction qui renvoie le TSF (calcule une ligne de meilleure adéquation sur une période donnée 
+    Renvoie le TSF (calcule une ligne de meilleure adéquation sur une période donnée 
     pour tenter de prédire les tendances futures)
     """
     data_close = [float(x) for x in donnée_tsf.close.values]
@@ -170,7 +170,7 @@ def TSF(donnée_tsf: pandas.DataFrame) -> float:
 
 def aroon_oscilator(donnée_ao: pandas.DataFrame) -> float:
     """
-    Fonction qui calcule le AO (aide les traders à savoir quand un marché a une tendance à la hausse, 
+    Calcule le AO (aide les traders à savoir quand un marché a une tendance à la hausse, 
     à la baisse, ou se trouve dans une zone de fluctuation ou un marché sans tendance)
     """
     data_high = [float(x) for x in donnée_ao.high.values]
@@ -186,7 +186,7 @@ def aroon_oscilator(donnée_ao: pandas.DataFrame) -> float:
 
 def williams_R(donnée_wr: pandas.DataFrame) -> float:
     """
-    Fonction qui calcule le williams R (indicateur technique de surachat 
+    Calcule le williams R (indicateur technique de surachat 
     et de survente qui peut offrir des signaux potentiels d'achat et de vente)
     """
 
@@ -201,12 +201,12 @@ def williams_R(donnée_wr: pandas.DataFrame) -> float:
     r = float(talib.WILLR(np_high, np_low, np_close, 15)[-1])
 
     return r
-####################liste####################
+#################### liste####################
 
 
 def ROC(donnée_roc: pandas.DataFrame) -> list:
     """
-    Fonction qui calcule le ROC (compare le prix actuel à un prix antérieur 
+    Calcule le ROC (compare le prix actuel à un prix antérieur 
     et est utilisé pour confirmer les mouvements de prix ou détecter les divergences)
     """
     data = [float(x) for x in donnée_roc.close.values]
@@ -220,7 +220,7 @@ def ROC(donnée_roc: pandas.DataFrame) -> list:
 
 def OBV(donnée_obv: pandas.DataFrame) -> list:
     """
-    Fonction qui calcule le OBV (combine le prix et le volume afin de déterminer 
+    Calcule le OBV (combine le prix et le volume afin de déterminer 
     si les mouvements de prix sont forts ou faibles)
     """
     data_volume = [float(x) for x in donnée_obv.low.values]
@@ -241,7 +241,7 @@ def OBV(donnée_obv: pandas.DataFrame) -> list:
 
 def MOM(donnée_mom: pandas.DataFrame) -> list:
     """
-    Fonction qui calcule le MOM (compare le prix actuel par rapport au prix antérieur)
+    Calcule le MOM (compare le prix actuel par rapport au prix antérieur)
     """
     data = [float(x) for x in donnée_mom.close.values]
 
@@ -258,8 +258,8 @@ def MOM(donnée_mom: pandas.DataFrame) -> list:
 
 def SMA(donnée_sma: pandas.DataFrame) -> list:
     """
-    Fonction qui prend en argument une dataframe pandas et une durée qui est un entier
-    Et renvoie le sma sous forme d'une liste
+    Prend en argument une dataframe pandas et une durée qui est un entier
+    Renvoie le sma sous forme d'une liste
     """
     # On récupère les données de la colonne close
     data = [float(x) for x in donnée_sma.close.values]
@@ -278,8 +278,8 @@ def SMA(donnée_sma: pandas.DataFrame) -> list:
 
 def EMA(donnée_ema: pandas.DataFrame) -> list:
     """
-    Fonction qui prend en argument une dataframe pandas et une durée qui est un entier
-    Et renvoie le ema sous forme d'une liste
+    Prend en argument une dataframe pandas et une durée qui est un entier
+    Renvoie le ema sous forme d'une liste
     """
 
     # On récupère les données de la colonne close
@@ -299,7 +299,7 @@ def EMA(donnée_ema: pandas.DataFrame) -> list:
 
 def ADX(donnée_adx: pandas.DataFrame) -> list:
     """
-    Fonction qui calcul le ADX (Décrit si un marché est en tendance ou non)
+    Calcul le ADX (Décrit si un marché est en tendance ou non)
     """
     data_high = [float(x) for x in donnée_adx.high.values]
     data_low = [float(x) for x in donnée_adx.low.values]
@@ -318,7 +318,7 @@ def ADX(donnée_adx: pandas.DataFrame) -> list:
 
 def KAMA(donnée_kama: pandas.DataFrame) -> list:
     """
-    Fonction qui calcule le KAMA (devient plus sensible pendant les périodes 
+    Calcule le KAMA (devient plus sensible pendant les périodes 
     où les mouvements de prix sont stables dans une certaine direction 
     et devient moins sensible aux mouvements de prix lorsque le prix est volatile)
     """
@@ -333,7 +333,7 @@ def KAMA(donnée_kama: pandas.DataFrame) -> list:
 
 def T3(donnée_t3: pandas.DataFrame) -> list:
     """
-    Fonction qui calcule le triple moving average exponential (peut donner des signaux potentiels d'achat 
+    Calcule le triple moving average exponential (peut donner des signaux potentiels d'achat 
     et de vente et tente de filtrer le bruit à court terme.)
     """
     data_close = [float(x) for x in donnée_t3.close.values]
@@ -347,7 +347,7 @@ def T3(donnée_t3: pandas.DataFrame) -> list:
 
 def TRIMA(donnée_trima: pandas.DataFrame) -> list:
     """
-    Fonction qui calcule le TRIMA (Moyenne mobile simple qui a été moyennée une nouvelle fois, 
+    Calcule le TRIMA (Moyenne mobile simple qui a été moyennée une nouvelle fois, 
     créant ainsi une ligne très lisse)
     """
     data_close = [float(x) for x in donnée_trima.close.values]
@@ -361,7 +361,7 @@ def TRIMA(donnée_trima: pandas.DataFrame) -> list:
 
 def PPO(donnée_ppo: pandas.DataFrame) -> list:
     """
-    Fonction qui calcule le PPO (calcule la différence entre les deux moyennes mobiles)
+    Calcule le PPO (calcule la différence entre les deux moyennes mobiles)
     """
     data = [float(x) for x in donnée_ppo.close.values]
 
@@ -374,7 +374,7 @@ def PPO(donnée_ppo: pandas.DataFrame) -> list:
 
 def ultimate_oscilator(donnée_uo: pandas.DataFrame) -> list:
     """
-    Fonction qui calcule l'ultimate oscilator (combine l'action des prix à court terme, 
+    Calcule l'ultimate oscilator (combine l'action des prix à court terme, 
     à moyen terme et à long terme en un seul oscillateur)
     """
     data_high = [float(x) for x in donnée_uo.high.values]
@@ -395,8 +395,8 @@ def ultimate_oscilator(donnée_uo: pandas.DataFrame) -> list:
 
 def MACD(donnée_macd: pandas.DataFrame) -> Union[list, list, list]:
     """
-    Fonction qui prend en argument une dataframe pandas
-    Et renvoie le MACD sous forme d'une liste de trois listes
+    Prend en argument une dataframe pandas
+    Renvoie le MACD sous forme d'une liste de trois listes
     """
 
     # On récupère les données de la colonne close
@@ -418,8 +418,8 @@ def MACD(donnée_macd: pandas.DataFrame) -> Union[list, list, list]:
 
 def stochRSI(donnée_stochrsi: pandas.DataFrame) -> Union[list, list]:
     """
-    Fonction qui prend en argument une dataframe pandas
-    Et qui renvoie le stochRSI sous forme de deux listes
+    Prend en argument une dataframe pandas
+    Renvoie le stochRSI sous forme de deux listes
     On utilise pas la fonction par défaut stochrsi de talib car
     celle-ci applique stochf à rsi et non pas stoch à rsi
     """
@@ -444,8 +444,8 @@ def stochRSI(donnée_stochrsi: pandas.DataFrame) -> Union[list, list]:
 
 def bandes_bollinger(donnée_bandes: pandas.DataFrame) -> Union[list, list, list]:
     """
-    Fonction qui prend en argument une dataframe pandas
-    Et qui renvoie les bandes de bollinger sous forme d'une liste de trois listes
+    Prend en argument une dataframe pandas
+    Renvoie les bandes de bollinger sous forme d'une liste de trois listes
     """
 
     # On récupère les données de la colonne close

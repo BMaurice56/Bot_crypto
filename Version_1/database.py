@@ -7,7 +7,7 @@ import ast
 
 def get_db(f):
     """
-    Fonction qui créer la connexion avec la base de donnée
+    Créer la connexion avec la base de donnée
     """
     @wraps(f)
     def connexion(*args, **kwargs):
@@ -78,9 +78,10 @@ def bdd_rsi_vwap_cmf(curseur, connexion):
 @get_db
 def insert_bdd(table: str, data: pandas.DataFrame, curseur, connexion) -> None:
     """
-    Fonction qui prend en argument la table et les données à inserer
-    Et insert les données dans la bdd
-    Ex param :
+    Prend en argument la table et les données à inserer
+    Insert les données dans la bdd
+
+    Ex params :
     table : data ou rsi_vwap_cmf
     data : dataframe des données du serveur
     """
@@ -123,9 +124,10 @@ def insert_bdd(table: str, data: pandas.DataFrame, curseur, connexion) -> None:
 @get_db
 def insert_data_historique_bdd(symbol: str, nombre_données: int, curseur, connexion) -> None:
     """
-    Fonction qui permet de charger les x dernières minutes/heures (avec un espace de x min/heure pour chaque jeux de données)
+    Permet de charger les x dernières minutes/heures (avec un espace de x min/heure pour chaque jeux de données)
     Dans la base de donnée
-    Ex param :
+
+    Ex params :
     symbol : 'BTCUSDT'
     nombres_données : 1000
     """
@@ -185,10 +187,11 @@ def insert_data_historique_bdd(symbol: str, nombre_données: int, curseur, conne
 @get_db
 def select_donnée_bdd(df_numpy: str, curseur, connexion) -> Union[pandas.DataFrame, pandas.DataFrame] or Union[numpy.array, numpy.array]:
     """
-    Fonction qui récupère toutes les données de la bdd
+    Récupère toutes les données de la bdd
     Renvoie toutes les données et les prix sous forme de dataframe
     Première dataframe : toutes les données
     Deuxième dataframe : les prix
+
     Ex param :
     df_numpy : dataframe ou numpy
     """
