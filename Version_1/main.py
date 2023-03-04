@@ -19,17 +19,21 @@ class IA:
 
     # Fonction d'entrainement
 
-    def training_keras(self) -> None:
+    def training_keras(self, l1: float, l2: float, X: numpy.array, y: numpy.array) -> None:
         """
         Entraine les neurones et les sauvegardes
-        """
 
-        X, y = select_donnée_bdd("numpy")
+        Ex params:
+        l1 (première ligne de neurones) : 50
+        l2 (deuxième ligne) : 10
+        X : valeur à entrainer (utiliser pour la prédiction)
+        y : valeur à entraineer (valeur prédite)
+        """
 
         modele = Sequential()
 
-        modele.add(Dense(30, input_dim=298, activation='relu'))
-        modele.add(Dense(15, activation='relu'))
+        modele.add(Dense(l1, input_dim=298, activation='relu'))
+        modele.add(Dense(l2, activation='relu'))
         # 30, 15 pour le marché normal et up
         # 30, 16 pour le marché down
 
