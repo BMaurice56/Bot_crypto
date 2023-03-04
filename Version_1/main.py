@@ -165,9 +165,8 @@ class IA:
     def différence_prix(self, prix_1: float, prix_2: float) -> float:
         """
         Renvoie la différence entre deux prix
-        Différence toujours positive
         """
-        return max(prix_1, prix_2) - min(prix_1, prix_2)
+        return prix_1 - prix_2
 
     def validation_achat(self, prix: float, prix_up: float, prix_down: float, prediction: float, prediction_up: float, prediction_down: float) -> int or None:
         """
