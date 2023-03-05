@@ -123,7 +123,7 @@ while True:
     état_v2 = f"Bot {symbol} toujours en cour d'exécution le : {date}\n" + \
         f"Différence de prix : {ia.différence_prix(prix, prediction)}\n" + \
         f"Différence de prix up : {ia.différence_prix(prix_up, prediction_up)}\n" + \
-        f"Différence de prix down: {ia.différence_prix(prix_down, prediction_down)}"
+        f"Prédiction down : {prediction_down}"
 
     if symbol == "BTC":
         msg_discord.message_canal_etat_bot(état_v2, 'Etat du bot !')

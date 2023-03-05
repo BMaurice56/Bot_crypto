@@ -147,14 +147,14 @@ class IA:
         """
         if prix < prediction and prix_up < prediction_up and prix_down > prediction_down:
             if self.symbol == "BTC":
-                if self.différence_prix(prix_up, prediction_up) >= 0.045 and prediction_down <= 0.03:
+                if prediction_up - prix_up >= 0.045 and prediction_down <= 0.03:
                     return 1
             else:
                 return 1
 
         if prix > prediction and prix_up > prediction_up and prix_down < prediction_down:
             if self.symbol == "BTC":
-                if self.différence_prix(prix_up, prediction_up) >= 0.045 and prediction_down >= 0.0245:
+                if prix_up - prediction_up >= 0.045 and prediction_down >= 0.0245:
                     return 0
             else:
                 return 0
