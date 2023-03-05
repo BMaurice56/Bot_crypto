@@ -7,7 +7,6 @@ from binance.client import Client
 from zoneinfo import ZoneInfo
 from datetime import datetime
 from message_discord import *
-from typing import Optional
 from random import randint
 from time import sleep
 import traceback
