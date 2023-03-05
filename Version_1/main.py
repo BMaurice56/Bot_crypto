@@ -17,8 +17,6 @@ class IA:
         """
         self.symbol = symbol
 
-    # Fonction d'entrainement
-
     def training_keras(self, l1: float, l2: float, X: numpy.array, y: numpy.array) -> None:
         """
         Entraine les neurones et les sauvegardes
@@ -27,20 +25,21 @@ class IA:
         l1 (première ligne de neurones) : 50
         l2 (deuxième ligne) : 10
         X : valeur à entrainer (utiliser pour la prédiction)
-        y : valeur à entraineer (valeur prédite)
+        y : valeur à entrainer (valeur prédite)
         """
-
+        # Création du modèle
         modele = Sequential()
 
+        # Ajout des couches
         modele.add(Dense(l1, input_dim=298, activation='relu'))
         modele.add(Dense(l2, activation='relu'))
-        # 30, 15 pour le marché normal et up
-        # 30, 16 pour le marché down
+        modele.add(Dense(10, activation='relu'))
+        modele.add(Dense(1, activation='relu'))
 
         modele.compile(loss='mean_squared_logarithmic_error',
                        optimizer='adam')
 
-        modele.fit(X, y, epochs=50, batch_size=6)
+        modele.fit(X, y, epochs=50, batch_size=8)
 
         modele_json = modele.to_json()
 
@@ -51,47 +50,21 @@ class IA:
 
         print("Modèle sauvegarder !")
 
-    # Fonction de prédiction
-
     def prédiction_keras(self, donnée_serveur_data: pandas.DataFrame, donnée_serveur_rsi: pandas.DataFrame, Modèle) -> float:
         """
         Fait les prédiction et renvoie le prix potentiel de la crypto
         """
 
-        ls = [SMA(donnée_serveur_data), EMA(donnée_serveur_data), ADX(donnée_serveur_data),
-              KAMA(donnée_serveur_data), T3(
-            donnée_serveur_data), TRIMA(donnée_serveur_data),
-            PPO(donnée_serveur_data), ultimate_oscilator(donnée_serveur_data),
-            MACD(donnée_serveur_data), stochRSI(donnée_serveur_data), bandes_bollinger(donnée_serveur_data)]
+        ls = calcul_indice_40_donnees(
+            donnée_serveur_data) + calcul_indice_15_donnees(donnée_serveur_rsi)
 
-        ls += [RSI(donnée_serveur_rsi), VWAP(donnée_serveur_rsi), chaikin_money_flow(
-            donnée_serveur_rsi), CCI(donnée_serveur_rsi), MFI(donnée_serveur_rsi), LinearRegression(
-            donnée_serveur_rsi), TSF(donnée_serveur_rsi), aroon_oscilator(donnée_serveur_rsi), williams_R(
-            donnée_serveur_rsi), ROC(donnée_serveur_rsi), OBV(donnée_serveur_rsi), MOM(donnée_serveur_rsi)]
-
-        donnée_prédiction = []
-
-        cpt = 1
-        for element in ls:
-            if cpt <= 8 or cpt >= 21:
-                for nb in element:
-                    donnée_prédiction.append(nb)
-            elif cpt <= 11:
-                for liste in element:
-                    for nb in liste:
-                        donnée_prédiction.append(nb)
-            elif cpt <= 20:
-                donnée_prédiction.append(element)
-
-            cpt += 1
+        donnée_prédiction = one_liste(ls)
 
         np_liste = numpy.array([donnée_prédiction])
 
-        predic = moyenne(Modèle.predict(np_liste)[0])
+        predic = float(Modèle.predict(np_liste)[0][0])
 
         return predic
-
-    # Fonction de chargement des modèles
 
     def chargement_modele(self) -> None:
         """

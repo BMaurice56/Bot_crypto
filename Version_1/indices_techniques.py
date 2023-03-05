@@ -1,8 +1,9 @@
-from typing import Union
+from typing import Union, Optional
+import pandas
 import talib
 import numpy
-import pandas
 import math
+import ast
 
 # Autres fonctions
 
@@ -463,3 +464,62 @@ def bandes_bollinger(donnée_bandes: pandas.DataFrame) -> Union[list, list, list
     low = [float(x) for x in low if math.isnan(x) == False]
 
     return [up, middle, low]
+
+
+def calcul_indice_15_donnees(donnée_serveur_rsi: pandas.DataFrame) -> list:
+    """
+    Calcul les indices techniques qui nécessite 15 données
+    """
+    ls = [RSI(donnée_serveur_rsi), VWAP(donnée_serveur_rsi), chaikin_money_flow(
+        donnée_serveur_rsi), CCI(donnée_serveur_rsi), MFI(donnée_serveur_rsi), LinearRegression(
+        donnée_serveur_rsi), TSF(donnée_serveur_rsi), aroon_oscilator(donnée_serveur_rsi), williams_R(
+        donnée_serveur_rsi), ROC(donnée_serveur_rsi), OBV(donnée_serveur_rsi), MOM(donnée_serveur_rsi)]
+
+    return ls
+
+
+def calcul_indice_40_donnees(donnée_serveur_data: pandas.DataFrame) -> list:
+    """
+    Calcul les indices techniques qui nécessite 40 données
+    """
+    ls = [SMA(donnée_serveur_data), EMA(donnée_serveur_data), ADX(donnée_serveur_data),
+          KAMA(donnée_serveur_data), T3(
+        donnée_serveur_data), TRIMA(donnée_serveur_data),
+        PPO(donnée_serveur_data), ultimate_oscilator(donnée_serveur_data),
+        MACD(donnée_serveur_data), stochRSI(donnée_serveur_data), bandes_bollinger(donnée_serveur_data)]
+
+    return ls
+
+
+def one_liste(donnee: list or tuple, bdd: Optional[bool] = None) -> list:
+    """
+    Prend en argument la liste avec toutes les données brutes
+    Renvoi une seule et même liste avec toutes les données (pas de sous liste)
+    """
+    resultat = []
+
+    cpt = 1
+    for element in donnee:
+        elt = element
+        if cpt <= 8 or cpt >= 21:
+            if bdd != None:
+                elt = ast.literal_eval(str(elt))
+
+            for nb in elt:
+                resultat.append(nb)
+        elif cpt <= 11:
+            if bdd != None:
+                elt = ast.literal_eval(str(elt))
+
+            for liste in elt:
+                for nb in liste:
+                    resultat.append(nb)
+        elif cpt <= 20:
+            if bdd != None:
+                elt = float(elt)
+
+            resultat.append(elt)
+
+        cpt += 1
+
+    return resultat

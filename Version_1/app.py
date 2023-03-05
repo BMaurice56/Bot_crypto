@@ -115,7 +115,7 @@ while True:
     prediction_down = ia.prédiction_keras(
         data_down, rsi_vwap_cmf_down, loaded_model_down)
 
-    état = f"programme toujours en cour d'exécution le : {date}\n" + \
+    état = f"Bot {symbol} toujours en cour d'exécution le : {date}\n" + \
         f"prix de la crypto : {prix}, prix de la prédiction : {prediction}\n" + \
         f"prix crypto up : {prix_up}, prix de la prédiction : {prediction_up}\n" + \
         f"prix crypto down : {prix_down}, prix de la prédiction : {prediction_down}"
@@ -125,77 +125,80 @@ while True:
         f"Différence de prix up : {ia.différence_prix(prix_up, prediction_up)}\n" + \
         f"Différence de prix down: {ia.différence_prix(prix_down, prediction_down)}"
 
-    msg_discord.message_canal_etat_bot(état, 'Etat du bot !')
-    """
-    # On augmente de 1 le temps qu'on a de position
-    # Remis à zéro après si achat ou aucune crypto
-    temps_derniere_position += 1
+    if symbol == "BTC":
+        msg_discord.message_canal_etat_bot(état_v2, 'Etat du bot !')
+        # On augmente de 1 le temps qu'on a de position
+        # Remis à zéro après si achat ou aucune crypto
+        temps_derniere_position += 1
 
-    résultat_achat = ia.validation_achat(
-        prix, prix_up, prix_down, prediction, prediction_up, prediction_down)
+        résultat_achat = ia.validation_achat(
+            prix, prix_up, prix_down, prediction, prediction_up, prediction_down)
 
-    # S'il y a bien un signal d'achat, alors on peut passer à la suite
-    if résultat_achat != None:
-        if dico_montant[résultat_achat] < dico_minimum[résultat_achat]:
-            # Si le thread du stoploss est toujours en vie
-            # On l'arrête avant d'en créer un nouveau
-            kill_thread(thread, event)
+        # S'il y a bien un signal d'achat, alors on peut passer à la suite
+        if résultat_achat != None:
+            if dico_montant[résultat_achat] < dico_minimum[résultat_achat]:
+                # Si le thread du stoploss est toujours en vie
+                # On l'arrête avant d'en créer un nouveau
+                kill_thread(thread, event)
 
-            # Si on possède toujours de l'autre crypto, on la vend
-            if dico_montant[not résultat_achat] > dico_minimum[not résultat_achat]:
-                kucoin.achat_vente(
-                    dico_montant[not résultat_achat], dico_symbol[not résultat_achat], False)
+                # Si on possède toujours de l'autre crypto, on la vend
+                if dico_montant[not résultat_achat] > dico_minimum[not résultat_achat]:
+                    kucoin.achat_vente(
+                        dico_montant[not résultat_achat], dico_symbol[not résultat_achat], False)
 
-                argent = kucoin.montant_compte(kucoin.devise)
+                    argent = kucoin.montant_compte(kucoin.devise)
 
-            # Définition des variables pour le stoploss
-            symbol_stoploss = dico_symbol[résultat_achat]
-            prix_stoploss = prix * dico_pourcentage_stoploss[résultat_achat]
+                # Définition des variables pour le stoploss
+                symbol_stoploss = dico_symbol[résultat_achat]
+                prix_stoploss = prix * \
+                    dico_pourcentage_stoploss[résultat_achat]
 
-            # Achat de la crypto voulu
-            kucoin.achat_vente(argent, dico_symbol[résultat_achat], True)
+                # Achat de la crypto voulu
+                kucoin.achat_vente(argent, dico_symbol[résultat_achat], True)
 
-            # Gère le stoploss de façon manuel
-            thread = kucoin.stoploss_manuel(
-                symbol_stoploss, prix_stoploss, event, True)
+                # Gère le stoploss de façon manuel
+                thread = kucoin.stoploss_manuel(
+                    symbol_stoploss, prix_stoploss, event, True)
 
-            buy_sell = True
+                buy_sell = True
+
+        else:
+            # Si le prix est supérieur a la prédiction (ou inversement)
+            # Et que on a pas acheté et qu'on a des cryptos
+            # Alors on vend
+            if (prix > prediction or prix_up > prediction_up or prix_down < prediction_down) and crypto_up > kucoin.minimum_crypto_up:
+                kill_thread(thread, event)
+
+                kucoin.achat_vente(crypto_up, kucoin.symbol_up, False)
+                buy_sell = True
+
+            if (prix < prediction or prix_up < prediction_up or prix_down > prediction_down) and crypto_down > kucoin.minimum_crypto_down:
+                kill_thread(thread, event)
+
+                kucoin.achat_vente(crypto_down, kucoin.symbol_down, False)
+                buy_sell = True
+
+        # Si plus de crypto ou achat, alors on remet a zéro les variables
+        if buy_sell == True or crypto_up < kucoin.minimum_crypto_up and crypto_down < kucoin.minimum_crypto_down:
+            temps_derniere_position = 0
+            gain_ordrelimite = kucoin.pourcentage_gain
+
+        # Si cela fait trop longtemps que l'ordre a été placé sans être vendu, on le descent
+        if temps_derniere_position >= 4:
+            gain_ordrelimite -= 0.0025
+
+            # On arrondie a la troisième décimale pour éviter tout une suite de zéro
+            gain_ordrelimite = round(gain_ordrelimite, 4)
+
+            # Si on descent à zéro, alors on ne replace plus l'ordre
+            if gain_ordrelimite > 0.0:
+                kucoin.ordre_vente_seuil(
+                    symbol_stoploss, gain_ordrelimite)
+
+            temps_derniere_position = 0
 
     else:
-        # Si le prix est supérieur a la prédiction (ou inversement)
-        # Et que on a pas acheté et qu'on a des cryptos
-        # Alors on vend
-        if (prix > prediction or prix_up > prediction_up or prix_down < prediction_down) and crypto_up > kucoin.minimum_crypto_up:
-            kill_thread(thread, event)
-
-            kucoin.achat_vente(crypto_up, kucoin.symbol_up, False)
-            buy_sell = True
-
-        if (prix < prediction or prix_up < prediction_up or prix_down > prediction_down) and crypto_down > kucoin.minimum_crypto_down:
-            kill_thread(thread, event)
-
-            kucoin.achat_vente(crypto_down, kucoin.symbol_down, False)
-            buy_sell = True
-
-    # Si plus de crypto ou achat, alors on remet a zéro les variables
-    if buy_sell == True or crypto_up < kucoin.minimum_crypto_up and crypto_down < kucoin.minimum_crypto_down:
-        temps_derniere_position = 0
-        gain_ordrelimite = kucoin.pourcentage_gain
-
-    # Si cela fait trop longtemps que l'ordre a été placé sans être vendu, on le descent
-    if temps_derniere_position >= 4:
-        gain_ordrelimite -= 0.0025
-
-        # On arrondie a la troisième décimale pour éviter tout une suite de zéro
-        gain_ordrelimite = round(gain_ordrelimite, 4)
-
-        # Si on descent à zéro, alors on ne replace plus l'ordre
-        if gain_ordrelimite > 0.0:
-            kucoin.ordre_vente_seuil(
-                symbol_stoploss, gain_ordrelimite)
-
-        temps_derniere_position = 0
-    """
+        msg_discord.message_canal_etat_bot(état, 'Etat du bot !')
 
     # On enregistre l'état du bot (dernière heure et stoploss)
     # Pour que si le bot est arrêté et repart, qu'il soit au courant

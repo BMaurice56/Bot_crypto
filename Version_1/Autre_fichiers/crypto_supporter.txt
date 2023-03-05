@@ -1,1 +1,1 @@
-BTC;BNB
+BTC;BNB;ETH

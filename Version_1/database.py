@@ -2,7 +2,6 @@ from indices_techniques import *
 from donnees_serveur import *
 from functools import wraps
 import sqlite3
-import ast
 
 
 def get_db(f):
@@ -70,56 +69,6 @@ def bdd_rsi_vwap_cmf(curseur, connexion):
 
     connexion.commit()
 
-# Fonctions BDD
-
-# Connexion à la bdd et créaton du curseur pour interagire avec
-
-
-@get_db
-def insert_bdd(table: str, data: pandas.DataFrame, curseur, connexion) -> None:
-    """
-    Prend en argument la table et les données à inserer
-    Insert les données dans la bdd
-
-    Ex params :
-    table : data ou rsi_vwap_cmf
-    data : dataframe des données du serveur
-    """
-
-    # Insertion normale des valeurs dans la table data
-    # On transforme en str qu'au dernier moment car la liste
-    # Est utilisé lors de l'insertion des données dans la bdd au lancement
-    if table == "data":
-        ls = [str(SMA(data)), str(EMA(data)), str(ADX(data)), str(
-            KAMA(data)), str(T3(data)), str(TRIMA(data)),
-            str(PPO(data)), str(ultimate_oscilator(data)),
-            str(MACD(data)), str(stochRSI(data)), str(bandes_bollinger(
-                data)), float(data.close.values[-1])]
-
-        curseur.execute("""
-        insert into data (sma, ema, adx, kama, t3, trima, ppo, u_oscilator,
-        macd, stochrsi, bande_bollinger, prix_fermeture) 
-        values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-        """, ls)
-
-        connexion.commit()
-
-    # Insertion normale des valeurs dans la table rsi____
-    elif table == "rsi_vwap_cmf":
-        ls = [RSI(data), VWAP(data), chaikin_money_flow(
-            data), CCI(data), MFI(data), LinearRegression(
-            data), TSF(data), aroon_oscilator(data), williams_R(
-            data), str(ROC(data)), str(OBV(data)), str(MOM(data)), float(data.close.values[-1])]
-
-        curseur.execute("""
-        insert into rsi_vwap_cmf 
-        (rsi, vwap, cmf, cci, mfi, linearregression,
-        tsf, a_oscilator, w_r, roc, obv, mom, prix_fermeture) 
-        values (?,?,?,?,?,?,?,?,?,?,?,?,?)
-        """, ls)
-
-        connexion.commit()
-
 
 @get_db
 def insert_data_historique_bdd(symbol: str, nombre_données: int, curseur, connexion) -> None:
@@ -150,21 +99,23 @@ def insert_data_historique_bdd(symbol: str, nombre_données: int, curseur, conne
 
         data = données_serveur[i:i+40]
 
-        ls = [str(SMA(data)), str(EMA(data)),  str(ADX(data)), str(
-            KAMA(data)), str(T3(data)), str(TRIMA(data)),
-            str(PPO(data)), str(ultimate_oscilator(data)),
-            str(MACD(data)), str(stochRSI(data)), str(bandes_bollinger(
-                data)), float(data.close.values[-1])]
+        # Calcul les indices techniques + ajout du prix
+        ls = calcul_indice_40_donnees(data) + [float(data.close.values[-1])]
+
+        # Transformation en string des sous-listes
+        for i in range(len(ls)):
+            ls[i] = str(ls[i])
 
         liste_data.append(ls)
 
     for j in range(25, len(données_serveur)-15):
         data = données_serveur[j:j+15]
 
-        ls = [RSI(data), VWAP(data), chaikin_money_flow(
-            data), CCI(data), MFI(data), LinearRegression(
-            data), TSF(data), aroon_oscilator(data), williams_R(
-            data), str(ROC(data)), str(OBV(data)), str(MOM(data)), float(data.close.values[-1])]
+        # Calcul les indices techniques + ajout du prix
+        ls = calcul_indice_15_donnees(data) + [float(data.close.values[-1])]
+
+        # Transformation en string des sous-listes
+        ls[9], ls[10], ls[11] = str(ls[9]), str(ls[10]), str(ls[11])
 
         liste_rsi.append(ls)
 
@@ -216,24 +167,7 @@ def select_donnée_bdd(df_numpy: str, curseur, connexion) -> Union[pandas.DataFr
     # Et on remet le tout dans une dataframe
     donnée = []
     for row in donnée_bdd:
-        temp = []
-        cpt = 1
-        for element in row:
-            if cpt <= 8 or cpt >= 21:
-                elt = ast.literal_eval(str(element))
-                for nb in elt:
-                    temp.append(nb)
-            elif cpt <= 11:
-                elt = ast.literal_eval(str(element))
-                for liste in elt:
-                    for nb in liste:
-                        temp.append(nb)
-            elif cpt <= 20:
-                temp.append(float(element))
-
-            cpt += 1
-
-        donnée.append(temp)
+        donnée.append(one_liste(row, True))
 
     if df_numpy == "dataframe":
         dp = pandas.DataFrame(donnée)
