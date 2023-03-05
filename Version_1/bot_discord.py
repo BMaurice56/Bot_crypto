@@ -194,7 +194,9 @@ class Botcrypto(commands.Bot):
             Permet de ne pas bloquer le bot discord et donc d'executre d'autre commandes à coté
             Comme l'arrêt du bot ou le relancer, le prix à l'instant T, etc...
             """
-            question = "Sur quelles crypto trader ? BTC ? BNB ?"
+            question = "Sur quelles crypto trader ? "
+            for crypto in self.crypto_supporter:
+                question += f"{crypto} ? "
 
             await ctx.send(question)
 
@@ -287,7 +289,9 @@ class Botcrypto(commands.Bot):
             Permet de vendre les cryptomonaies du bot à distance
             Sans devoir accéder à la platforme
             """
-            question = "Quelle crypto ? BTC ? BNB ?"
+            question = "Quelle crypto ? "
+            for crypto in self.crypto_supporter:
+                question += f"{crypto} ? "
 
             await ctx.send(question)
 
