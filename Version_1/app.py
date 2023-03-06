@@ -120,9 +120,9 @@ while True:
         f"prix crypto up : {prix_up}, prix de la prédiction : {prediction_up}\n" + \
         f"prix crypto down : {prix_down}, prix de la prédiction : {prediction_down}"
 
-    msg_discord.message_canal_etat_bot(état, 'Etat du bot !')
-
     if symbol == "BTC":
+        msg_discord.message_canal("état_bot", état, 'Etat du bot !')
+
         # On augmente de 1 le temps qu'on a de position
         # Remis à zéro après si achat ou aucune crypto
         temps_derniere_position += 1
@@ -192,6 +192,9 @@ while True:
                     symbol_stoploss, gain_ordrelimite)
 
             temps_derniere_position = 0
+
+    else:
+        msg_discord.message_canal("état_bot_autre", état, 'Etat du bot !')
 
     # On enregistre l'état du bot (dernière heure et stoploss)
     # Pour que si le bot est arrêté et repart, qu'il soit au courant

@@ -162,9 +162,13 @@ class Kucoin:
     Classe qui permet d'interagir avec les données des serveurs de kucoin
     """
 
-    def __init__(self, crypto, thread: Optional[bool] = None) -> None:
+    def __init__(self, crypto: str, thread: Optional[bool] = None) -> None:
         """
         Initialise un objet kucoin pour interagir avec leurs serveurs
+
+        Ex params:
+        crypto : "BTC", "BNB" ...
+        thread (optionnel) : False pour ne pas activer les fonctions continues
         """
 
         self.api = "https://api.kucoin.com"
@@ -639,15 +643,15 @@ class Kucoin:
         # Puis on vient envoyer un message sur le discord
         if achat_ou_vente == True:
             msg = f"Prise de position avec {montant} usdt au prix de {prix}$, crypto : {symbol}"
-            self.msg_discord.message_canal_prise_position(
-                msg, 'Prise de position')
+            self.msg_discord.message_canal("prise_position",
+                                           msg, 'Prise de position')
 
         else:
             argent = self.montant_compte(self.devise)
 
             msg = f"Vente de position au prix de {prix}$, il reste {argent} usdt"
-            self.msg_discord.message_canal_prise_position(
-                msg, 'Vente de position')
+            self.msg_discord.message_canal("prise_position",
+                                           msg, 'Vente de position')
 
     def ordre_vente_seuil(self, symbol: str, nouveau_gain: Optional[float] = None) -> None:
         """
@@ -704,8 +708,8 @@ class Kucoin:
             # Envoit d'un message sur le canal discord
             msg = "Baisse de l'ordre limite, l'estimation du prix de revente risque d'être fausse !\n" + \
                 f"Nouveau gain : {gain}"
-            self.msg_discord.message_canal_prise_position(
-                msg, "Modification de l'ordre limite")
+            self.msg_discord.message_canal("prise_position",
+                                           msg, "Modification de l'ordre limite")
 
         ###################################################################################
 
@@ -805,8 +809,8 @@ class Kucoin:
                     # Si la crypto dépasse le stoploss fixé, alors on vend
                     if self.comparaisons(prix, prix_stop, type_marche) == False:
                         # Message sur le discords
-                        self.msg_discord.message_canal_prise_position(
-                            "Vente des cryptos via le stoploss", "Exécution du stoploss")
+                        self.msg_discord.message_canal("prise_position",
+                                                       "Vente des cryptos via le stoploss", "Exécution du stoploss")
 
                         self.achat_vente(crypto, symbol, False)
 
@@ -856,8 +860,8 @@ class Kucoin:
                         if self.vente_manuelle not in self.dico_partage:
                             montant = self.montant_compte(self.devise)
 
-                            self.msg_discord.message_canal_prise_position(
-                                f"Vente de l'ordre limite, il reste {montant} USDT !", "Vente de l'ordre limite")
+                            self.msg_discord.message_canal("prise_position",
+                                                           f"Exécution de l'ordre limite, il reste {montant} USDT !", "Exécution de l'ordre limite")
 
                         # Soit c'est une vente manuelle
                         else:

@@ -44,7 +44,7 @@ class Botcrypto(commands.Bot):
             Renvoit l'erreur sur le serveur s'il y en a une qui apparait
             """
             try:
-                self.msg_discord.message_canal_general("Le bot est lancé !")
+                self.msg_discord.message_canal("général", "Le bot est lancé !")
                 sys.argv = ['', symbol]
                 runpy.run_path("app.py")
             except:
@@ -53,8 +53,8 @@ class Botcrypto(commands.Bot):
                 self.msg_discord.message_erreur(
                     erreur, f"Erreur survenue au niveau du bot {symbol}, arrêt du programme")
 
-                self.msg_discord.message_canal_general(
-                    "Le bot s'est arrêté !")
+                self.msg_discord.message_canal("général",
+                                               "Le bot s'est arrêté !")
 
         def arret_manuel_bot(symbol):
             """
@@ -220,6 +220,9 @@ class Botcrypto(commands.Bot):
                     self.liste_bot_lancé.append(p)
                     self.liste_symbol_bot_lancé.append(crypto)
 
+                    # Trie la liste de symbol dans l'ordre croissant
+                    self.liste_symbol_bot_lancé.sort()
+
                     p.start()
 
                 else:
@@ -305,23 +308,29 @@ class Botcrypto(commands.Bot):
             # On récupère la crypto
             crypto_symbol = msg.content
 
-            # On regarde le montant des deux cryptos
-            crypto_up = self.kucoin.montant_compte(f"{crypto_symbol}3L")
-            crypto_down = self.kucoin.montant_compte(f"{crypto_symbol}3S")
+            # On vérifie que la crypto existe bien
+            if crypto_symbol in self.crypto_supporter:
 
-            kucoin = Kucoin(crypto_symbol, False)
+                # On regarde le montant des deux cryptos
+                crypto_up = self.kucoin.montant_compte(f"{crypto_symbol}3L")
+                crypto_down = self.kucoin.montant_compte(f"{crypto_symbol}3S")
 
-            # Et on vend la ou les cryptos en supprimant les ordres placés
-            if crypto_up > self.kucoin.minimum_crypto_up:
-                kucoin.achat_vente(crypto_up, f"{crypto_symbol}3L-USDT", False)
+                kucoin = Kucoin(crypto_symbol, False)
 
-                await ctx.send(f"{crypto_up} crypto up vendu !")
+                # Et on vend la ou les cryptos en supprimant les ordres placés
+                if crypto_up > self.kucoin.minimum_crypto_up:
+                    kucoin.achat_vente(
+                        crypto_up, f"{crypto_symbol}3L-USDT", False)
 
-            if crypto_down > self.kucoin.minimum_crypto_down:
-                kucoin.achat_vente(
-                    crypto_down, f"{crypto_symbol}3S-USDT", False)
+                    await ctx.send(f"{crypto_up} crypto up vendu !")
 
-                await ctx.send(f"{crypto_down} crypto down vendu !")
+                if crypto_down > self.kucoin.minimum_crypto_down:
+                    kucoin.achat_vente(
+                        crypto_down, f"{crypto_symbol}3S-USDT", False)
+
+                    await ctx.send(f"{crypto_down} crypto down vendu !")
+            else:
+                await ctx.send("Crypto non supportée !")
 
             # Et on renvoie les nouveaux montants sur le discord
             await montant(ctx)
@@ -394,7 +403,7 @@ class Botcrypto(commands.Bot):
         """
         Affiche dans le canal général "Bot Discord démarré !" lorsqu'il est opérationnel
         """
-        self.msg_discord.message_canal_general("Bot Discord démarré !")
+        self.msg_discord.message_canal("général", "Bot Discord démarré !")
 
 
 if __name__ == "__main__":
