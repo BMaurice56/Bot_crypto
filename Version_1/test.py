@@ -11,16 +11,20 @@ insert_data_historique_bdd("BNBDOWNUSDT", 50_000)
 
 X, y = select_donnée_bdd("numpy")
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42)
 
 
 def build_model(hp):
     model = keras.Sequential()
-    model.add(layers.Dense(units=hp.Int('units', min_value=5, max_value=256, step=16), activation='relu', input_dim=298))
-    model.add(layers.Dense(units=hp.Int('units', min_value=2, max_value=256, step=16), activation='relu'))
+    model.add(layers.Dense(units=hp.Int('units', min_value=5,
+              max_value=256, step=16), activation='relu', input_dim=298))
+    model.add(layers.Dense(units=hp.Int('units', min_value=2,
+              max_value=256, step=16), activation='relu'))
     model.add(layers.Dense(units=1, activation='relu'))
     model.compile(optimizer='adam', loss='mean_squared_logarithmic_error')
     return model
+
 
 tuner = RandomSearch(
     build_model,
@@ -54,29 +58,27 @@ r2 = r2_score(y_test, y_pred)
 
 # afficher le coefficient R²
 print('Coefficient R² : {:.2f}'.format(r2))
-
 """
 from main import IA, select_donnée_bdd, insert_data_historique_bdd, model_from_json
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score
 
-# reste à faire : BNBDOWN
-
-#insert_data_historique_bdd("BNBDOWNUSDT", 50_000)
+# insert_data_historique_bdd("BNBDOWNUSDT", 50_000)
 
 X, y = select_donnée_bdd("numpy")
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42)
 
-#ia = IA("BNB")
+# ia = IA("BNB")
 
-#ia.training_keras(1000, 200, X_train, y_train)
+# ia.training_keras(1000, 200, X_train, y_train)
 
 with open(f"modele.json", "r") as f:
-        loaded_model = model_from_json(f.read())
-        loaded_model.load_weights(f"modele.h5")
-        loaded_model.compile(
-            loss='mean_squared_logarithmic_error', optimizer='adam')
+    loaded_model = model_from_json(f.read())
+    loaded_model.load_weights(f"modele.h5")
+    loaded_model.compile(
+        loss='mean_squared_logarithmic_error', optimizer='adam')
 
 
 # prédire les valeurs pour les données de test
@@ -88,15 +90,3 @@ r2 = r2_score(y_test, y_pred)
 # afficher le coefficient R²
 print('Coefficient R² : {:.2f}'.format(r2))
 print(loaded_model.evaluate(X_train, y_train))
-
-
-"""
-with open(f"modele.json", "r") as f:
-    loaded_model = model_from_json(f.read())
-    loaded_model.load_weights(f"modele.h5")
-    loaded_model.compile(
-        loss='mean_squared_logarithmic_error', optimizer='adam')
-        
-print(loaded_model.evaluate(X, y))
-"""
-
