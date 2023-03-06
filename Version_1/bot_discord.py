@@ -44,7 +44,7 @@ class Botcrypto(commands.Bot):
             Renvoit l'erreur sur le serveur s'il y en a une qui apparait
             """
             try:
-                self.msg_discord.message_canal_general("Le bot est lancé !")
+                self.msg_discord.message_canal("général", "Le bot est lancé !")
                 sys.argv = ['', symbol]
                 runpy.run_path("app.py")
             except:
@@ -53,8 +53,8 @@ class Botcrypto(commands.Bot):
                 self.msg_discord.message_erreur(
                     erreur, f"Erreur survenue au niveau du bot {symbol}, arrêt du programme")
 
-                self.msg_discord.message_canal_general(
-                    "Le bot s'est arrêté !")
+                self.msg_discord.message_canal("général",
+                                               "Le bot s'est arrêté !")
 
         def arret_manuel_bot(symbol):
             """
@@ -394,7 +394,7 @@ class Botcrypto(commands.Bot):
         """
         Affiche dans le canal général "Bot Discord démarré !" lorsqu'il est opérationnel
         """
-        self.msg_discord.message_canal_general("Bot Discord démarré !")
+        self.msg_discord.message_canal("général", "Bot Discord démarré !")
 
 
 if __name__ == "__main__":

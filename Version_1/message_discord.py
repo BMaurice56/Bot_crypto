@@ -12,52 +12,28 @@ class Message_discord:
         Initialise un objet message pour l'envoi de ceux-ci
         """
         # Adresse du webhook discord
-        self.adr_webhook_prise_position = "https://discord.com/api/webhooks/973269614874214410/UPyGLXDE2MbjvtmehG8cAAxx3zXtU3Kt-mN4TolLo1golSuHUp9AiCal0jrvIu3C6E6_"
-        self.adr_webhook_état_bot = "https://discord.com/api/webhooks/972545553210695731/zLBkaDU4SPyyLoVXz5E-tv-4PkhfrZH6gipWwSI-1cAqwxFlrbYjKsxxRc2i9zioINIh"
         self.adr_webhook_général = "https://discordapp.com/api/webhooks/969652904959045674/KdVNf9INCcZ3O4V1NnzCsJfhwiAgy4cy1GMjaPZI7spmAAeIkS7sQSYGuKMT5YyAyLza"
+        self.adr_webhook_état_bot = "https://discord.com/api/webhooks/972545553210695731/zLBkaDU4SPyyLoVXz5E-tv-4PkhfrZH6gipWwSI-1cAqwxFlrbYjKsxxRc2i9zioINIh"
+        self.adr_webhook_état_bot_autre = "https://discordapp.com/api/webhooks/1082407631961985044/r3oZXctylgvAXgEVspr2yDucZ4a1SpMIzFxR7Ifi3nynoxA-uzWNhryKWCK_Y_RZx40O"
+        self.adr_webhook_prise_position = "https://discord.com/api/webhooks/973269614874214410/UPyGLXDE2MbjvtmehG8cAAxx3zXtU3Kt-mN4TolLo1golSuHUp9AiCal0jrvIu3C6E6_"
 
         self.nom = "Jimmy"
 
-    def message_canal_general(self, message: str, titre: Optional[str] = None):
+    def message_canal(self, canal: str, message: str, titre: Optional[str] = None):
         """
-        Envoi un message sur le canal général
+        Envoi un message sur le canal voulu
         """
+        if canal == "général":
+            adresse = self.adr_webhook_général
+        elif canal == "état_bot":
+            adresse = self.adr_webhook_état_bot
+        elif canal == "état_bot_autre":
+            adresse = self.adr_webhook_état_bot_autre
+        elif canal == "prise_position":
+            adresse = self.adr_webhook_prise_position
+
         webhook = DiscordWebhook(
-            url=self.adr_webhook_général, username=self.nom, content=message)
-
-        if titre != None:
-            embed = DiscordEmbed(title=titre, color="03b2f8")
-
-            embed.add_embed_field(name="Message :", value=message)
-
-            webhook.add_embed(embed)
-            webhook.content = None
-
-        webhook.execute()
-
-    def message_canal_etat_bot(self, message: str, titre: Optional[str] = None):
-        """
-        Envoi un message sur le canal général
-        """
-        webhook = DiscordWebhook(
-            url=self.adr_webhook_état_bot, username=self.nom, content=message)
-
-        if titre != None:
-            embed = DiscordEmbed(title=titre, color="03b2f8")
-
-            embed.add_embed_field(name="Message :", value=message)
-
-            webhook.add_embed(embed)
-            webhook.content = None
-
-        webhook.execute()
-
-    def message_canal_prise_position(self, message: str, titre: Optional[str] = None):
-        """
-        Envoi un message sur le canal général
-        """
-        webhook = DiscordWebhook(
-            url=self.adr_webhook_prise_position, username=self.nom, content=message)
+            url=adresse, username=self.nom, content=message)
 
         if titre != None:
             embed = DiscordEmbed(title=titre, color="03b2f8")
@@ -79,14 +55,14 @@ class Message_discord:
 
         # On envoie l'emplacement de l'erreur, où elle s'est produite
         # Et si cela arrête le programme ou non
-        self.message_canal_general(emplacement_erreur)
+        self.message_canal("général", emplacement_erreur)
 
         # Si l'erreur est trop grande, alors on la coupe en plusieurs morceaux
         if len(erreur) > 2000:
             while len(erreur) >= 2000:
-                self.message_canal_general(erreur[:2000])
+                self.message_canal("général", erreur[:2000])
                 erreur = erreur[2000:]
             if erreur != "":
-                self.message_canal_general(erreur)
+                self.message_canal("général", erreur)
         else:
-            self.message_canal_general(erreur)
+            self.message_canal("général", erreur)
