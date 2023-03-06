@@ -8,7 +8,7 @@ class IA:
     Classe qui contient l'entrainement ainsi la prédiction des modèles d'ia
     """
 
-    def __init__(self, symbol) -> None:
+    def __init__(self, symbol: str) -> None:
         """
         Initialise un objet IA permet d'interagir avec ou de les créer
 

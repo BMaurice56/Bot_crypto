@@ -162,9 +162,13 @@ class Kucoin:
     Classe qui permet d'interagir avec les données des serveurs de kucoin
     """
 
-    def __init__(self, crypto, thread: Optional[bool] = None) -> None:
+    def __init__(self, crypto: str, thread: Optional[bool] = None) -> None:
         """
         Initialise un objet kucoin pour interagir avec leurs serveurs
+
+        Ex params:
+        crypto : "BTC", "BNB" ...
+        thread (optionnel) : False pour ne pas activer les fonctions continues
         """
 
         self.api = "https://api.kucoin.com"

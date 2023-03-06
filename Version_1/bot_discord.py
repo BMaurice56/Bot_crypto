@@ -220,6 +220,9 @@ class Botcrypto(commands.Bot):
                     self.liste_bot_lancé.append(p)
                     self.liste_symbol_bot_lancé.append(crypto)
 
+                    # Trie la liste de symbol dans l'ordre croissant
+                    self.liste_symbol_bot_lancé.sort()
+
                     p.start()
 
                 else:
@@ -305,23 +308,29 @@ class Botcrypto(commands.Bot):
             # On récupère la crypto
             crypto_symbol = msg.content
 
-            # On regarde le montant des deux cryptos
-            crypto_up = self.kucoin.montant_compte(f"{crypto_symbol}3L")
-            crypto_down = self.kucoin.montant_compte(f"{crypto_symbol}3S")
+            # On vérifie que la crypto existe bien
+            if crypto_symbol in self.crypto_supporter:
 
-            kucoin = Kucoin(crypto_symbol, False)
+                # On regarde le montant des deux cryptos
+                crypto_up = self.kucoin.montant_compte(f"{crypto_symbol}3L")
+                crypto_down = self.kucoin.montant_compte(f"{crypto_symbol}3S")
 
-            # Et on vend la ou les cryptos en supprimant les ordres placés
-            if crypto_up > self.kucoin.minimum_crypto_up:
-                kucoin.achat_vente(crypto_up, f"{crypto_symbol}3L-USDT", False)
+                kucoin = Kucoin(crypto_symbol, False)
 
-                await ctx.send(f"{crypto_up} crypto up vendu !")
+                # Et on vend la ou les cryptos en supprimant les ordres placés
+                if crypto_up > self.kucoin.minimum_crypto_up:
+                    kucoin.achat_vente(
+                        crypto_up, f"{crypto_symbol}3L-USDT", False)
 
-            if crypto_down > self.kucoin.minimum_crypto_down:
-                kucoin.achat_vente(
-                    crypto_down, f"{crypto_symbol}3S-USDT", False)
+                    await ctx.send(f"{crypto_up} crypto up vendu !")
 
-                await ctx.send(f"{crypto_down} crypto down vendu !")
+                if crypto_down > self.kucoin.minimum_crypto_down:
+                    kucoin.achat_vente(
+                        crypto_down, f"{crypto_symbol}3S-USDT", False)
+
+                    await ctx.send(f"{crypto_down} crypto down vendu !")
+            else:
+                await ctx.send("Crypto non supportée !")
 
             # Et on renvoie les nouveaux montants sur le discord
             await montant(ctx)
