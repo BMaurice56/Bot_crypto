@@ -63,16 +63,18 @@ from main import IA, select_donnée_bdd, insert_data_historique_bdd, model_from_
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score
 
-# insert_data_historique_bdd("BNBDOWNUSDT", 50_000)
+# reste a faire : xrp, xrpup, xrpdown, ada, adaup, adadown, sol, solup, soldown
+
+#insert_data_historique_bdd("XRPUSDT", 50_000)
 
 X, y = select_donnée_bdd("numpy")
 
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42)
 
-# ia = IA("BNB")
+ia = IA("XRP")
 
-# ia.training_keras(1000, 200, X_train, y_train)
+ia.training_keras(100, 15, X_train, y_train)
 
 with open(f"modele.json", "r") as f:
     loaded_model = model_from_json(f.read())

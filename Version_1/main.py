@@ -33,13 +33,12 @@ class IA:
         # Ajout des couches
         modele.add(Dense(l1, input_dim=298, activation='relu'))
         modele.add(Dense(l2, activation='relu'))
-        modele.add(Dense(10, activation='relu'))
         modele.add(Dense(1, activation='relu'))
 
         modele.compile(loss='mean_squared_logarithmic_error',
                        optimizer='adam')
 
-        modele.fit(X, y, epochs=50, batch_size=8)
+        modele.fit(X, y, epochs=50, batch_size=6)
 
         modele_json = modele.to_json()
 
