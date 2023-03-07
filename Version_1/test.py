@@ -1,4 +1,4 @@
-"""
+
 import tensorflow as tf
 from tensorflow import keras
 from keras import layers
@@ -7,7 +7,7 @@ from main import IA, select_donnée_bdd, insert_data_historique_bdd, model_from_
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score
 
-insert_data_historique_bdd("BNBDOWNUSDT", 50_000)
+insert_data_historique_bdd("XRPDOWNUSDT", 50_000)
 
 X, y = select_donnée_bdd("numpy")
 
@@ -58,6 +58,7 @@ r2 = r2_score(y_test, y_pred)
 
 # afficher le coefficient R²
 print('Coefficient R² : {:.2f}'.format(r2))
+
 """
 from main import IA, select_donnée_bdd, insert_data_historique_bdd, model_from_json
 from sklearn.model_selection import train_test_split
@@ -92,3 +93,4 @@ r2 = r2_score(y_test, y_pred)
 # afficher le coefficient R²
 print('Coefficient R² : {:.2f}'.format(r2))
 print(loaded_model.evaluate(X_train, y_train))
+"""
