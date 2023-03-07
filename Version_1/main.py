@@ -70,9 +70,9 @@ class IA:
         Charge et renvoie les trois modèles
         """
         # Emplacement des réseaux de neuronnes
-        emplacement = f"Modele_1h_2.0/SPOT/{self.symbol}USDT/"
-        emplacement_up = f"Modele_1h_2.0/SPOT_EFFET_LEVIER/{self.symbol}UPUSDT/"
-        emplacement_down = f"Modele_1h_2.0/SPOT_EFFET_LEVIER/{self.symbol}DOWNUSDT/"
+        emplacement = f"Modele_1h/SPOT_USDT/{self.symbol}/"
+        emplacement_up = emplacement[:-1] + "UP/"
+        emplacement_down = emplacement[:-1] + "DOWN/"
 
         # Fichiers
         fichier_json = "modele.json"

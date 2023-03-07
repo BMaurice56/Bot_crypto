@@ -7,7 +7,7 @@ from main import IA, select_donnée_bdd, insert_data_historique_bdd, model_from_
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score
 
-insert_data_historique_bdd("XRPDOWNUSDT", 50_000)
+insert_data_historique_bdd("ADADOWNUSDT", 50_000)
 
 X, y = select_donnée_bdd("numpy")
 
@@ -64,7 +64,7 @@ from main import IA, select_donnée_bdd, insert_data_historique_bdd, model_from_
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score
 
-# reste a faire : xrp, xrpup, xrpdown, ada, adaup, adadown, sol, solup, soldown
+# reste a faire : sol, solup, soldown
 
 #insert_data_historique_bdd("XRPUSDT", 50_000)
 
