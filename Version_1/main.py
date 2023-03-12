@@ -31,7 +31,7 @@ class IA:
         modele = Sequential()
 
         # Ajout des couches
-        modele.add(Dense(l1, input_dim=298, activation='relu'))
+        modele.add(Dense(l1, input_dim=260, activation='relu'))
         modele.add(Dense(l2, activation='relu'))
         modele.add(Dense(1, activation='relu'))
 

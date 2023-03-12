@@ -1,13 +1,12 @@
-"""
-import tensorflow as tf
+
 from tensorflow import keras
 from keras import layers
 from keras_tuner import RandomSearch
-from main import IA, select_donnée_bdd, insert_data_historique_bdd, model_from_json
+from main import select_donnée_bdd, insert_data_historique_bdd
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score
 
-insert_data_historique_bdd("ADADOWNUSDT", 50_000)
+insert_data_historique_bdd("BTCUSDT", 50_000)
 
 X, y = select_donnée_bdd("numpy")
 
@@ -18,9 +17,9 @@ X_train, X_test, y_train, y_test = train_test_split(
 def build_model(hp):
     model = keras.Sequential()
     model.add(layers.Dense(units=hp.Int('units', min_value=5,
-              max_value=256, step=16), activation='relu', input_dim=298))
+              max_value=256, step=8), activation='relu', input_dim=260))
     model.add(layers.Dense(units=hp.Int('units', min_value=2,
-              max_value=256, step=16), activation='relu'))
+              max_value=256, step=8), activation='relu'))
     model.add(layers.Dense(units=1, activation='relu'))
     model.compile(optimizer='adam', loss='mean_squared_logarithmic_error')
     return model
@@ -65,12 +64,10 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score
 from time import perf_counter
 
-# reste a faire : sol, solup, soldown
-t1 = perf_counter()
-insert_data_historique_bdd("BTCDOWNUSDT", 50_000)
-t2 = perf_counter()
-print(t2 - t1)
-"""
+# reste a faire : BTC, ETH, BNB, XRP, ADA, SOL
+
+insert_data_historique_bdd("BTCUSDT", 50_000)
+
 X, y = select_donnée_bdd("numpy")
 
 X_train, X_test, y_train, y_test = train_test_split(
@@ -85,7 +82,6 @@ with open(f"modele.json", "r") as f:
     loaded_model.load_weights(f"modele.h5")
     loaded_model.compile(
         loss='mean_squared_logarithmic_error', optimizer='adam')
-
 
 # prédire les valeurs pour les données de test
 y_pred = loaded_model.predict(X_test)
