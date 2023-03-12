@@ -35,7 +35,6 @@ def bdd_data(curseur, connexion):
     ppo TEXT,
     u_oscilator TEXT,
     macd TEXT,
-    stochrsi TEXT, 
     bande_bollinger TEXT,
     prix_fermeture REAL
     )
@@ -58,8 +57,6 @@ def bdd_rsi_vwap_cmf(curseur, connexion):
     mfi REAL,
     linearregression REAL,
     tsf REAL,
-    a_oscilator REAL,
-    w_r REAL,
     roc TEXT,
     obv TEXT,
     mom TEXT,
@@ -115,21 +112,21 @@ def insert_data_historique_bdd(symbol: str, nombre_données: int, curseur, conne
         ls = calcul_indice_15_donnees(data) + [float(data.close.values[-1])]
 
         # Transformation en string des sous-listes
-        ls[9], ls[10], ls[11] = str(ls[9]), str(ls[10]), str(ls[11])
+        ls[7], ls[8], ls[9] = str(ls[7]), str(ls[8]), str(ls[9])
 
         liste_rsi.append(ls)
 
     curseur.executemany("""
         insert into data (sma, ema, adx, kama, t3, trima, ppo, u_oscilator,
-        macd, stochrsi, bande_bollinger, prix_fermeture) 
-        values (?,?,?,?,?,?,?,?,?,?,?,?)
+        macd, bande_bollinger, prix_fermeture) 
+        values (?,?,?,?,?,?,?,?,?,?,?)
         """, liste_data)
 
     curseur.executemany("""
         insert into rsi_vwap_cmf 
         (rsi, vwap, cmf, cci, mfi, linearregression,
-        tsf, a_oscilator, w_r, roc, obv, mom, prix_fermeture) 
-        values (?,?,?,?,?,?,?,?,?,?,?,?,?)
+        tsf, roc, obv, mom, prix_fermeture) 
+        values (?,?,?,?,?,?,?,?,?,?,?)
         """, liste_rsi)
 
     connexion.commit()
@@ -148,11 +145,10 @@ def select_donnée_bdd(df_numpy: str, curseur, connexion) -> Union[pandas.DataFr
     """
     donnée_bdd = curseur.execute("""
     SELECT data.sma, data.ema, data.adx, data.kama, data.t3, data.trima, data.ppo, data.u_oscilator,
-    data.macd, data.stochrsi, data.bande_bollinger, 
+    data.macd, data.bande_bollinger, 
     rsi_vwap_cmf.rsi, rsi_vwap_cmf.vwap, rsi_vwap_cmf.cmf,
     rsi_vwap_cmf.cci, rsi_vwap_cmf.mfi, rsi_vwap_cmf.linearregression,
-    rsi_vwap_cmf.tsf, rsi_vwap_cmf.a_oscilator, rsi_vwap_cmf.w_r,
-    rsi_vwap_cmf.roc, rsi_vwap_cmf.obv, rsi_vwap_cmf.mom
+    rsi_vwap_cmf.tsf, rsi_vwap_cmf.roc, rsi_vwap_cmf.obv, rsi_vwap_cmf.mom
     FROM data
     INNER JOIN rsi_vwap_cmf ON rsi_vwap_cmf.id = data.id
     """).fetchall()

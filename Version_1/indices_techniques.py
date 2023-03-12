@@ -169,39 +169,6 @@ def TSF(donnée_tsf: pandas.DataFrame) -> float:
     return tsf
 
 
-def aroon_oscilator(donnée_ao: pandas.DataFrame) -> float:
-    """
-    Calcule le AO (aide les traders à savoir quand un marché a une tendance à la hausse, 
-    à la baisse, ou se trouve dans une zone de fluctuation ou un marché sans tendance)
-    """
-    data_high = [float(x) for x in donnée_ao.high.values]
-    data_low = [float(x) for x in donnée_ao.low.values]
-
-    np_high = numpy.array(data_high)
-    np_low = numpy.array(data_low)
-
-    ao = float(talib.AROONOSC(np_high, np_low)[-1])
-
-    return ao
-
-
-def williams_R(donnée_wr: pandas.DataFrame) -> float:
-    """
-    Calcule le williams R (indicateur technique de surachat 
-    et de survente qui peut offrir des signaux potentiels d'achat et de vente)
-    """
-
-    data_high = [float(x) for x in donnée_wr.high.values]
-    data_low = [float(x) for x in donnée_wr.low.values]
-    data_close = [float(x) for x in donnée_wr.close.values]
-
-    np_high = numpy.array(data_high)
-    np_low = numpy.array(data_low)
-    np_close = numpy.array(data_close)
-
-    r = float(talib.WILLR(np_high, np_low, np_close, 15)[-1])
-
-    return r
 #################### liste####################
 
 
@@ -417,32 +384,6 @@ def MACD(donnée_macd: pandas.DataFrame) -> Union[list, list, list]:
     return [macd, signal, hist]
 
 
-def stochRSI(donnée_stochrsi: pandas.DataFrame) -> Union[list, list]:
-    """
-    Prend en argument une dataframe pandas
-    Renvoie le stochRSI sous forme de deux listes
-    On utilise pas la fonction par défaut stochrsi de talib car
-    celle-ci applique stochf à rsi et non pas stoch à rsi
-    """
-    # On récupère les données de la colonne close
-    data = [float(x) for x in donnée_stochrsi.close.values]
-
-    # Création d'un tableau numpy pour la fonction de talib
-    np_data = numpy.array(data)
-
-    # On récupère le retour de la fonction rsi sur les valeurs données
-    rsi = talib.RSI(np_data)
-
-    # Et on applique stoch dessus
-    stochrsi, signal = talib.STOCH(rsi, rsi, rsi)
-
-    # Enfin, on enlève les nan
-    stochrsi = [float(x) for x in stochrsi if math.isnan(x) == False]
-    signal = [float(x) for x in signal if math.isnan(x) == False]
-
-    return [stochrsi, signal]
-
-
 def bandes_bollinger(donnée_bandes: pandas.DataFrame) -> Union[list, list, list]:
     """
     Prend en argument une dataframe pandas
@@ -472,8 +413,8 @@ def calcul_indice_15_donnees(donnée_serveur_rsi: pandas.DataFrame) -> list:
     """
     ls = [RSI(donnée_serveur_rsi), VWAP(donnée_serveur_rsi), chaikin_money_flow(
         donnée_serveur_rsi), CCI(donnée_serveur_rsi), MFI(donnée_serveur_rsi), LinearRegression(
-        donnée_serveur_rsi), TSF(donnée_serveur_rsi), aroon_oscilator(donnée_serveur_rsi), williams_R(
-        donnée_serveur_rsi), ROC(donnée_serveur_rsi), OBV(donnée_serveur_rsi), MOM(donnée_serveur_rsi)]
+        donnée_serveur_rsi), TSF(donnée_serveur_rsi), ROC(donnée_serveur_rsi),
+        OBV(donnée_serveur_rsi), MOM(donnée_serveur_rsi)]
 
     return ls
 
@@ -486,7 +427,7 @@ def calcul_indice_40_donnees(donnée_serveur_data: pandas.DataFrame) -> list:
           KAMA(donnée_serveur_data), T3(
         donnée_serveur_data), TRIMA(donnée_serveur_data),
         PPO(donnée_serveur_data), ultimate_oscilator(donnée_serveur_data),
-        MACD(donnée_serveur_data), stochRSI(donnée_serveur_data), bandes_bollinger(donnée_serveur_data)]
+        MACD(donnée_serveur_data), bandes_bollinger(donnée_serveur_data)]
 
     return ls
 
@@ -501,20 +442,20 @@ def one_liste(donnee: list or tuple, bdd: Optional[bool] = None) -> list:
     cpt = 1
     for element in donnee:
         elt = element
-        if cpt <= 8 or cpt >= 21:
+        if cpt <= 8 or cpt >= 18:
             if bdd != None:
                 elt = ast.literal_eval(str(elt))
 
             for nb in elt:
                 resultat.append(nb)
-        elif cpt <= 11:
+        elif cpt <= 10:
             if bdd != None:
                 elt = ast.literal_eval(str(elt))
 
             for liste in elt:
                 for nb in liste:
                     resultat.append(nb)
-        elif cpt <= 20:
+        elif cpt <= 17:
             if bdd != None:
                 elt = float(elt)
 

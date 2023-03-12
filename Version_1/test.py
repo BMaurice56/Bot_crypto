@@ -1,4 +1,4 @@
-
+"""
 import tensorflow as tf
 from tensorflow import keras
 from keras import layers
@@ -63,11 +63,14 @@ print('Coefficient R² : {:.2f}'.format(r2))
 from main import IA, select_donnée_bdd, insert_data_historique_bdd, model_from_json
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score
+from time import perf_counter
 
 # reste a faire : sol, solup, soldown
-
-#insert_data_historique_bdd("XRPUSDT", 50_000)
-
+t1 = perf_counter()
+insert_data_historique_bdd("BTCDOWNUSDT", 50_000)
+t2 = perf_counter()
+print(t2 - t1)
+"""
 X, y = select_donnée_bdd("numpy")
 
 X_train, X_test, y_train, y_test = train_test_split(
