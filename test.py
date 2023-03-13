@@ -1,9 +1,9 @@
 from main import IA, insert_data_historique_bdd
 
-# reste a faire : ETH, BNB, XRP, ADA, SOL
+# reste a faire : BNB, XRP, ADA, SOL
 
-insert_data_historique_bdd("BTCDOWNUSDT", 50_000)
+insert_data_historique_bdd("BNBUSDT", 50_000)
 
-ia = IA("BTC")
+ia = IA("BNB")
 
 ia.training_2()
