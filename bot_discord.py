@@ -44,7 +44,8 @@ class Botcrypto(commands.Bot):
             Renvoit l'erreur sur le serveur s'il y en a une qui apparait
             """
             try:
-                self.msg_discord.message_canal("général", "Le bot est lancé !")
+                self.msg_discord.message_canal(
+                    "général", f"Bot {symbol} est lancé !")
                 sys.argv = ['', symbol]
                 runpy.run_path("app.py")
             except:
@@ -70,6 +71,22 @@ class Botcrypto(commands.Bot):
                     os.kill(p.ident, 9)
 
                     break
+
+        async def lancement_processus(symbol):
+            """
+            Lance le processus du bot
+            """
+            p = Process(target=lancement_bot,
+                        name=symbol, args=[symbol])
+
+            # Puis on ajoute le processus du bot dans les listes pour garder une trace de tous les bots lancés
+            self.liste_bot_lancé.append(p)
+            self.liste_symbol_bot_lancé.append(symbol)
+
+            # Trie la liste de symbol dans l'ordre croissant
+            self.liste_symbol_bot_lancé.sort()
+
+            p.start()
 
         async def arret_auto_bot():
             """
@@ -210,26 +227,25 @@ class Botcrypto(commands.Bot):
             # On récupère la crypto
             crypto = msg.content
 
-            # Si elle est supporter et pas lancé, alors on lance le bot
-            if crypto in self.crypto_supporter:
-                if crypto not in self.liste_symbol_bot_lancé:
-                    p = Process(target=lancement_bot,
-                                name=crypto, args=[crypto])
+            if crypto == "all":
+                for symbol in self.crypto_supporter:
+                    if symbol not in self.liste_symbol_bot_lancé:
+                        # Lancement du processus puis attente de deux secondes
+                        await lancement_processus(symbol)
 
-                    # Puis on ajoute le processus du bot dans les listes pour garder une trace de tous les bots lancés
-                    self.liste_bot_lancé.append(p)
-                    self.liste_symbol_bot_lancé.append(crypto)
-
-                    # Trie la liste de symbol dans l'ordre croissant
-                    self.liste_symbol_bot_lancé.sort()
-
-                    p.start()
-
-                else:
-                    await ctx.send("Le bot est déjà lancé !")
+                        await asyncio.sleep(2)
 
             else:
-                await ctx.send("Le bot n'existe pas !")
+                # Si elle est supporter et pas lancé, alors on lance le bot
+                if crypto in self.crypto_supporter:
+                    if crypto not in self.liste_symbol_bot_lancé:
+                        await lancement_processus(crypto)
+
+                    else:
+                        await ctx.send("Le bot est déjà lancé !")
+
+                else:
+                    await ctx.send("Le bot n'existe pas !")
 
         @ self.command(name="stop")
         async def stop(ctx):
@@ -256,17 +272,22 @@ class Botcrypto(commands.Bot):
             # On récupère la crypto
             crypto = msg.content
 
-            # Puis on l'arrête si le bot est lancé
-            if crypto in self.crypto_supporter:
-                if crypto in self.liste_symbol_bot_lancé:
-                    arret_manuel_bot(crypto)
-
-                    await ctx.send("Bot arrêté !")
-                else:
-                    await ctx.send("Bot déjà à l'arrêt !")
+            if crypto == "all":
+                for symbol in self.liste_symbol_bot_lancé:
+                    arret_manuel_bot(symbol)
 
             else:
-                await ctx.send("Bot inexistant !")
+                # Puis on l'arrête si le bot est lancé
+                if crypto in self.crypto_supporter:
+                    if crypto in self.liste_symbol_bot_lancé:
+                        arret_manuel_bot(crypto)
+
+                        await ctx.send("Bot arrêté !")
+                    else:
+                        await ctx.send("Bot déjà à l'arrêt !")
+
+                else:
+                    await ctx.send("Bot inexistant !")
 
         @ self.command(name="statut")
         async def statut(ctx):
