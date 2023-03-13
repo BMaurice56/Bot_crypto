@@ -273,8 +273,12 @@ class Botcrypto(commands.Bot):
             crypto = msg.content
 
             if crypto == "all":
-                for symbol in self.liste_symbol_bot_lancé:
+                copy_symbol = [x for x in self.liste_symbol_bot_lancé]
+
+                for symbol in copy_symbol:
                     arret_manuel_bot(symbol)
+                    
+                await ctx.send("Tous les bots ont été arrêtés !")
 
             else:
                 # Puis on l'arrête si le bot est lancé
