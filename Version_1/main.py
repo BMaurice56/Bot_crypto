@@ -1,4 +1,7 @@
 from keras.models import Sequential, model_from_json
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import r2_score
+from keras_tuner import RandomSearch
 from keras.layers import Dense
 from database import *
 
@@ -16,38 +19,117 @@ class IA:
         symbol : "BTC"
         """
         self.symbol = symbol
+        self.input = 260
 
-    def training_keras(self, l1: float, l2: float, X: numpy.array, y: numpy.array) -> None:
+    def training(self, l1: float, l2: float) -> None:
         """
         Entraine les neurones et les sauvegardes
 
         Ex params:
         l1 (première ligne de neurones) : 50
         l2 (deuxième ligne) : 10
-        X : valeur à entrainer (utiliser pour la prédiction)
-        y : valeur à entrainer (valeur prédite)
         """
         # Création du modèle
         modele = Sequential()
 
+        # Récupération et séparation des données
+        X, y = select_donnée_bdd("numpy")
+
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.2, random_state=42)
+
         # Ajout des couches
-        modele.add(Dense(l1, input_dim=260, activation='relu'))
+        modele.add(Dense(l1, input_dim=self.input, activation='relu'))
         modele.add(Dense(l2, activation='relu'))
         modele.add(Dense(1, activation='relu'))
 
         modele.compile(loss='mean_squared_logarithmic_error',
                        optimizer='adam')
 
-        modele.fit(X, y, epochs=50, batch_size=6)
+        modele.fit(X_train, y_train, epochs=50, batch_size=6)
 
         modele_json = modele.to_json()
 
+        # Sauvegarde du modèle
         with open("modele.json", "w") as json_file:
             json_file.write(modele_json)
 
+        # Sauvegarde des poids
         modele.save_weights("modele.h5")
 
         print("Modèle sauvegarder !")
+
+        # prédire les valeurs pour les données de test
+        y_pred = modele.predict(X_test)
+
+        # calculer le coefficient R²
+        r2 = r2_score(y_test, y_pred)
+
+        # afficher le coefficient R² et l'évaluation du modèle sur les données de test
+        print(f'Coefficient R² : {r2}')
+        print(modele.evaluate(X_test, y_test))
+
+    def training_2(self):
+        """
+        recherche la meilleur combinaison de neurone et sauvegarde le modèle
+        """
+        # Récupération et séparation des données
+        X, y = select_donnée_bdd("numpy")
+
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.2, random_state=42)
+
+        def build_model(hp):
+            model = Sequential()
+            model.add(Dense(units=hp.Int('units', min_value=5,
+                                         max_value=256, step=8), activation='relu', input_dim=self.input))
+            model.add(Dense(units=hp.Int('units', min_value=2,
+                                         max_value=256, step=8), activation='relu'))
+            model.add(Dense(units=1, activation='relu'))
+            model.compile(optimizer='adam',
+                          loss='mean_squared_logarithmic_error')
+            return model
+
+        tuner = RandomSearch(
+            build_model,
+            objective='val_loss',
+            max_trials=20,
+            executions_per_trial=2,
+            directory='my_dir',
+            project_name='helloworld'
+        )
+
+        tuner.search_space_summary()
+
+        tuner.search(X_train, y_train,
+                     epochs=50,
+                     validation_data=(X_test, y_test))
+
+        best_model = tuner.get_best_models(num_models=1)[0]
+
+        modele_json = best_model.to_json()
+
+        # Sauvegarde du modèle
+        with open("modele.json", "w") as json_file:
+            json_file.write(modele_json)
+
+        # Sauvegarde des poids
+        best_model.save_weights("modele.h5")
+
+        print("Modèle sauvegarder !")
+
+        # prédire les valeurs pour les données de test
+        y_pred = best_model.predict(X_test)
+
+        # calculer le coefficient R²
+        r2 = r2_score(y_test, y_pred)
+
+        # afficher le coefficient R² et l'évaluation du modèle sur les données de test
+        print(f'Coefficient R² : {r2}')
+        print(best_model.evaluate(X_test, y_test))
+
+        # Suppression du dossier de test des neurones
+        os.system("rm -r my_dir")
 
     def prédiction_keras(self, donnée_serveur_data: pandas.DataFrame, donnée_serveur_rsi: pandas.DataFrame, Modèle) -> float:
         """
