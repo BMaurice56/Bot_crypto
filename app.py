@@ -122,7 +122,7 @@ while True:
 
     if symbol == "BTC":
         msg_discord.message_canal("état_bot", état, 'Etat du bot !')
-
+        """
         # On augmente de 1 le temps qu'on a de position
         # Remis à zéro après si achat ou aucune crypto
         temps_derniere_position += 1
@@ -192,7 +192,7 @@ while True:
                     symbol_stoploss, gain_ordrelimite)
 
             temps_derniere_position = 0
-
+        """
     else:
         msg_discord.message_canal("état_bot_autre", état, 'Etat du bot !')
 
