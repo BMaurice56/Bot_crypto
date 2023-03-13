@@ -1,4 +1,4 @@
-from main import IA, insert_data_historique_bdd, model_from_json
+from main import IA, insert_data_historique_bdd
 
 # reste a faire : BTC, ETH, BNB, XRP, ADA, SOL
 
