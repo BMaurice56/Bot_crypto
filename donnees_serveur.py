@@ -399,7 +399,7 @@ class Kucoin:
                                 date = datetime.now(tz=ZoneInfo("Europe/Paris")
                                                     ).strftime("%A %d %B %Y %H:%M:%S")
 
-                                f.write(f"Erreur du {date} : {résultat} \n")
+                                f.write(f"Bot : {self.symbol_base}, erreur du {date} : {résultat} \n")
 
                 # Puis on vient vider les fichiers
                 os.system(
