@@ -5,13 +5,6 @@ import asyncio
 import runpy
 import sys
 
-# A réactiver et à mettre en premier si le bot discord est un cran au dessus
-# dans l'arborescence de fichier pour gérer les deux versions du bot
-"""
-import sys
-sys.path[:0] = ['Version_1/']
-"""
-
 
 class Botcrypto(commands.Bot):
 
