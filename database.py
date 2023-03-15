@@ -28,14 +28,7 @@ def bdd_data(curseur, connexion):
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     sma TEXT, 
     ema TEXT,
-    adx TEXT,
-    kama TEXT,
-    t3 TEXT,
-    trima TEXT,
-    ppo TEXT,
-    u_oscilator TEXT,
     macd TEXT,
-    bande_bollinger TEXT,
     prix_fermeture REAL
     )
     """)
@@ -51,15 +44,9 @@ def bdd_rsi_vwap_cmf(curseur, connexion):
     (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     rsi REAL,
-    vwap REAL,
     cmf REAL,
-    cci REAL,
-    mfi REAL,
-    linearregression REAL,
-    tsf REAL,
     roc TEXT,
     obv TEXT,
-    mom TEXT,
     prix_fermeture REAL
     )
     """)
@@ -93,7 +80,6 @@ def insert_data_historique_bdd(symbol: str, nombre_données: int, curseur, conne
     liste_rsi = []
 
     for i in range(0, len(données_serveur)-40):
-
         data = données_serveur[i:i+40]
 
         # Calcul les indices techniques + ajout du prix
@@ -112,21 +98,19 @@ def insert_data_historique_bdd(symbol: str, nombre_données: int, curseur, conne
         ls = calcul_indice_15_donnees(data) + [float(data.close.values[-1])]
 
         # Transformation en string des sous-listes
-        ls[7], ls[8], ls[9] = str(ls[7]), str(ls[8]), str(ls[9])
+        ls[2], ls[3] = str(ls[2]), str(ls[3])
 
         liste_rsi.append(ls)
 
     curseur.executemany("""
-        insert into data (sma, ema, adx, kama, t3, trima, ppo, u_oscilator,
-        macd, bande_bollinger, prix_fermeture) 
-        values (?,?,?,?,?,?,?,?,?,?,?)
+        insert into data (sma, ema, macd, prix_fermeture) 
+        values (?,?,?,?)
         """, liste_data)
 
     curseur.executemany("""
         insert into rsi_vwap_cmf 
-        (rsi, vwap, cmf, cci, mfi, linearregression,
-        tsf, roc, obv, mom, prix_fermeture) 
-        values (?,?,?,?,?,?,?,?,?,?,?)
+        (rsi, cmf, roc, obv, prix_fermeture) 
+        values (?,?,?,?,?)
         """, liste_rsi)
 
     connexion.commit()
@@ -144,11 +128,9 @@ def select_donnée_bdd(df_numpy: str, curseur, connexion) -> Union[pandas.DataFr
     df_numpy : dataframe ou numpy
     """
     donnée_bdd = curseur.execute("""
-    SELECT data.sma, data.ema, data.adx, data.kama, data.t3, data.trima, data.ppo, data.u_oscilator,
-    data.macd, data.bande_bollinger, 
-    rsi_vwap_cmf.rsi, rsi_vwap_cmf.vwap, rsi_vwap_cmf.cmf,
-    rsi_vwap_cmf.cci, rsi_vwap_cmf.mfi, rsi_vwap_cmf.linearregression,
-    rsi_vwap_cmf.tsf, rsi_vwap_cmf.roc, rsi_vwap_cmf.obv, rsi_vwap_cmf.mom
+    SELECT data.sma, data.ema, data.macd, 
+    rsi_vwap_cmf.rsi, rsi_vwap_cmf.cmf,
+    rsi_vwap_cmf.roc, rsi_vwap_cmf.obv
     FROM data
     INNER JOIN rsi_vwap_cmf ON rsi_vwap_cmf.id = data.id
     """).fetchall()

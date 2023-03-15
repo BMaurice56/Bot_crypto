@@ -45,32 +45,6 @@ def RSI(donnée_rsi: pandas.DataFrame) -> float:
     return rsi
 
 
-def VWAP(donnée_vwap: pandas.DataFrame) -> float:
-    """
-    Prend en argument une dataframe pandas
-    Renvoie le vwap sous forme d'une float
-    """
-
-    haut = [float(x) for x in donnée_vwap.high.values]
-    bas = [float(x) for x in donnée_vwap.low.values]
-    fermeture = [float(x) for x in donnée_vwap.close.values]
-    volume = [float(x) for x in donnée_vwap.volume.values]
-
-    somme_pr_t_x_volume = 0
-    for i in range(len(haut)):
-        prix_typique = (haut[i] + bas[i] + fermeture[i])/3
-        somme_pr_t_x_volume += prix_typique * volume[i]
-
-    somme_volume = sum(volume)
-
-    if somme_volume == 0:
-        somme_volume = 1
-
-    vwap = somme_pr_t_x_volume / somme_volume
-
-    return vwap
-
-
 def chaikin_money_flow(donnée_cmf: pandas.DataFrame) -> float:
     """
     Prend en argument une dataframe pandas
@@ -101,72 +75,6 @@ def chaikin_money_flow(donnée_cmf: pandas.DataFrame) -> float:
     result = moyenne(moyenne_flow) / my_volume
 
     return result
-
-
-def CCI(donnée_cci: pandas.DataFrame) -> float:
-    """
-    Calcule le CCI (tente d'interpréter les signaux d'achat 
-    et de vente et peut identifier les zones de surachat et de 
-    survente de l'action des prix)
-    """
-    data_high = [float(x) for x in donnée_cci.high.values]
-    data_low = [float(x) for x in donnée_cci.low.values]
-    data_close = [float(x) for x in donnée_cci.close.values]
-
-    np_high = numpy.array(data_high)
-    np_low = numpy.array(data_low)
-    np_close = numpy.array(data_close)
-
-    cci = talib.CCI(np_high, np_low, np_close, len(data_close))
-
-    return float(cci[-1])
-
-
-def MFI(donnée_mfi: pandas.DataFrame) -> float:
-    """
-    Calcul le MFI (utile pour confirmer les tendances 
-    des prix et avertir d'éventuels renversements de prix)
-    """
-    data_volume = [float(x) for x in donnée_mfi.volume.values]
-    data_high = [float(x) for x in donnée_mfi.high.values]
-    data_low = [float(x) for x in donnée_mfi.low.values]
-    data_close = [float(x) for x in donnée_mfi.close.values]
-
-    np_volume = numpy.array(data_volume)
-    np_high = numpy.array(data_high)
-    np_low = numpy.array(data_low)
-    np_close = numpy.array(data_close)
-
-    mfi = float(talib.MFI(np_high, np_low, np_close, np_volume)[-1])
-
-    return mfi
-
-
-def LinearRegression(donnée_lr: pandas.DataFrame) -> float:
-    """
-    Calcule la régrésion linéraire
-    """
-    data_close = [float(x) for x in donnée_lr.close.values]
-
-    np_close = numpy.array(data_close)
-
-    line = float(talib.LINEARREG(np_close, 15)[-1])
-
-    return line
-
-
-def TSF(donnée_tsf: pandas.DataFrame) -> float:
-    """
-    Renvoie le TSF (calcule une ligne de meilleure adéquation sur une période donnée 
-    pour tenter de prédire les tendances futures)
-    """
-    data_close = [float(x) for x in donnée_tsf.close.values]
-
-    np_close = numpy.array(data_close)
-
-    tsf = float(talib.TSF(np_close, 15)[-1])
-
-    return tsf
 
 
 #################### liste####################
@@ -206,18 +114,6 @@ def OBV(donnée_obv: pandas.DataFrame) -> list:
 
     return ls
 
-
-def MOM(donnée_mom: pandas.DataFrame) -> list:
-    """
-    Calcule le MOM (compare le prix actuel par rapport au prix antérieur)
-    """
-    data = [float(x) for x in donnée_mom.close.values]
-
-    np_data = numpy.array(data)
-
-    mom = [float(x) for x in talib.MOM(np_data) if math.isnan(x) == False]
-
-    return mom
 ###################################################################
 
 # Fonctions qui renvoient sous forme d'une liste
@@ -265,99 +161,6 @@ def EMA(donnée_ema: pandas.DataFrame) -> list:
     return ema
 
 
-def ADX(donnée_adx: pandas.DataFrame) -> list:
-    """
-    Calcul le ADX (Décrit si un marché est en tendance ou non)
-    """
-    data_high = [float(x) for x in donnée_adx.high.values]
-    data_low = [float(x) for x in donnée_adx.low.values]
-    data_close = [float(x) for x in donnée_adx.close.values]
-
-    np_high = numpy.array(data_high)
-    np_low = numpy.array(data_low)
-    np_close = numpy.array(data_close)
-
-    data = talib.ADX(np_high, np_low, np_close)
-
-    adx = [float(x) for x in data if math.isnan(x) == False]
-
-    return adx
-
-
-def KAMA(donnée_kama: pandas.DataFrame) -> list:
-    """
-    Calcule le KAMA (devient plus sensible pendant les périodes 
-    où les mouvements de prix sont stables dans une certaine direction 
-    et devient moins sensible aux mouvements de prix lorsque le prix est volatile)
-    """
-    data_close = [float(x) for x in donnée_kama.close.values]
-
-    np_close = numpy.array(data_close)
-
-    kama = [float(x) for x in talib.KAMA(np_close) if math.isnan(x) == False]
-
-    return kama
-
-
-def T3(donnée_t3: pandas.DataFrame) -> list:
-    """
-    Calcule le triple moving average exponential (peut donner des signaux potentiels d'achat 
-    et de vente et tente de filtrer le bruit à court terme.)
-    """
-    data_close = [float(x) for x in donnée_t3.close.values]
-
-    np_close = numpy.array(data_close)
-
-    t3 = [float(x) for x in talib.T3(np_close) if math.isnan(x) == False]
-
-    return t3
-
-
-def TRIMA(donnée_trima: pandas.DataFrame) -> list:
-    """
-    Calcule le TRIMA (Moyenne mobile simple qui a été moyennée une nouvelle fois, 
-    créant ainsi une ligne très lisse)
-    """
-    data_close = [float(x) for x in donnée_trima.close.values]
-
-    np_close = numpy.array(data_close)
-
-    tr = [float(x) for x in talib.TRIMA(np_close) if math.isnan(x) == False]
-
-    return tr
-
-
-def PPO(donnée_ppo: pandas.DataFrame) -> list:
-    """
-    Calcule le PPO (calcule la différence entre les deux moyennes mobiles)
-    """
-    data = [float(x) for x in donnée_ppo.close.values]
-
-    np_data = numpy.array(data)
-
-    ppo = [float(x) for x in talib.PPO(np_data) if math.isnan(x) == False]
-
-    return ppo
-
-
-def ultimate_oscilator(donnée_uo: pandas.DataFrame) -> list:
-    """
-    Calcule l'ultimate oscilator (combine l'action des prix à court terme, 
-    à moyen terme et à long terme en un seul oscillateur)
-    """
-    data_high = [float(x) for x in donnée_uo.high.values]
-    data_low = [float(x) for x in donnée_uo.low.values]
-    data_close = [float(x) for x in donnée_uo.close.values]
-
-    np_high = numpy.array(data_high)
-    np_low = numpy.array(data_low)
-    np_close = numpy.array(data_close)
-
-    uo = [float(x) for x in talib.ULTOSC(
-        np_high, np_low, np_close) if math.isnan(x) == False]
-
-    return uo
-
 # Fonctions qui renvoient sous forme d'une liste de listes
 
 
@@ -384,37 +187,12 @@ def MACD(donnée_macd: pandas.DataFrame) -> Union[list, list, list]:
     return [macd, signal, hist]
 
 
-def bandes_bollinger(donnée_bandes: pandas.DataFrame) -> Union[list, list, list]:
-    """
-    Prend en argument une dataframe pandas
-    Renvoie les bandes de bollinger sous forme d'une liste de trois listes
-    """
-
-    # On récupère les données de la colonne close
-    data = [float(x) for x in donnée_bandes.close.values]
-
-    # Création d'un tableau numpy pour la fonction de talib
-    np_data = numpy.array(data)
-
-    # On récupère le retour de la fonction bbands sur les valeurs données
-    up, middle, low = talib.BBANDS(np_data)
-
-    # Et on enlève les nan
-    up = [float(x) for x in up if math.isnan(x) == False]
-    middle = [float(x) for x in middle if math.isnan(x) == False]
-    low = [float(x) for x in low if math.isnan(x) == False]
-
-    return [up, middle, low]
-
-
 def calcul_indice_15_donnees(donnée_serveur_rsi: pandas.DataFrame) -> list:
     """
     Calcul les indices techniques qui nécessite 15 données
     """
-    ls = [RSI(donnée_serveur_rsi), VWAP(donnée_serveur_rsi), chaikin_money_flow(
-        donnée_serveur_rsi), CCI(donnée_serveur_rsi), MFI(donnée_serveur_rsi), LinearRegression(
-        donnée_serveur_rsi), TSF(donnée_serveur_rsi), ROC(donnée_serveur_rsi),
-        OBV(donnée_serveur_rsi), MOM(donnée_serveur_rsi)]
+    ls = [RSI(donnée_serveur_rsi), chaikin_money_flow(
+        donnée_serveur_rsi), ROC(donnée_serveur_rsi), OBV(donnée_serveur_rsi)]
 
     return ls
 
@@ -423,11 +201,8 @@ def calcul_indice_40_donnees(donnée_serveur_data: pandas.DataFrame) -> list:
     """
     Calcul les indices techniques qui nécessite 40 données
     """
-    ls = [SMA(donnée_serveur_data), EMA(donnée_serveur_data), ADX(donnée_serveur_data),
-          KAMA(donnée_serveur_data), T3(
-        donnée_serveur_data), TRIMA(donnée_serveur_data),
-        PPO(donnée_serveur_data), ultimate_oscilator(donnée_serveur_data),
-        MACD(donnée_serveur_data), bandes_bollinger(donnée_serveur_data)]
+    ls = [SMA(donnée_serveur_data), EMA(
+        donnée_serveur_data), MACD(donnée_serveur_data)]
 
     return ls
 
@@ -442,20 +217,20 @@ def one_liste(donnee: list or tuple, bdd: Optional[bool] = None) -> list:
     cpt = 1
     for element in donnee:
         elt = element
-        if cpt <= 8 or cpt >= 18:
+        if cpt <= 2 or cpt >= 6:
             if bdd != None:
                 elt = ast.literal_eval(str(elt))
 
             for nb in elt:
                 resultat.append(nb)
-        elif cpt <= 10:
+        elif cpt <= 3:
             if bdd != None:
                 elt = ast.literal_eval(str(elt))
 
             for liste in elt:
                 for nb in liste:
                     resultat.append(nb)
-        elif cpt <= 17:
+        elif cpt <= 5:
             if bdd != None:
                 elt = float(elt)
 

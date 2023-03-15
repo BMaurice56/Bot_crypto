@@ -19,7 +19,7 @@ class IA:
         symbol : "BTC"
         """
         self.symbol = symbol
-        self.input = 260
+        self.input = 65
 
     def training(self, l1: float, l2: float) -> None:
         """
