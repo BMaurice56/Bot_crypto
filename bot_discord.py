@@ -233,7 +233,10 @@ class Botcrypto(commands.Bot):
                         # Lancement du processus puis attente de deux secondes
                         await lancement_processus(symbol)
 
-                        await asyncio.sleep(2)
+                        # Dès que le bot est démarré, on passe au suivant
+                        while True:
+                            if f"{symbol}_started" in self.kucoin.dico_partage:
+                                break
 
             else:
                 # Si elle est supporter et pas lancé, alors on lance le bot
@@ -277,7 +280,7 @@ class Botcrypto(commands.Bot):
 
                 for symbol in copy_symbol:
                     arret_manuel_bot(symbol)
-                    
+
                 await ctx.send("Tous les bots ont été arrêtés !")
 
             else:

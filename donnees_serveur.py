@@ -210,6 +210,9 @@ class Kucoin:
         # Dictionnaire partagé entre programme
         self.dico_partage = SharedMemoryDict(name="dico", size=1024)
 
+        # Permet de savoir si le bot a fini de démarrer (démarrage multiple)
+        self.dico_partage[f"{self.symbol_base}_started"] = True
+
         # Si on créer un objet Kucoin en dehors de discord -> bot de trading
         # Permet de garder l'id à jour dans le fichier
         if thread == None:
