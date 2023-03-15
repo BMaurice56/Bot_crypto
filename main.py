@@ -1,6 +1,6 @@
+from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
 from keras.models import Sequential, model_from_json
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import r2_score
 from keras_tuner import RandomSearch
 from keras.layers import Dense
 from database import *
@@ -48,26 +48,11 @@ class IA:
 
         modele.fit(X_train, y_train, epochs=50, batch_size=6)
 
-        modele_json = modele.to_json()
-
         # Sauvegarde du modèle
-        with open("modele.json", "w") as json_file:
-            json_file.write(modele_json)
+        self.save_modele(modele)
 
-        # Sauvegarde des poids
-        modele.save_weights("modele.h5")
-
-        print("Modèle sauvegarder !")
-
-        # prédire les valeurs pour les données de test
-        y_pred = modele.predict(X_test)
-
-        # calculer le coefficient R²
-        r2 = r2_score(y_test, y_pred)
-
-        # afficher le coefficient R² et l'évaluation du modèle sur les données de test
-        print(f'Coefficient R² : {r2}')
-        print(modele.evaluate(X_test, y_test))
+        # Test du modèle
+        self.test_modele(X_test, y_test, modele)
 
     def training_2(self):
         """
@@ -107,29 +92,47 @@ class IA:
 
         best_model = tuner.get_best_models(num_models=1)[0]
 
-        modele_json = best_model.to_json()
+        # Sauvegarde du modèle
+        self.save_modele(best_model)
+
+        # Test du modèle
+        self.test_modele(X_test, y_test, best_model)
+
+        # Suppression du dossier de test des neurones
+        os.system("rm -r my_dir")
+
+    def save_modele(self, modele) -> None:
+        """
+        Sauvegarde le modèle
+        """
+        modele_json = modele.to_json()
 
         # Sauvegarde du modèle
         with open("modele.json", "w") as json_file:
             json_file.write(modele_json)
 
         # Sauvegarde des poids
-        best_model.save_weights("modele.h5")
+        modele.save_weights("modele.h5")
 
         print("Modèle sauvegarder !")
 
+    def test_modele(self, X_test, y_test, modele) -> None:
+        """
+        Test le modèle passé en argument
+        """
         # prédire les valeurs pour les données de test
-        y_pred = best_model.predict(X_test)
+        y_pred = modele.predict(X_test)
 
-        # calculer le coefficient R²
+        # calcule des indices de fiabilités du modèle
+        mse = mean_squared_error(y_test, y_pred)
+        mae = mean_absolute_error(y_test, y_pred)
         r2 = r2_score(y_test, y_pred)
 
-        # afficher le coefficient R² et l'évaluation du modèle sur les données de test
+        # affiche les indices et l'évaluation du modèle sur les données de test
+        print(f"Mean Squared Error (MSE): {mse}")
+        print(f"Mean Absolute Error (MAE): {mae}")
         print(f'Coefficient R² : {r2}')
-        print(best_model.evaluate(X_test, y_test))
-
-        # Suppression du dossier de test des neurones
-        os.system("rm -r my_dir")
+        print(modele.evaluate(X_test, y_test))
 
     def prédiction_keras(self, donnée_serveur_data: pandas.DataFrame, donnée_serveur_rsi: pandas.DataFrame, Modèle) -> float:
         """
