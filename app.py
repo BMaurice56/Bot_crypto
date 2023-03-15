@@ -121,7 +121,7 @@ while True:
         f"prix crypto down : {prix_down}, prix de la prédiction : {prediction_down}"
 
     if symbol == "BTC":
-        msg_discord.message_canal("état_bot", état, 'Etat du bot !')
+        msg_discord.message_canal("état_bot_autre", état, 'Etat du bot !')
         """
         # On augmente de 1 le temps qu'on a de position
         # Remis à zéro après si achat ou aucune crypto
