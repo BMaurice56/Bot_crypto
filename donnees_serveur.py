@@ -414,11 +414,11 @@ class Kucoin:
 
                 # Puis on vient vider les fichiers
                 os.system(
-                    f'echo "" > {self.path_log}/log_requete_{self.symbol_base}.txt')
+                    f'echo > {self.path_log}/log_requete_{self.symbol_base}.txt')
                 os.system(
-                    f'echo "" > {self.path_log}/log_stoploss_manuel_{self.symbol_base}.txt')
+                    f'echo > {self.path_log}/log_stoploss_manuel_{self.symbol_base}.txt')
                 os.system(
-                    f'echo "" > {self.path_log}/log_update_id_position_{self.symbol_base}.txt')
+                    f'echo > {self.path_log}/log_update_id_position_{self.symbol_base}.txt')
 
                 # Et faire dormir le programme
                 sleep(60 * 60 * 3)
