@@ -214,6 +214,12 @@ class Kucoin:
         # Permet de savoir si le bot a fini de démarrer (démarrage multiple)
         self.dico_partage[f"{self.symbol_base}_started"] = True
 
+        # Dossier fichiers logs
+        self.dir_log = "fichier_log"
+
+        # Chemin des fichiers logs
+        self.path_log = f"/home/Bot_crypto/{self.dir_log}"
+
         # Si on créer un objet Kucoin en dehors de discord -> bot de trading
         # Permet de garder l'id à jour dans le fichier et analyser les fichiers logs
         if thread == None:
@@ -333,13 +339,13 @@ class Kucoin:
                             ).strftime("%A %d %B %Y %H:%M:%S")
 
         if emplacement == "requete":
-            pwd = f"fichier_log/log_requete_{self.symbol_base}.txt"
+            pwd = f"{self.dir_log}/log_requete_{self.symbol_base}.txt"
 
         elif emplacement == "presence_position":
-            pwd = f"fichier_log/log_update_id_position_{self.symbol_base}.txt"
+            pwd = f"{self.dir_log}/log_update_id_position_{self.symbol_base}.txt"
 
         elif emplacement == "stoploss":
-            pwd = f"fichier_log/log_stoploss_manuel_{self.symbol_base}.txt"
+            pwd = f"{self.dir_log}/log_stoploss_manuel_{self.symbol_base}.txt"
 
         fichier = open(pwd, "a")
 
@@ -361,9 +367,9 @@ class Kucoin:
             while True:
                 for elt in nom:
                     fichier_en_cours = elt
-                    if os.path.exists(f"fichier_log/{elt}") == True:
+                    if os.path.exists(f"{self.dir_log}/{elt}") == True:
                         # On vient lire le contenue du fichier
-                        fichier = open(f"fichier_log/{elt}", "r").read()
+                        fichier = open(f"{self.dir_log}/{elt}", "r").read()
 
                         # S'il y a bien une requête dans le fichier, alors on peut l'analyser
                         if len(fichier) > 25:
@@ -398,7 +404,7 @@ class Kucoin:
                                     résultat.append(requete_trie[k])
 
                             if len(résultat) > 0:
-                                f = open(f"fichier_log/log_recap.txt", "a")
+                                f = open(f"{self.dir_log}/log_recap.txt", "a")
 
                                 date = datetime.now(tz=ZoneInfo("Europe/Paris")
                                                     ).strftime("%A %d %B %Y %H:%M:%S")
@@ -408,11 +414,11 @@ class Kucoin:
 
                 # Puis on vient vider les fichiers
                 os.system(
-                    f'echo "" > /home/Bot_crypto/Version_1/fichier_log/log_requete_{self.symbol_base}.txt')
+                    f'echo "" > {self.path_log}/log_requete_{self.symbol_base}.txt')
                 os.system(
-                    f'echo "" > /home/Bot_crypto/Version_1/fichier_log/log_stoploss_manuel_{self.symbol_base}.txt')
+                    f'echo "" > {self.path_log}/log_stoploss_manuel_{self.symbol_base}.txt')
                 os.system(
-                    f'echo "" > /home/Bot_crypto/Version_1/fichier_log/log_update_id_position_{self.symbol_base}.txt')
+                    f'echo "" > {self.path_log}/log_update_id_position_{self.symbol_base}.txt')
 
                 # Et faire dormir le programme
                 sleep(60 * 60 * 3)
