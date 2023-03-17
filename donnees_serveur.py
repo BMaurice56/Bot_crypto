@@ -194,6 +194,7 @@ class Kucoin:
         self.symbol_down_simple = f"{crypto}3S"
         self.devise = "USDT"
 
+        # Variable vente manuelle dictionnaire partagé
         self.vente_manuelle = f"vente_manuelle_{self.symbol_base}"
 
         # Donne le symbol simple
@@ -214,7 +215,7 @@ class Kucoin:
         self.dico_partage[f"{self.symbol_base}_started"] = True
 
         # Si on créer un objet Kucoin en dehors de discord -> bot de trading
-        # Permet de garder l'id à jour dans le fichier
+        # Permet de garder l'id à jour dans le fichier et analyser les fichiers logs
         if thread == None:
             th = Thread(target=self.update_id_ordre_limite)
             th.start()
@@ -402,7 +403,8 @@ class Kucoin:
                                 date = datetime.now(tz=ZoneInfo("Europe/Paris")
                                                     ).strftime("%A %d %B %Y %H:%M:%S")
 
-                                f.write(f"Bot : {self.symbol_base}, erreur du {date} : {résultat} \n")
+                                f.write(
+                                    f"Bot : {self.symbol_base}, erreur du {date} : {résultat} \n")
 
                 # Puis on vient vider les fichiers
                 os.system(
