@@ -54,7 +54,7 @@ class IA:
         # Test du modèle
         self.test_modele(X_test, y_test, modele)
 
-    def training_2(self):
+    def training_2(self) -> None:
         """
         recherche la meilleur combinaison de neurone et sauvegarde le modèle
         """
@@ -80,8 +80,8 @@ class IA:
             objective='val_loss',
             max_trials=20,
             executions_per_trial=2,
-            directory='my_dir',
-            project_name='helloworld'
+            directory="my_dir",
+            project_name="helloworld"
         )
 
         tuner.search_space_summary()
@@ -230,17 +230,23 @@ class IA:
         Valide ou non l'achat d'une crypto
         """
         if prix < prediction and prix_up < prediction_up and prix_down > prediction_down:
-            if self.symbol == "BTC":
-                if prediction_up - prix_up >= 0.045 and prediction_down <= 0.03:
-                    return 1
-            else:
+            if self.symbol == "BTC" and prediction_up - prix_up >= 0.045 and prediction_down <= 0.03:
+                return 1
+
+            elif self.symbol == "ETH":
+                return 1
+
+            elif self.symbol == "BNB":
                 return 1
 
         if prix > prediction and prix_up > prediction_up and prix_down < prediction_down:
-            if self.symbol == "BTC":
-                if prix_up - prediction_up >= 0.045 and prediction_down >= 0.0245:
-                    return 0
-            else:
+            if self.symbol == "BTC" and prix_up - prediction_up >= 0.045 and prediction_down >= 0.0245:
+                return 0
+
+            elif self.symbol == "ETH":
+                return 0
+
+            elif self.symbol == "BNB":
                 return 0
 
         return None
