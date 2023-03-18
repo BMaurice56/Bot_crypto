@@ -1,11 +1,11 @@
 from main import IA, insert_data_historique_bdd, select_donnée_bdd, Process
 
-# reste a faire : ADA, SOL
-# nickel : BTC, ETH, BNB, XRP
+# reste a faire : SOL
+# nickel : BTC, ETH, BNB, XRP, ADA
 
-ia = IA("ADA")
+ia = IA("SOL")
 
-insert_data_historique_bdd("ADAUSDT", 50_000)
+insert_data_historique_bdd("SOLUSDT", 50_000)
 
 ia.training_2()
 
