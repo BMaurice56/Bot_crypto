@@ -155,7 +155,7 @@ class IA:
         Charge et renvoie les trois modèles
         """
         # Emplacement des réseaux de neuronnes
-        emplacement = f"Modele_1h/SPOT_USDT/{self.symbol}/"
+        emplacement = f"Modele_1h/{self.symbol}/"
         emplacement_up = emplacement[:-1] + "UP/"
         emplacement_down = emplacement[:-1] + "DOWN/"
 

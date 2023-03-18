@@ -229,6 +229,8 @@ class Botcrypto(commands.Bot):
                         # Dès que le bot est démarré, on passe au suivant
                         while True:
                             if f"{symbol}_started" in self.kucoin.dico_partage:
+                                del self.kucoin.dico_partage[f"{symbol}_started"]
+
                                 break
 
             else:
