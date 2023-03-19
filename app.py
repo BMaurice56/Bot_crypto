@@ -120,12 +120,12 @@ while True:
         f"prix crypto up : {prix_up}, prix de la prédiction : {prediction_up}\n" + \
         f"prix crypto down : {prix_down}, prix de la prédiction : {prediction_down}"
 
-    état_2 = f"Bot {symbol} toujours en cour d'exécution le : {date}\n"
-
     with open(f"Autre_fichiers/message_bot_{symbol}.txt", "a") as f:
         f.write(état)
 
-    msg_discord.message_canal("état_bot_autre", état_2)
+    état_2 = f"Bot {symbol} toujours en cour d'exécution le : {date}\n"
+
+    msg_discord.message_canal("état_bot", état_2)
     """
     # On augmente de 1 le temps qu'on a de position
     # Remis à zéro après si achat ou aucune crypto

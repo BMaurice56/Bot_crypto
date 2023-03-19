@@ -14,7 +14,6 @@ class Message_discord:
         # Adresse du webhook discord
         self.adr_webhook_général = "https://discordapp.com/api/webhooks/969652904959045674/KdVNf9INCcZ3O4V1NnzCsJfhwiAgy4cy1GMjaPZI7spmAAeIkS7sQSYGuKMT5YyAyLza"
         self.adr_webhook_état_bot = "https://discord.com/api/webhooks/972545553210695731/zLBkaDU4SPyyLoVXz5E-tv-4PkhfrZH6gipWwSI-1cAqwxFlrbYjKsxxRc2i9zioINIh"
-        self.adr_webhook_état_bot_autre = "https://discordapp.com/api/webhooks/1082407631961985044/r3oZXctylgvAXgEVspr2yDucZ4a1SpMIzFxR7Ifi3nynoxA-uzWNhryKWCK_Y_RZx40O"
         self.adr_webhook_prise_position = "https://discord.com/api/webhooks/973269614874214410/UPyGLXDE2MbjvtmehG8cAAxx3zXtU3Kt-mN4TolLo1golSuHUp9AiCal0jrvIu3C6E6_"
 
         self.nom = "Jimmy"
@@ -24,7 +23,7 @@ class Message_discord:
         Envoi un message sur le canal voulu
 
         Ex params :
-        canal : "général" ou "état_bot" ou "état_bot_autre" ou "prise_position"
+        canal : "général" ou "état_bot" ou "prise_position"
         message : contenue du message
         titre (optionnel) : titre du message
         """
@@ -32,8 +31,6 @@ class Message_discord:
             adresse = self.adr_webhook_général
         elif canal == "état_bot":
             adresse = self.adr_webhook_état_bot
-        elif canal == "état_bot_autre":
-            adresse = self.adr_webhook_état_bot_autre
         elif canal == "prise_position":
             adresse = self.adr_webhook_prise_position
 
@@ -54,9 +51,8 @@ class Message_discord:
         """
         S'occupe de recevoir une erreur et de l'envoyer sur le canal discord
         """
-        fichier = open("fichier_log/log_erreur.txt", "a")
-
-        fichier.write(f"{emplacement_erreur} ; {erreur} \n")
+        with open("fichier_log/log_erreur.txt", "a") as f:
+            f.write(f"{emplacement_erreur} ; {erreur} \n")
 
         # On envoie l'emplacement de l'erreur, où elle s'est produite
         # Et si cela arrête le programme ou non
