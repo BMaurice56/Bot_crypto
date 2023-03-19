@@ -85,8 +85,6 @@ class Botcrypto(commands.Bot):
             """
             Supprime automatiquement de la liste les processus arrêté
             """
-            self.msg_discord.message_canal(
-                "général", "fonction arret auto lancé")
             while True:
                 for process in self.liste_bot_lancé:
                     if process.exitcode != None:
