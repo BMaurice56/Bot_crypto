@@ -226,10 +226,12 @@ class Botcrypto(commands.Bot):
                         # Lancement du processus puis attente de deux secondes
                         await lancement_processus(symbol)
 
-                        # Dès que le bot est démarré, on passe au suivant
+                        # Dès que le bot est démarré, on attend (gestion multibot) et on passe au suivant
                         while True:
                             if f"{symbol}_started" in self.kucoin.dico_partage:
                                 del self.kucoin.dico_partage[f"{symbol}_started"]
+
+                                await asyncio.sleep(5)
 
                                 break
 
