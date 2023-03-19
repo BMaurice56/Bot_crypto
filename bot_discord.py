@@ -239,6 +239,13 @@ class Botcrypto(commands.Bot):
                     if crypto not in self.liste_symbol_bot_lancé:
                         await lancement_processus(crypto)
 
+                        # Dès que le bot est démarré, on peut supprimer la variable
+                        while True:
+                            if f"{crypto}_started" in self.kucoin.dico_partage:
+                                del self.kucoin.dico_partage[f"{crypto}_started"]
+
+                                break
+
                     else:
                         await ctx.send("Le bot est déjà lancé !")
 
@@ -364,7 +371,7 @@ class Botcrypto(commands.Bot):
             Renvoie le montant du compte des cryptos
             """
 
-            argent = self.kucoin.montant_compte(self.kucoin.devise)
+            argent = self.kucoin.montant_compte(self.kucoin.devise, None, True)
             await ctx.send(f"Le compte possède {argent} USDT")
 
             for crypto in self.crypto_supporter:
@@ -378,8 +385,21 @@ class Botcrypto(commands.Bot):
             """
             redemarre le bot discord et met à jour ses fichiers
             """
+            # Récupère toutes les positions en cours
+            cryptos_position = self.kucoin.présence_position_all()
 
-            Popen("nohup python3.10 redemarrage.py >/dev/null 2>&1", shell=True)
+            # S'il y a bien des symboles, alors on bloque le redémarrage
+            if cryptos_position != None:
+                await ctx.send("Impossible de redémarrer, des positions sont en cours")
+
+                crypto = ""
+                for elt in cryptos_position:
+                    crypto += f"{elt}, "
+
+                await ctx.send(f"Crypto.s ayant une position : {crypto[:-2]}")
+
+            else:
+                Popen("nohup python3.10 redemarrage.py >/dev/null 2>&1", shell=True)
 
         @ self.command(name="message")
         async def message(ctx):
