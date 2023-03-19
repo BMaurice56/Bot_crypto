@@ -87,7 +87,6 @@ while True:
     buy_sell = False
 
     argent = kucoin.montant_compte(kucoin.devise)
-    msg_discord.message_canal("général", f"argent du bot {symbol} : {argent}")
     crypto_up = kucoin.montant_compte(kucoin.symbol_up_simple)
     crypto_down = kucoin.montant_compte(kucoin.symbol_down_simple)
 
