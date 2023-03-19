@@ -231,7 +231,7 @@ class Botcrypto(commands.Bot):
                             if f"{symbol}_started" in self.kucoin.dico_partage:
                                 del self.kucoin.dico_partage[f"{symbol}_started"]
 
-                                await asyncio.sleep(5)
+                                await asyncio.sleep(10)
 
                                 break
 
