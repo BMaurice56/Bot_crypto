@@ -22,6 +22,11 @@ class Message_discord:
     def message_canal(self, canal: str, message: str, titre: Optional[str] = None):
         """
         Envoi un message sur le canal voulu
+
+        Ex params :
+        canal : "général" ou "état_bot" ou "état_bot_autre" ou "prise_position"
+        message : contenue du message
+        titre (optionnel) : titre du message
         """
         if canal == "général":
             adresse = self.adr_webhook_général

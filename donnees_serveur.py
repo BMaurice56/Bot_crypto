@@ -473,6 +473,7 @@ class Kucoin:
         Ex params :
         symbol : USDT ou BTC3L
         type_requete (optionnel) : "requete" ou "stoploss"
+        total (optionnel) : total d'usdt voulu
         """
         # On défini la terminaison de la requête
         endpoint = f"/api/v1/accounts?currency={symbol}&type=trade"
@@ -520,7 +521,7 @@ class Kucoin:
                 if argent > argent_bot:
                     argent = argent_bot
 
-            money = self.arrondi(float(argent[0]['balance']) * 0.999, '0.0001')
+            money = self.arrondi(argent * 0.999, '0.0001')
 
             return money
         else:
