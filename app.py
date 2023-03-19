@@ -30,7 +30,7 @@ symbol_stoploss = ""
 prix_stoploss = 0.0
 
 # Création de la variable avec le thread de stoploss manuel
-thread = kucoin.stoploss_manuel(symbol_stoploss, prix_stoploss, event)
+thread = Thread()
 
 # On récupère l'état précédent du bot (Heure et stoploss)
 etat = ia.etat_bot("lecture")
@@ -65,11 +65,10 @@ if len(etat) > 0:
         symbol_stoploss = etat[1]
         prix_stoploss = float(etat[2])
 
-    # S'il y a des cryptos en cours, alors on relance le stoploss
-    if crypto_up > kucoin.minimum_crypto_up or crypto_down > kucoin.minimum_crypto_down:
-        if symbol_stoploss != "" and prix_stoploss != 0.0:
+        # S'il y a des cryptos en cours, alors on relance le stoploss
+        if crypto_up > kucoin.minimum_crypto_up or crypto_down > kucoin.minimum_crypto_down:
             thread = kucoin.stoploss_manuel(
-                symbol_stoploss, prix_stoploss, event, True)
+                symbol_stoploss, prix_stoploss, event)
 
     # Si le bot n'a pas attendu l'heure, alors il attend
     if date - ancienne_date < 3600:
@@ -158,7 +157,7 @@ while True:
 
             # Gère le stoploss de façon manuel
             thread = kucoin.stoploss_manuel(
-                symbol_stoploss, prix_stoploss, event, True)
+                symbol_stoploss, prix_stoploss, event)
 
             buy_sell = True
 

@@ -824,7 +824,7 @@ class Kucoin:
             del self.dico_partage[self.vente_manuelle]
 
     # Fonction qui tourne en continue
-    def stoploss_manuel(self, symbol: str, prix_stop: float, event: Event, start: Optional[bool] = None) -> Thread:
+    def stoploss_manuel(self, symbol: str, prix_stop: float, event: Event) -> Thread:
         """
         Fait office de stoploss mais de façon manuel
         Basé sur le prix du marché normal, pas celui des jetons à effet de levier
@@ -835,7 +835,7 @@ class Kucoin:
         start (optionnel) : True pour démarrer ou laisser à None
         """
 
-        def stoploss_thread(symbol: str, prix_stop: float, event: Event):
+        def stoploss_thread(symbol: str, prix_stop: float, event: Event) -> None:
             try:
                 # Dictionnaire qui donne les bonnes valeurs et symbol au stoploss
                 dico_type_marché = {self.symbol_up: True,
@@ -885,13 +885,12 @@ class Kucoin:
                     erreur, "Erreur survenu dans la fonction stoploss_manuel, aucune interruption du programme, fonction relancée")
 
                 # Et enfin on relance la fonction
-                self.stoploss_manuel(symbol, prix_stop)
+                stoploss_thread(symbol, prix_stop, event)
 
         th = Thread(target=stoploss_thread, args=[
             symbol, prix_stop, event])
 
-        if start != None:
-            th.start()
+        th.start()
 
         return th
 
