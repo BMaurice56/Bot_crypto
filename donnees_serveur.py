@@ -205,6 +205,11 @@ class Kucoin:
         with open("Autre_fichiers/priceIncrement.txt", "r") as f:
             self.dico_priceIncrement = json.loads(f.read())
 
+        # Crypto supportées et leurs nombres
+        with open("Autre_fichiers/crypto_supporter.txt", "r") as f:
+            self.crypto_supporter = f.read().split(";")
+            self.nb_crypto_supporté = len(self.crypto_supporter)
+
         # Message discord
         self.msg_discord = Message_discord()
 
@@ -292,18 +297,15 @@ class Kucoin:
 
         return valeur_1 <= valeur_2
 
-    def lecture_fichier(self) -> str or None:
+    def lecture_fichier_ordre_limit(self) -> str or None:
         """
         Lit le contenu du ficher ordre_limit
         Renvoie le contenu ou None
         """
         # On utilise try dans le cas où le fichier n'existe pas
         try:
-            fichier = open(f"ordre_limit_{self.symbol_base}.txt", "r")
-
-            elt = fichier.read()
-
-            fichier.close()
+            with open(f"ordre_limit_{self.symbol_base}.txt", "r") as f:
+                elt = f.read()
 
             if elt == "":
                 return None
@@ -311,7 +313,7 @@ class Kucoin:
         except:
             return None
 
-    def écriture_fichier(self, str_to_write: Optional[str] = None) -> None:
+    def écriture_fichier_ordre_limit(self, str_to_write: Optional[str] = None) -> None:
         """
         Ecrit ou écrase le fichier
 
@@ -347,11 +349,8 @@ class Kucoin:
         elif emplacement == "stoploss":
             pwd = f"{self.dir_log}/log_stoploss_manuel_{self.symbol_base}.txt"
 
-        fichier = open(pwd, "a")
-
-        fichier.write(f"{date};{requete}\n")
-
-        fichier.close()
+        with open(pwd, "a") as f:
+            f.write(f"{date};{requete}\n")
 
     def analyse_fichier(self) -> None:
         """
@@ -404,15 +403,14 @@ class Kucoin:
                                     résultat.append(requete_trie[k])
 
                             if len(résultat) > 0:
-                                f = open(f"{self.dir_log}/log_recap.txt", "a")
-
                                 date = datetime.now(tz=ZoneInfo("Europe/Paris")
                                                     ).strftime("%A %d %B %Y %H:%M:%S")
 
-                                f.write(
-                                    f"Bot : {self.symbol_base}, erreur du {date} : {résultat} \n")
+                                with open(f"{self.dir_log}/log_recap.txt", "a") as f:
+                                    f.write(
+                                        f"Bot : {self.symbol_base}, erreur du {date} : {résultat} \n")
 
-                # Puis on vient vider les fichiers
+                # Puis on vient vider les fichiers (ou les créer)
                 os.system(
                     f'echo > {self.path_log}/log_requete_{self.symbol_base}.txt')
                 os.system(
@@ -468,7 +466,7 @@ class Kucoin:
         # Puis on retourne les données
         return json.loads(content)
 
-    def montant_compte(self, symbol: str, type_requete: Optional[str] = None) -> float:
+    def montant_compte(self, symbol: str, type_requete: Optional[str] = None, total: Optional[bool] = None) -> float:
         """
         Renvoie le montant que possède le compte selon le symbol voulus
 
@@ -493,9 +491,34 @@ class Kucoin:
         # Avec seulement 99,9% de sa quantité initiale car pour l'achat des cryptos
         # -> aucun problème avec le nb de chiffres après la virgule et les frais de la platforme
         if argent != []:
-            # if symbol == self.devise:
-            #    if argent[0] > 25:
-            #        argent = [25]
+            argent = float(argent[0]['balance'])
+
+            # renvoit l'usdt disponible pour chaque bot
+            if symbol == self.devise and total == None:
+                # Si présence du total d'usdt dans le dictionnaire
+                # On met à jour le max s'il est supérieur à celui enregistrer (gain des bots)
+                if "quantite_usdt" in self.dico_partage:
+                    # S'il y a plus d'argent (gain), alors on met à jour
+                    if argent >= self.dico_partage["quantite_usdt"]:
+                        self.dico_partage["quantite_usdt"] = argent
+                    else:
+                        # S'il n'y a pas de position et que le montant est plus faible (perte)
+                        # Alors on met à jour
+                        position_all = self.présence_position_all()
+                        if position_all == None:
+                            self.dico_partage["quantite_usdt"] = argent
+
+                else:
+                    self.dico_partage["quantite_usdt"] = argent
+
+                # Max d'usdt pour chaque bot
+                argent_bot = self.dico_partage["quantite_usdt"] / \
+                    self.nb_crypto_supporté
+
+                # S'il y a plus d'usdt que prévu pour chaque bot
+                # Alors le bot ne prend que sa part
+                if argent > argent_bot:
+                    argent = argent_bot
 
             money = self.arrondi(float(argent[0]['balance']) * 0.999, '0.0001')
 
@@ -583,14 +606,14 @@ class Kucoin:
             if self.vente_manuelle in self.dico_partage:
                 del self.dico_partage[self.vente_manuelle]
 
-    def presence_position(self, symbol: str) -> dict or None:
+    def présence_position(self, symbol: str) -> dict or None:
         """
         Renvoie les positions en cours sur une pair de crypto précis
 
         Ex params :
         symbol : BTC3S-USDT
 
-        Sortie de la fonction :
+        Sortie de la fonction (si position):
         {'id': '62d6e3303896050001788d36', 'symbol': 'BTC3L-USDT', 'opType': 'DEAL', 'type': 'limit', 'side': 'sell', 
         'price': '0.007', 'size': '6791.3015', 'funds': '0', 'dealFunds': '0', 'dealSize': '0', 'fee': '0', 
         'feeCurrency': 'USDT', 'stp': '', 'stop': '', 'stopTriggered': False, 'stopPrice': '0', 'timeInForce': 'GTC', 
@@ -613,12 +636,36 @@ class Kucoin:
         else:
             return resultat[0]
 
+    def présence_position_all(self) -> list or None:
+        """
+        Renvoi toutes les positions de toutes les cyptomonnaies supportées
+        """
+        # Stock les cryptos ayant des positions
+        cryptos_position = []
+
+        # Parcour toutes les cryptos supportées
+        for symbol in self.crypto_supporter:
+            liste_symbole = [f"{symbol}3L-USDT", f"{symbol}3S-USDT"]
+
+            # Parcour les deux marchés
+            for position_symbol in liste_symbole:
+                pos = self.présence_position(position_symbol)
+
+                # S'il y a bien une position, alors on stocke le symbole de la crypto
+                if pos != None:
+                    cryptos_position.append(position_symbol)
+
+        if cryptos_position == []:
+            return None
+
+        return cryptos_position
+
     def suppression_ordre(self) -> None:
         """
         Supprime l'ordre s'il existe
         """
         # On récupère l'id de l'ordre
-        id_ordre = self.lecture_fichier()
+        id_ordre = self.lecture_fichier_ordre_limit()
 
         # Si le fichier n'est pas vide, alors on peut supprimer l'ordre
         if id_ordre != None:
@@ -631,7 +678,7 @@ class Kucoin:
 
         # Enfin on supprime l'id du fichier
         # Créer le fichier s'il n'existe pas
-        self.écriture_fichier()
+        self.écriture_fichier_ordre_limit()
 
     def achat_vente(self, montant: float, symbol: str, achat_ou_vente: bool) -> None:
         """
@@ -658,7 +705,7 @@ class Kucoin:
                                            msg, 'Prise de position')
 
         else:
-            argent = self.montant_compte(self.devise)
+            argent = self.montant_compte(self.devise, None, True)
 
             msg = f"Vente de position au prix de {prix}$, il reste {argent} usdt"
             self.msg_discord.message_canal("prise_position",
@@ -693,7 +740,7 @@ class Kucoin:
             gain = nouveau_gain
 
             # On récupère l'ancien prix pour le calcul de la descente
-            ancien_prix = float(self.presence_position(symbol)["price"])
+            ancien_prix = float(self.présence_position(symbol)["price"])
 
             # Calcul du nouveau prix
             nv_prix = self.arrondi(
@@ -769,7 +816,7 @@ class Kucoin:
                 f"{str(content)}", "Echec du placement de l'ordre limite")
 
         # Puis on vient écrire l'id de l'ordre dans un fichier pour faciliter la suppresion de celui-ci
-        self.écriture_fichier(content["data"]["orderId"])
+        self.écriture_fichier_ordre_limit(content["data"]["orderId"])
 
         # Et on supprime la valeur du dictionnaire (si descente de l'ordre limite)
         if self.vente_manuelle in self.dico_partage:
@@ -856,12 +903,12 @@ class Kucoin:
             # Stock l'id de l'ordre
             id_ordrelimite = ""
             while True:
-                sl_3L = self.presence_position(self.symbol_up)
-                sl_3S = self.presence_position(self.symbol_down)
+                sl_3L = self.présence_position(self.symbol_up)
+                sl_3S = self.présence_position(self.symbol_down)
 
                 # S'il y a aucun stoploss, par sécurité on vide le fichier
                 if sl_3L == None and sl_3S == None:
-                    self.écriture_fichier()
+                    self.écriture_fichier_ordre_limit()
 
                     # S'il y avait bien un id avant
                     if id_ordrelimite != "":
@@ -869,7 +916,8 @@ class Kucoin:
 
                         # alors soit l'ordre est exécuté
                         if self.vente_manuelle not in self.dico_partage:
-                            montant = self.montant_compte(self.devise)
+                            montant = self.montant_compte(
+                                self.devise, None, True)
 
                             self.msg_discord.message_canal("prise_position",
                                                            f"Exécution de l'ordre limite, il reste {montant} USDT !", "Exécution de l'ordre limite")
@@ -880,12 +928,12 @@ class Kucoin:
 
                 # Sinon par sécurité, on remet l'id du stoploss dans le fichier
                 elif sl_3L != None:
-                    self.écriture_fichier(sl_3L['id'])
+                    self.écriture_fichier_ordre_limit(sl_3L['id'])
                     id_ordrelimite = sl_3L['id']
 
                 # De même pour ici
                 elif sl_3S != None:
-                    self.écriture_fichier(sl_3S['id'])
+                    self.écriture_fichier_ordre_limit(sl_3S['id'])
                     id_ordrelimite = sl_3S['id']
 
                 sleep(20)
