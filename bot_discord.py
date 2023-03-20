@@ -1,5 +1,5 @@
 from main import Kucoin, Message_discord, os, Process, traceback, kill_process, datetime, ZoneInfo, sleep, Thread
-from subprocess import Popen, PIPE
+from subprocess import Popen
 from discord.ext import commands
 import asyncio
 import runpy
@@ -69,37 +69,62 @@ class Botcrypto(commands.Bot):
             """
             Envoi sur le canal d'état les bots démarés
             """
-            bot = []
-            cpt = 0
+            somme = 0
+            temps_max = 0
 
             while True:
                 if self.liste_symbol_bot_lancé != []:
-                    # Si un bot est lancé, on envoit un message
-                    if bot != self.liste_symbol_bot_lancé:
-                        bot = self.liste_symbol_bot_lancé[:]
+                    # On fait la moyenne de temps des bots lancé
+                    # Message de statut des bots au niveau de leur fonctionnement à eux
+                    for symbole in self.liste_symbol_bot_lancé:
+                        with open(f"etat_bot_{symbole}.txt", "r") as f:
+                            date_crypto = f.read().split(";")[0]
 
-                        cpt = 120
+                            date_crypto = datetime.strptime(
+                                date_crypto, "%A %d %B %Y %H:%M:%S")
 
-                    # Sinon pas de changement, on attend
-                    else:
-                        cpt += 1
-                        sleep(30)
+                            date_crypto = int(date_crypto.strftime("%s"))
 
-                    # Si une heure d'attente est passée, on envoit un message
-                    if cpt >= 120:
-                        date = datetime.now(tz=ZoneInfo("Europe/Paris")
-                                            ).strftime("%A %d %B %Y %H:%M:%S")
+                            somme += date_crypto
 
+                            if date_crypto >= temps_max:
+                                temps_max = date_crypto
+
+                    # Ajout prochaine heure envoi message
+                    moyenne = somme / len(self.liste_symbol_bot_lancé) + 3600
+                    temps_max += 3600
+
+                    # Horodatage actuelle
+                    date = datetime.now(tz=ZoneInfo("Europe/Paris")
+                                        ).strftime("%A %d %B %Y %H:%M:%S")
+
+                    date = datetime.strptime(date, "%A %d %B %Y %H:%M:%S")
+
+                    date = int(date.strftime("%s"))
+
+                    # Moyenne des temps - la date actuel + 10 secondes safe
+                    waiting_time = moyenne - date + 10
+
+                    # Temps d'attente jusqu'au dernier bot avant nouvelle recherche (+ 1 minute safe)
+                    max_time = (temps_max + 60) - waiting_time
+
+                    sleep(waiting_time)
+
+                    # Nouvelle vérification si arrêt des bots entre temps
+                    if self.liste_symbol_bot_lancé != []:
                         symbole = "".join(
-                            f"{symbole}, " for symbole in bot)
+                            f"{symbole}, " for symbole in self.liste_symbol_bot_lancé)
 
                         msg = f"Bot {symbole[:-2]} toujours en cour d'exécution le : {date}"
 
                         self.msg_discord.message_canal("état_bot", msg)
 
-                        cpt = 0
+                    # Puis on attend que tous les bots passent leur passage de prédiction
+                    # Pour de nouveau voir le temps d'attente avant le prochain message
+                    sleep(max_time)
+
                 else:
-                    sleep(10)
+                    sleep(30)
 
         async def lancement_processus(symbol):
             """
