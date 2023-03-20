@@ -115,6 +115,9 @@ class Botcrypto(commands.Bot):
                         symbole = "".join(
                             f"{symbole}, " for symbole in self.liste_symbol_bot_lancé)
 
+                        date = datetime.now(tz=ZoneInfo("Europe/Paris")
+                                            ).strftime("%A %d %B %Y %H:%M:%S")
+
                         msg = f"Bot {symbole[:-2]} toujours en cour d'exécution le : {date}"
 
                         self.msg_discord.message_canal("état_bot", msg)
