@@ -1,4 +1,4 @@
-from main import Kucoin, Message_discord, os, Process, traceback, kill_process, datetime, ZoneInfo
+from main import Kucoin, Message_discord, os, Process, traceback, kill_process, datetime, ZoneInfo, sleep, Thread
 from subprocess import Popen, PIPE
 from discord.ext import commands
 import asyncio
@@ -65,7 +65,7 @@ class Botcrypto(commands.Bot):
 
                     break
 
-        async def message_bot_lancé():
+        def message_bot_lancé():
             """
             Envoi sur le canal d'état les bots démarés
             """
@@ -73,7 +73,7 @@ class Botcrypto(commands.Bot):
             cpt = 0
 
             while True:
-                if bot != []:
+                if self.liste_symbol_bot_lancé != []:
                     # Si un bot est lancé, on envoit un message
                     if bot != self.liste_symbol_bot_lancé:
                         bot = self.liste_symbol_bot_lancé[:]
@@ -83,22 +83,23 @@ class Botcrypto(commands.Bot):
                     # Sinon pas de changement, on attend
                     else:
                         cpt += 1
-                        await asyncio.sleep(30)
+                        sleep(30)
 
                     # Si une heure d'attente est passée, on envoit un message
                     if cpt >= 120:
                         date = datetime.now(tz=ZoneInfo("Europe/Paris")
                                             ).strftime("%A %d %B %Y %H:%M:%S")
 
-                        symbole = "".join(f"{symbole}, " for symbole in bot)
+                        symbole = "".join(
+                            f"{symbole}, " for symbole in bot)
 
-                        msg = f"Bot {symbole[:-1]}  toujours en cour d'exécution le : {date}"
+                        msg = f"Bot {symbole[:-2]} toujours en cour d'exécution le : {date}"
 
                         self.msg_discord.message_canal("état_bot", msg)
 
                         cpt = 0
                 else:
-                    await asyncio.sleep(10)
+                    sleep(10)
 
         async def lancement_processus(symbol):
             """
@@ -177,10 +178,12 @@ class Botcrypto(commands.Bot):
             self.loop.create_task(suppression_messages(etat_bot))
             self.loop.create_task(suppression_messages(prise_position))
 
-        # Démarrage tache async
+        # Démarrage tache async et thread
         self.loop.create_task(suppression_auto_message())
         self.loop.create_task(arret_auto_bot())
-        self.loop.create_task(message_bot_lancé())
+
+        th = Thread(target=message_bot_lancé)
+        th.start()
 
         @ self.command(name="del")
         async def delete(ctx):
@@ -307,7 +310,7 @@ class Botcrypto(commands.Bot):
 
             # Vérifie que le message n'est pas celui envoyé par le bot
             def check(m):
-                return m.content not in [question, bot_lancé] and m.channel == ctx.channel
+                return m.content != question and m.content != bot_lancé and m.channel == ctx.channel
 
             # On attend la réponse
             msg = await bot.wait_for("message", check=check)
