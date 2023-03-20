@@ -119,9 +119,9 @@ class Botcrypto(commands.Bot):
 
                         self.msg_discord.message_canal("état_bot", msg)
 
-                    # Puis on attend que tous les bots passent leur passage de prédiction
-                    # Pour de nouveau voir le temps d'attente avant le prochain message
-                    sleep(max_time)
+                        # Puis on attend que tous les bots passent leur passage de prédiction
+                        # Pour de nouveau voir le temps d'attente avant le prochain message
+                        sleep(max_time)
 
                 else:
                     sleep(30)
