@@ -1,4 +1,4 @@
-from main import Kucoin, Message_discord, os, Process, traceback, kill_process
+from main import Kucoin, Message_discord, os, Process, traceback, kill_process, datetime, ZoneInfo
 from subprocess import Popen, PIPE
 from discord.ext import commands
 import asyncio
@@ -64,6 +64,41 @@ class Botcrypto(commands.Bot):
                     os.kill(p.ident, 9)
 
                     break
+
+        async def message_bot_lancé():
+            """
+            Envoi sur le canal d'état les bots démarés
+            """
+            bot = []
+            cpt = 0
+
+            while True:
+                if bot != []:
+                    # Si un bot est lancé, on envoit un message
+                    if bot != self.liste_symbol_bot_lancé:
+                        bot = self.liste_symbol_bot_lancé[:]
+
+                        cpt = 120
+
+                    # Sinon pas de changement, on attend
+                    else:
+                        cpt += 1
+                        await asyncio.sleep(30)
+
+                    # Si une heure d'attente est passée, on envoit un message
+                    if cpt >= 120:
+                        date = datetime.now(tz=ZoneInfo("Europe/Paris")
+                                            ).strftime("%A %d %B %Y %H:%M:%S")
+
+                        symbole = "".join(f"{symbole}, " for symbole in bot)
+
+                        msg = f"Bot {symbole[:-1]}  toujours en cour d'exécution le : {date}"
+
+                        self.msg_discord.message_canal("état_bot", msg)
+
+                        cpt = 0
+                else:
+                    await asyncio.sleep(10)
 
         async def lancement_processus(symbol):
             """
@@ -145,6 +180,7 @@ class Botcrypto(commands.Bot):
         # Démarrage tache async
         self.loop.create_task(suppression_auto_message())
         self.loop.create_task(arret_auto_bot())
+        self.loop.create_task(message_bot_lancé())
 
         @ self.command(name="del")
         async def delete(ctx):
