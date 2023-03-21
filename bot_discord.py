@@ -69,7 +69,6 @@ class Botcrypto(commands.Bot):
             """
             Envoi sur le canal d'état les bots démarés
             """
-            somme = 0
             temps_max = 0
 
             while True:
@@ -85,13 +84,10 @@ class Botcrypto(commands.Bot):
 
                             date_crypto = int(date_crypto.strftime("%s"))
 
-                            somme += date_crypto
-
                             if date_crypto >= temps_max:
                                 temps_max = date_crypto
 
                     # Ajout prochaine heure envoi message
-                    moyenne = somme / len(self.liste_symbol_bot_lancé) + 3600
                     temps_max += 3600
 
                     # Horodatage actuelle
@@ -103,10 +99,7 @@ class Botcrypto(commands.Bot):
                     date = int(date.strftime("%s"))
 
                     # Moyenne des temps - la date actuel + 10 secondes safe
-                    waiting_time = moyenne - date + 10
-
-                    # Temps d'attente jusqu'au dernier bot avant nouvelle recherche (+ 1 minute safe)
-                    max_time = (temps_max + 60) - waiting_time
+                    waiting_time = temps_max - date + 10
 
                     sleep(waiting_time)
 
@@ -124,7 +117,7 @@ class Botcrypto(commands.Bot):
 
                         # Puis on attend que tous les bots passent leur passage de prédiction
                         # Pour de nouveau voir le temps d'attente avant le prochain message
-                        sleep(max_time)
+                        sleep(10)
 
                 else:
                     sleep(30)
