@@ -202,51 +202,70 @@ class IA:
         if lecture_ecriture == "lecture":
             # On utilise try dans le cas où le fichier n'existe pas
             try:
-                fichier = open(fichier, "r")
-
-                elt = fichier.read()
-
-                fichier.close()
+                with open(fichier, "r") as f:
+                    elt = fichier.read()
 
                 return elt
             except:
                 return ""
 
         elif lecture_ecriture == "écriture":
-            fichier = open(fichier, "w")
+            with open(fichier, "w") as f:
+                f.write(to_write)
 
-            fichier.write(to_write)
-
-            fichier.close()
-
-    def différence_prix(self, prix_1: float, prix_2: float) -> float:
+    def écriture_prediction(self, prix: float, prix_up: float, prix_down: float, prediction: float, prediction_up: float, prediction_down: float, date: datetime) -> None:
         """
-        Renvoie la différence entre deux prix
+        Ecrit dans un fichier les prédictions et les prix de la crypto ainsi que la date
         """
-        return prix_1 - prix_2
+        # Liste des valeurs
+        liste_valeur = [prix, prediction, prix_up,
+                        prediction_up, prix_down, prediction_down, date]
+
+        # Ecriture dans le fichier
+        with open(f"Autre_fichiers/message_bot_{self.symbol}.txt", "a") as f:
+            f.write(str(liste_valeur))
 
     def validation_achat(self, prix: float, prix_up: float, prix_down: float, prediction: float, prediction_up: float, prediction_down: float) -> int or None:
         """
         Valide ou non l'achat d'une crypto
+        Si pas de condition d'achat -> valeur inconnue
         """
         if prix < prediction and prix_up < prediction_up and prix_down > prediction_down:
-            if self.symbol == "BTC" and prediction_up - prix_up >= 0.045 and prediction_down <= 0.03:
+            if self.symbol == "ADA":
+                if prediction - prix <= 0.0009 and prediction_up - prix_up <= 0.0032 and prix_down - prediction_down <= 0.0005:
+                    return 1
+
+            elif self.symbol == "BNB":
+                if prediction - prix <= 1.57 and prediction_up - prix_up <= 0.32 and prix_down - prediction_down <= 0.0064:
+                    return 1
+
+            elif self.symbol == "BTC":
                 return 1
 
             elif self.symbol == "ETH":
-                return 1
+                if prediction - prix <= 3 and prediction_up - prix_up <= 0.028 and prix_down - prediction_down <= 0.008:
+                    return 1
+
+            elif self.symbol == "XRP":
+                if prediction - prix <= 0.0027 and prediction_up - prix_up <= 0.0031 and prix_down - prediction_down <= 0.00018:
+                    return 1
+
+        elif prix > prediction and prix_up > prediction_up and prix_down < prediction_down:
+            if self.symbol == "ADA":
+                if prix - prediction <= 0.0011 and prix_up - prediction_up <= 0.0018 and prediction_down - prix_down <= 0.0003:
+                    return 0
 
             elif self.symbol == "BNB":
-                return 1
-
-        if prix > prediction and prix_up > prediction_up and prix_down < prediction_down:
-            if self.symbol == "BTC" and prix_up - prediction_up >= 0.045 and prediction_down >= 0.0245:
                 return 0
+
+            elif self.symbol == "BTC":
+                if prix - prediction <= 35 and prix_up - prediction_up <= 0.031 and prediction_down - prix_down <= 0.0024:
+                    return 0
 
             elif self.symbol == "ETH":
                 return 0
 
-            elif self.symbol == "BNB":
+            elif self.symbol == "XRP":
                 return 0
 
         return None

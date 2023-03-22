@@ -320,13 +320,9 @@ class Kucoin:
         Ex param :
         str_to_write (optionnel) : id de l'ordre
         """
-
-        fichier = open(f"ordre_limit_{self.symbol_base}.txt", "w")
-
-        if str_to_write != None:
-            fichier.write(str_to_write)
-
-        fichier.close()
+        with open(f"ordre_limit_{self.symbol_base}.txt", "w") as f:
+            if str_to_write != None:
+                f.write(str_to_write)
 
     def écriture_requete(self, requete: str, emplacement: str) -> None:
         """

@@ -1,4 +1,4 @@
-from time import perf_counter
+from time import time
 from main import *
 import sys
 
@@ -81,7 +81,7 @@ temps_derniere_position = -1
 gain_ordrelimite = kucoin.pourcentage_gain
 
 while True:
-    t1 = perf_counter()
+    t1 = time()
 
     buy_sell = False
 
@@ -114,15 +114,9 @@ while True:
     prediction_down = ia.prédiction_keras(
         data_down, rsi_vwap_cmf_down, loaded_model_down)
 
-    état = f"Bot {symbol} toujours en cour d'exécution le : {date}\n" + \
-        f"prix de la crypto : {prix}, prix de la prédiction : {prediction}\n" + \
-        f"prix crypto up : {prix_up}, prix de la prédiction : {prediction_up}\n" + \
-        f"prix crypto down : {prix_down}, prix de la prédiction : {prediction_down}"
+    ia.écriture_prediction(prix, prix_up, prix_down,
+                           prediction, prediction_up, prediction_down, date)
 
-    with open(f"Autre_fichiers/message_bot_{symbol}.txt", "a") as f:
-        f.write(état)
-
-    """
     # On augmente de 1 le temps qu'on a de position
     # Remis à zéro après si achat ou aucune crypto
     temps_derniere_position += 1
@@ -192,7 +186,6 @@ while True:
                 symbol_stoploss, gain_ordrelimite)
 
         temps_derniere_position = 0
-    """
 
     # On enregistre l'état du bot (dernière heure et stoploss)
     # Pour que si le bot est arrêté et repart, qu'il soit au courant
@@ -200,6 +193,6 @@ while True:
     state = f"{date};{symbol_stoploss};{prix_stoploss}"
     ia.etat_bot("écriture", state)
 
-    t2 = perf_counter()
+    t2 = time()
 
     sleep(dodo - int(t2 - t1) - 1)

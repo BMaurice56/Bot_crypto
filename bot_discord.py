@@ -479,10 +479,9 @@ class Botcrypto(commands.Bot):
                     toto2 = str(toto[0].fields[0])[36:-14]
                     ls.append(toto2)
 
-            fichier = open("message_discord.txt", "w")
-
-            for elt in ls:
-                fichier.write(elt)
+            with open("message_discord.txt", "w") as f:
+                for elt in ls:
+                    f.write(elt)
 
         @ self.command(name="estimation")
         async def estimation(ctx):
