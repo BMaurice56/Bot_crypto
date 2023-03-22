@@ -119,6 +119,6 @@ if liste_ != []:
 
 fichier = f"etat_bot_BTC.txt"
 with open(fichier, "r") as f:
-    elt = fichier.read()
+    elt = f.read()
 
 print(elt)
