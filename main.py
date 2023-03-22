@@ -223,7 +223,7 @@ class IA:
 
         # Ecriture dans le fichier
         with open(f"Autre_fichiers/message_bot_{self.symbol}.txt", "a") as f:
-            f.write(str(liste_valeur))
+            f.write(f"{str(liste_valeur)}\n")
 
     def validation_achat(self, prix: float, prix_up: float, prix_down: float, prediction: float, prediction_up: float, prediction_down: float) -> int or None:
         """
