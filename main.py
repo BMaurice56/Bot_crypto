@@ -203,7 +203,7 @@ class IA:
             # On utilise try dans le cas où le fichier n'existe pas
             try:
                 with open(fichier, "r") as f:
-                    elt = fichier.read()
+                    elt = f.read()
 
                 return elt
             except:
