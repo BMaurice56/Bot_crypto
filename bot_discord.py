@@ -65,14 +65,37 @@ class Botcrypto(commands.Bot):
 
                     break
 
+        def message_statut_bot_discord():
+            """
+            Envoit sur le canal discord le ou les statuts des bots
+            """
+            symbole = "".join(
+                f"{symbole}, " for symbole in self.liste_symbol_bot_lancé)
+
+            date = datetime.now(tz=ZoneInfo("Europe/Paris")
+                                ).strftime("%A %d %B %Y %H:%M:%S")
+
+            msg = f"Bot {symbole[:-2]} toujours en cour d'exécution le : {date}"
+
+            self.msg_discord.message_canal("état_bot", msg)
+
         def message_bot_lancé():
             """
             Envoi sur le canal d'état les bots démarés
             """
             temps_max = 0
+            vide = self.liste_symbol_bot_lancé == []
 
             while True:
                 if self.liste_symbol_bot_lancé != []:
+                    # Si on vient de lancer un bot, on envoit un message
+                    if vide == True:
+                        sleep(90)
+
+                        message_statut_bot_discord()
+
+                        vide = False
+
                     # On fait la moyenne de temps des bots lancé
                     # Message de statut des bots au niveau de leur fonctionnement à eux
                     for symbole in self.liste_symbol_bot_lancé:
@@ -105,21 +128,14 @@ class Botcrypto(commands.Bot):
 
                     # Nouvelle vérification si arrêt des bots entre temps
                     if self.liste_symbol_bot_lancé != []:
-                        symbole = "".join(
-                            f"{symbole}, " for symbole in self.liste_symbol_bot_lancé)
-
-                        date = datetime.now(tz=ZoneInfo("Europe/Paris")
-                                            ).strftime("%A %d %B %Y %H:%M:%S")
-
-                        msg = f"Bot {symbole[:-2]} toujours en cour d'exécution le : {date}"
-
-                        self.msg_discord.message_canal("état_bot", msg)
+                        message_statut_bot_discord()
 
                         # Puis on attend que tous les bots passent leur passage de prédiction
                         # Pour de nouveau voir le temps d'attente avant le prochain message
                         sleep(10)
 
                 else:
+                    vide = False
                     sleep(30)
 
         async def lancement_processus(symbol):
