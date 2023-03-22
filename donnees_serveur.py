@@ -179,10 +179,6 @@ class Kucoin:
         self.pourcentage_gain = 0.015
         self.precedant_gain = 0.015
 
-        # Prix des cryptos de kucoin -> l'inverse de binance
-        self.minimum_crypto_up = 5000
-        self.minimum_crypto_down = 5
-
         # Symbol des crypto
         self.symbol_base = crypto
         self.symbol = f"{crypto}-USDT"
@@ -199,6 +195,15 @@ class Kucoin:
         # Donne le symbol simple
         self.dico_symbol_simple = {self.symbol_up: self.symbol_up_simple,
                                    self.symbol_down: self.symbol_down_simple}
+
+        self.dictionnaire_minimum_up = {
+            "ADA": 5, "BNB": 10, "BTC": 1500, "ETH": 2000, "XRP": 3000}
+        self.dictionnaire_minimum_down = {
+            "ADA": 50, "BNB": 5, "BTC": 5, "ETH": 10000, "XRP": 2}
+
+        # Prix des cryptos de kucoin -> l'inverse de binance
+        self.minimum_crypto_up = self.dictionnaire_minimum_up[self.symbol_base]
+        self.minimum_crypto_down = self.dictionnaire_minimum_down[self.symbol_base]
 
         # On récupère le priceIncrement de chaque crypto
         with open("Autre_fichiers/priceIncrement.txt", "r") as f:
