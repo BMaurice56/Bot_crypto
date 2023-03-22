@@ -8,14 +8,13 @@ from zoneinfo import ZoneInfo
 from datetime import datetime
 from message_discord import *
 from random import randint
-from time import sleep
+from time import time, sleep
 import traceback
 import requests
 import hashlib
 import base64
 import pandas
 import locale
-import time
 import hmac
 import json
 import os
@@ -257,7 +256,7 @@ class Kucoin:
         endpoint : 'api/v1/orders'
         param : none ou dict sous forme json.dumps() -> str
         """
-        now = str(int(time.time() * 1000))
+        now = str(int(time() * 1000))
 
         if methode == 'GET':
             str_to_sign = now + 'GET' + endpoint

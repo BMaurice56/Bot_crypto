@@ -1,4 +1,3 @@
-from time import time
 from main import *
 import sys
 
