@@ -196,6 +196,7 @@ class Kucoin:
         self.dico_symbol_simple = {self.symbol_up: self.symbol_up_simple,
                                    self.symbol_down: self.symbol_down_simple}
 
+        # Dictionnaire minimum des cryptos
         self.dictionnaire_minimum_up = {
             "ADA": 5, "BNB": 10, "BTC": 1500, "ETH": 2000, "XRP": 3000}
         self.dictionnaire_minimum_down = {

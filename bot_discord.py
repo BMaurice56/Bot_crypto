@@ -474,7 +474,7 @@ class Botcrypto(commands.Bot):
                 for elt in cryptos_position:
                     crypto += f"{elt}, "
 
-                await ctx.send(f"Crypto.s ayant une position : {crypto[:-2]}")
+                await ctx.send(f"Cryptos ayant une position : {crypto[:-2]}")
 
             else:
                 Popen("nohup python3.10 redemarrage.py >/dev/null 2>&1", shell=True)
