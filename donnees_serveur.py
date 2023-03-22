@@ -203,8 +203,9 @@ class Kucoin:
             "ADA": 50, "BNB": 5, "BTC": 5, "ETH": 10000, "XRP": 2}
 
         # Prix des cryptos de kucoin -> l'inverse de binance
-        self.minimum_crypto_up = self.dictionnaire_minimum_up[self.symbol_base]
-        self.minimum_crypto_down = self.dictionnaire_minimum_down[self.symbol_base]
+        if self.symbol_base != "Discord":
+            self.minimum_crypto_up = self.dictionnaire_minimum_up[self.symbol_base]
+            self.minimum_crypto_down = self.dictionnaire_minimum_down[self.symbol_base]
 
         # On récupère le priceIncrement de chaque crypto
         with open("Autre_fichiers/priceIncrement.txt", "r") as f:
