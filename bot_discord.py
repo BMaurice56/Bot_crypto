@@ -65,7 +65,7 @@ class Botcrypto(commands.Bot):
 
                     break
 
-        def message_statut_bot_discord():
+        def message_état_bot_discord():
             """
             Envoit sur le canal discord le ou les statuts des bots
             """
@@ -92,7 +92,7 @@ class Botcrypto(commands.Bot):
                     if vide == True:
                         sleep(90)
 
-                        message_statut_bot_discord()
+                        message_état_bot_discord()
 
                         vide = False
 
@@ -128,14 +128,14 @@ class Botcrypto(commands.Bot):
 
                     # Nouvelle vérification si arrêt des bots entre temps
                     if self.liste_symbol_bot_lancé != []:
-                        message_statut_bot_discord()
+                        message_état_bot_discord()
 
                         # Puis on attend que tous les bots passent leur passage de prédiction
                         # Pour de nouveau voir le temps d'attente avant le prochain message
                         sleep(10)
 
                 else:
-                    vide = False
+                    vide = True
                     sleep(30)
 
         async def lancement_processus(symbol):
