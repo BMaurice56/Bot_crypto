@@ -50,6 +50,10 @@ class Message_discord:
     def message_erreur(self, erreur: str, emplacement_erreur: str) -> None:
         """
         S'occupe de recevoir une erreur et de l'envoyer sur le canal discord
+
+        Ex params :
+        erreur : erreur python
+        emplacement_erreur : Message de l'utilisateur, emplacement de l'erreur dans le programme
         """
         with open("fichier_log/log_erreur.txt", "a") as f:
             f.write(f"{emplacement_erreur} ; {erreur} \n")

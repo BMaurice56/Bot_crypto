@@ -528,5 +528,12 @@ class Botcrypto(commands.Bot):
 
 if __name__ == "__main__":
     os.system("clear")
-    bot = Botcrypto()
-    bot.run("OTcyNDY0NDAwNzY4MzM1ODkz.YnZcDA.LYfcnXeeBB2aEO0-ZX7bNvM1T-8")
+    try:
+        bot = Botcrypto()
+        bot.run("OTcyNDY0NDAwNzY4MzM1ODkz.YnZcDA.LYfcnXeeBB2aEO0-ZX7bNvM1T-8")
+    except:
+        message_discord = Message_discord()
+
+        erreur = traceback.format_exc()
+        message_discord.message_erreur(
+            erreur, "Erreur survenue dans le bot discord, arrêt de tous les programmes")
