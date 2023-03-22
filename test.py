@@ -116,9 +116,3 @@ if liste_ != []:
     print("liste_up ", max(liste_up))
     print("liste_down ", max(liste_down))
 """
-
-fichier = f"etat_bot_BTC.txt"
-with open(fichier, "r") as f:
-    elt = f.read()
-
-print(elt)
