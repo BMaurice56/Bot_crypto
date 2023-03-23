@@ -89,7 +89,7 @@ class Botcrypto(commands.Bot):
             while True:
                 if self.liste_symbol_bot_lancé != []:
                     # Si on vient de lancer un bot, on envoit un message
-                    if vide == True:
+                    if vide is True:
                         sleep(90)
 
                         message_état_bot_discord()
@@ -213,7 +213,7 @@ class Botcrypto(commands.Bot):
 
             # Démarrage suppression dans les deux canaux
             self.loop.create_task(suppression_messages(etat_bot))
-            self.loop.create_task(suppression_messages(prise_position))
+            #self.loop.create_task(suppression_messages(prise_position))
 
         # Démarrage tache async et thread
         self.loop.create_task(suppression_auto_message())

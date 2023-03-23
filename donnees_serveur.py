@@ -42,13 +42,13 @@ class Binance:
 
         self.client = Client(self.api_key, self.api_secret)
 
-    def donnée(self, symbol: str, début: str, fin: str) -> pandas.DataFrame:
+    def donnée(self, symbole: str, début: str, fin: str) -> pandas.DataFrame:
         """
-        Prend en argument un symbol de type "BTCUSDT" ou encore "ETHUSDT" ...
+        Prend en argument un symbole de type "BTCUSDT" ou encore "ETHUSDT" ...
         Renvoie les données sous forme d'une dataframe pandas
 
         Ex params :
-        symbol : "BTCUSDT"
+        symbole : "BTCUSDT"
         début : "40 hour ago UTC" 
         fin : "0 hour ago UTC" ...
         """
@@ -57,11 +57,11 @@ class Binance:
         # Récupération des données de la crypto
         if fin[0] == "0":
             donnée_historique = self.client.get_historical_klines(
-                symbol, self.client.KLINE_INTERVAL_1HOUR, début)
+                symbole, self.client.KLINE_INTERVAL_1HOUR, début)
 
         else:
             donnée_historique = self.client.get_historical_klines(
-                symbol, self.client.KLINE_INTERVAL_1HOUR, début, fin)
+                symbole, self.client.KLINE_INTERVAL_1HOUR, début, fin)
 
         # On enlève les données pas nécessaire
         for i in range(len(donnée_historique)):
@@ -75,13 +75,13 @@ class Binance:
 
         return data
 
-    def all_data(self, symbol: str) -> dict:
+    def all_data(self, symbole: str) -> dict:
         """
-        Prend en argument un symbol
+        Prend en argument un symbole
         Renvoie un dictionnaire de avec toutes les données (+ ceux avec effet de levier)
 
         Ex param :
-        symbol : "BTC"
+        symbole : "BTC"
         """
         # Création du dictionnaire que recevra toutes les dataframes avec les données
         manager = Manager()
@@ -137,9 +137,9 @@ class Binance:
 
             return dictionnaire
 
-        p = Process(target=requete, args=(f"{symbol}USDT", 40, dico, 0,))
-        p2 = Process(target=requete, args=(f"{symbol}UPUSDT", 40, dico, 1,))
-        p3 = Process(target=requete, args=(f"{symbol}DOWNUSDT", 40, dico, 2,))
+        p = Process(target=requete, args=(f"{symbole}USDT", 40, dico, 0,))
+        p2 = Process(target=requete, args=(f"{symbole}UPUSDT", 40, dico, 1,))
+        p3 = Process(target=requete, args=(f"{symbole}DOWNUSDT", 40, dico, 2,))
 
         p.start()
         p2.start()
@@ -179,22 +179,22 @@ class Kucoin:
         self.pourcentage_gain = 0.015
         self.precedant_gain = 0.015
 
-        # Symbol des crypto
-        self.symbol_base = crypto
-        self.symbol = f"{crypto}-USDT"
-        self.symbol_up = f"{crypto}3L-USDT"
-        self.symbol_down = f"{crypto}3S-USDT"
+        # symbole des crypto
+        self.symbole_base = crypto
+        self.symbole = f"{crypto}-USDT"
+        self.symbole_up = f"{crypto}3L-USDT"
+        self.symbole_down = f"{crypto}3S-USDT"
 
-        self.symbol_up_simple = f"{crypto}3L"
-        self.symbol_down_simple = f"{crypto}3S"
+        self.symbole_up_simple = f"{crypto}3L"
+        self.symbole_down_simple = f"{crypto}3S"
         self.devise = "USDT"
 
         # Variable vente manuelle dictionnaire partagé
-        self.vente_manuelle = f"vente_manuelle_{self.symbol_base}"
+        self.vente_manuelle = f"vente_manuelle_{self.symbole_base}"
 
-        # Donne le symbol simple
-        self.dico_symbol_simple = {self.symbol_up: self.symbol_up_simple,
-                                   self.symbol_down: self.symbol_down_simple}
+        # Donne le symbole simple
+        self.dico_symbole_simple = {self.symbole_up: self.symbole_up_simple,
+                                   self.symbole_down: self.symbole_down_simple}
 
         # Dictionnaire minimum des cryptos
         self.dictionnaire_minimum_up = {
@@ -203,9 +203,9 @@ class Kucoin:
             "ADA": 50, "BNB": 5, "BTC": 5, "ETH": 10000, "XRP": 2}
 
         # Prix des cryptos de kucoin -> l'inverse de binance
-        if self.symbol_base != "Discord":
-            self.minimum_crypto_up = self.dictionnaire_minimum_up[self.symbol_base]
-            self.minimum_crypto_down = self.dictionnaire_minimum_down[self.symbol_base]
+        if self.symbole_base != "Discord":
+            self.minimum_crypto_up = self.dictionnaire_minimum_up[self.symbole_base]
+            self.minimum_crypto_down = self.dictionnaire_minimum_down[self.symbole_base]
 
         # On récupère le priceIncrement de chaque crypto
         with open("Autre_fichiers/priceIncrement.txt", "r") as f:
@@ -223,7 +223,7 @@ class Kucoin:
         self.dico_partage = SharedMemoryDict(name="dico", size=1024)
 
         # Permet de savoir si le bot a fini de démarrer (démarrage multiple)
-        self.dico_partage[f"{self.symbol_base}_started"] = True
+        self.dico_partage[f"{self.symbole_base}_started"] = True
 
         # Dossier fichiers logs
         self.dir_log = "fichier_log"
@@ -310,7 +310,7 @@ class Kucoin:
         """
         # On utilise try dans le cas où le fichier n'existe pas
         try:
-            with open(f"ordre_limit_{self.symbol_base}.txt", "r") as f:
+            with open(f"ordre_limit_{self.symbole_base}.txt", "r") as f:
                 elt = f.read()
 
             if elt == "":
@@ -326,7 +326,7 @@ class Kucoin:
         Ex param :
         str_to_write (optionnel) : id de l'ordre
         """
-        with open(f"ordre_limit_{self.symbol_base}.txt", "w") as f:
+        with open(f"ordre_limit_{self.symbole_base}.txt", "w") as f:
             if str_to_write != None:
                 f.write(str_to_write)
 
@@ -343,13 +343,13 @@ class Kucoin:
                             ).strftime("%A %d %B %Y %H:%M:%S")
 
         if emplacement == "requete":
-            pwd = f"{self.dir_log}/log_requete_{self.symbol_base}.txt"
+            pwd = f"{self.dir_log}/log_requete_{self.symbole_base}.txt"
 
         elif emplacement == "presence_position":
-            pwd = f"{self.dir_log}/log_update_id_position_{self.symbol_base}.txt"
+            pwd = f"{self.dir_log}/log_update_id_position_{self.symbole_base}.txt"
 
         elif emplacement == "stoploss":
-            pwd = f"{self.dir_log}/log_stoploss_manuel_{self.symbol_base}.txt"
+            pwd = f"{self.dir_log}/log_stoploss_manuel_{self.symbole_base}.txt"
 
         with open(pwd, "a") as f:
             f.write(f"{date};{requete}\n")
@@ -362,8 +362,8 @@ class Kucoin:
         fichier_en_cours = ""
         try:
             # Les noms des trois fichiers log de requêtes
-            nom = [f"log_requete_{self.symbol_base}.txt", f"log_stoploss_manuel_{self.symbol_base}.txt",
-                   f"log_update_id_position_{self.symbol_base}.txt"]
+            nom = [f"log_requete_{self.symbole_base}.txt", f"log_stoploss_manuel_{self.symbole_base}.txt",
+                   f"log_update_id_position_{self.symbole_base}.txt"]
 
             while True:
                 for elt in nom:
@@ -412,15 +412,15 @@ class Kucoin:
 
                                     with open(f"{self.dir_log}/log_recap.txt", "a") as f:
                                         f.write(
-                                            f"Bot : {self.symbol_base}, erreur du {date} : {résultat} \n")
+                                            f"Bot : {self.symbole_base}, erreur du {date} : {résultat} \n")
 
                 # Puis on vient vider les fichiers (ou les créer)
                 os.system(
-                    f'echo > {self.path_log}/log_requete_{self.symbol_base}.txt')
+                    f'echo > {self.path_log}/log_requete_{self.symbole_base}.txt')
                 os.system(
-                    f'echo > {self.path_log}/log_stoploss_manuel_{self.symbol_base}.txt')
+                    f'echo > {self.path_log}/log_stoploss_manuel_{self.symbole_base}.txt')
                 os.system(
-                    f'echo > {self.path_log}/log_update_id_position_{self.symbol_base}.txt')
+                    f'echo > {self.path_log}/log_update_id_position_{self.symbole_base}.txt')
 
                 # Et faire dormir le programme
                 sleep(60 * 60 * 3)
@@ -470,17 +470,17 @@ class Kucoin:
         # Puis on retourne les données
         return json.loads(content)
 
-    def montant_compte(self, symbol: str, type_requete: Optional[str] = None, total: Optional[bool] = None) -> float:
+    def montant_compte(self, symbole: str, type_requete: Optional[str] = None, total: Optional[bool] = None) -> float:
         """
-        Renvoie le montant que possède le compte selon le symbol voulus
+        Renvoie le montant que possède le compte selon le symbole voulus
 
         Ex params :
-        symbol : USDT ou BTC3L
+        symbole : USDT ou BTC3L
         type_requete (optionnel) : "requete" ou "stoploss"
         total (optionnel) : total d'usdt voulu
         """
         # On défini la terminaison de la requête
-        endpoint = f"/api/v1/accounts?currency={symbol}&type=trade"
+        endpoint = f"/api/v1/accounts?currency={symbole}&type=trade"
 
         # On change l'emplacement de l'écriture de la requete sur le fichier log
         log = "requete"
@@ -492,14 +492,14 @@ class Kucoin:
         # On ne garde que les données
         argent = resultat["data"]
 
-        # S'il le compte possède le symbol voulu, on renvoit le nombre
+        # S'il le compte possède le symbole voulu, on renvoit le nombre
         # Avec seulement 99,9% de sa quantité initiale car pour l'achat des cryptos
         # -> aucun problème avec le nb de chiffres après la virgule et les frais de la platforme
         if argent != []:
             argent = float(argent[0]['balance'])
 
             # renvoit l'usdt disponible pour chaque bot
-            if symbol == self.devise and total == None:
+            if symbole == self.devise and total == None:
                 # Si présence du total d'usdt dans le dictionnaire
                 # On met à jour le max s'il est supérieur à celui enregistrer (gain des bots)
                 if "quantite_usdt" in self.dico_partage:
@@ -531,16 +531,16 @@ class Kucoin:
         else:
             return 0
 
-    def prix_temps_reel_kucoin(self, symbol: str, type_requete: Optional[str] = None) -> float:
+    def prix_temps_reel_kucoin(self, symbole: str, type_requete: Optional[str] = None) -> float:
         """
         Renvoie le prix de la crypto en temps réel
 
         Ex params : 
-        symbol : BTC3S-USDT
+        symbole : BTC3S-USDT
         type_requete (optionnel) : "requete" ou "stoploss"
         """
         # On défini la terminaison de la requête
-        endpoint = f"/api/v1/market/orderbook/level1?symbol={symbol}"
+        endpoint = f"/api/v1/market/orderbook/level1?symbol={symbole}"
 
         # On change l'emplacement de l'écriture de la requete sur le fichier log
         log = "requete"
@@ -565,7 +565,7 @@ class Kucoin:
         Ex params :
         info : {
         "montant" : "20",
-        "symbol" : "BTC3S-USDT",
+        "symbole" : "BTC3S-USDT",
         "achat_vente" : "True" (pour achat)
         }
         """
@@ -594,7 +594,7 @@ class Kucoin:
         # Définition de tous les paramètres nécessaires
         param = {"clientOid": id_position,
                  "side": achat,
-                 "symbol": info["symbol"],
+                 "symbol": info["symbole"],
                  'type': "market",
                  type_achat: str(info["montant"])}
 
@@ -605,21 +605,21 @@ class Kucoin:
 
         # S'il on vient d'acheter, on place un ordre limite
         if info["achat_vente"] == True:
-            self.ordre_vente_seuil(info["symbol"])
+            self.ordre_vente_seuil(info["symbole"])
 
             # On repasse la variable a False pour l'ordre limite
             if self.vente_manuelle in self.dico_partage:
                 del self.dico_partage[self.vente_manuelle]
 
-    def présence_position(self, symbol: str) -> dict or None:
+    def présence_position(self, symbole: str) -> dict or None:
         """
         Renvoie les positions en cours sur une pair de crypto précis
 
         Ex params :
-        symbol : BTC3S-USDT
+        symbole : BTC3S-USDT
 
         Sortie de la fonction (si position):
-        {'id': '62d6e3303896050001788d36', 'symbol': 'BTC3L-USDT', 'opType': 'DEAL', 'type': 'limit', 'side': 'sell', 
+        {'id': '62d6e3303896050001788d36', 'symbole': 'BTC3L-USDT', 'opType': 'DEAL', 'type': 'limit', 'side': 'sell', 
         'price': '0.007', 'size': '6791.3015', 'funds': '0', 'dealFunds': '0', 'dealSize': '0', 'fee': '0', 
         'feeCurrency': 'USDT', 'stp': '', 'stop': '', 'stopTriggered': False, 'stopPrice': '0', 'timeInForce': 'GTC', 
         'postOnly': False, 'hidden': False, 'iceberg': False, 'visibleSize': '0', 'cancelAfter': 0, 'channel': 'IOS', 
@@ -627,7 +627,7 @@ class Kucoin:
         'tradeType': 'TRADE'}
         """
         # On crée le point de terminaison
-        endpoint = f"/api/v1/orders?status=active&symbol={symbol}"
+        endpoint = f"/api/v1/orders?status=active&symbol={symbole}"
 
         # On exécute la requête
         position = self.requete("GET", endpoint, "presence_position")
@@ -649,8 +649,8 @@ class Kucoin:
         cryptos_position = []
 
         # Parcour toutes les cryptos supportées
-        for symbol in self.crypto_supporter:
-            liste_symbole = [f"{symbol}3L-USDT", f"{symbol}3S-USDT"]
+        for symbole in self.crypto_supporter:
+            liste_symbole = [f"{symbole}3L-USDT", f"{symbole}3S-USDT"]
 
             # Parcour les deux marchés
             for position_symbol in liste_symbole:
@@ -685,51 +685,52 @@ class Kucoin:
         # Créer le fichier s'il n'existe pas
         self.écriture_fichier_ordre_limit()
 
-    def achat_vente(self, montant: float, symbol: str, achat_ou_vente: bool) -> None:
+    def achat_vente(self, montant: float, symbole: str, achat_ou_vente: bool) -> None:
         """
         Achète ou vente les cryptomonnaies
 
         Ex params :
-        Achat : montant : 200 (USDT), symbol : "BTC3L-USDT, achat_vente : True
+        Achat : montant : 200 (USDT), symbole : "BTC3L-USDT, achat_vente : True
         Vente : montant : 48 (BTC3L-USDT), "BTC3L-USDT", achat_vente : False
         """
         # On créer un dictionnaire avec toutes les informations nécessaires
         info = {"montant": montant,
-                "symbol": symbol, "achat_vente": achat_ou_vente}
+                "symbole": symbole, "achat_vente": achat_ou_vente}
 
         # On prend la position sur le serveur
         self.prise_position(info)
 
         # On récupère le prix en temps réel de la crypto que l'on vient d'acheter
-        prix = self.prix_temps_reel_kucoin(self.symbol)
+        prix = self.prix_temps_reel_kucoin(self.symbole)
 
         # Puis on vient envoyer un message sur le discord
         if achat_ou_vente == True:
-            msg = f"Prise de position avec {montant} usdt au prix de {prix}$, crypto : {symbol}"
+            msg = f"Prise de position avec {montant} usdt au prix de {prix}$, crypto : {symbole}"
             self.msg_discord.message_canal("prise_position",
                                            msg, 'Prise de position')
 
         else:
             argent = self.montant_compte(self.devise, None, True)
 
-            msg = f"Vente de position au prix de {prix}$, il reste {argent} usdt"
+            msg = f"Vente de position au prix de {prix}$, il reste {argent} usdt\n" + \
+                f"Crypto : {symbole}"
             self.msg_discord.message_canal("prise_position",
                                            msg, 'Vente de position')
 
-    def ordre_vente_seuil(self, symbol: str, nouveau_gain: Optional[float] = None) -> None:
+    def ordre_vente_seuil(self, symbole: str, nouveau_gain: Optional[float] = None) -> None:
         """
         Place l'ordre limite de vente
 
         Ex params :
-        symbol : BTC3S-USDT
+        symbole : BTC3S-USDT
         nouveau_gain (optionnel) : 0.002, 0.0175...
         """
         ###################### Calcul du prix de l'ordre ###############################
         # Récupération des prix de marchés
-        prix = self.prix_temps_reel_kucoin(symbol)
+        prix = self.prix_temps_reel_kucoin(symbole)
 
         # On récupère le priceIncrement de la crypto en question
-        zero_apres_virgule = self.dico_priceIncrement[symbol]
+        zero_apres_virgule = self.dico_priceIncrement[symbole]
 
         # On stock le pourcentage de gain actuel dans une variable
         gain = self.pourcentage_gain
@@ -745,7 +746,7 @@ class Kucoin:
             gain = nouveau_gain
 
             # On récupère l'ancien prix pour le calcul de la descente
-            ancien_prix = float(self.présence_position(symbol)["price"])
+            ancien_prix = float(self.présence_position(symbole)["price"])
 
             # Calcul du nouveau prix
             nv_prix = self.arrondi(
@@ -755,9 +756,9 @@ class Kucoin:
             # Alors on vend directement au lieu de placer un nouvel ordre
             if nv_prix <= prix:
                 # On récupère le montant du compte pour pouvoir vendre
-                montant = self.montant_compte(self.dico_symbol_simple[symbol])
+                montant = self.montant_compte(self.dico_symbole_simple[symbole])
 
-                self.achat_vente(montant, symbol, False)
+                self.achat_vente(montant, symbole, False)
 
                 return
 
@@ -780,14 +781,14 @@ class Kucoin:
         self.precedant_gain = gain
 
         #################### Calcul prix de vente estimer ###############################
-        prix_marche = self.prix_temps_reel_kucoin(self.symbol)
+        prix_marche = self.prix_temps_reel_kucoin(self.symbole)
 
         # On stock dans le dictionaire partagé le prix estimer de vente sur le marché de base
-        if "3L" in symbol:
-            self.dico_partage[f"prix_estimer_{self.symbol_base}"] = prix_marche * \
+        if "3L" in symbole:
+            self.dico_partage[f"prix_estimer_{self.symbole_base}"] = prix_marche * \
                 (1 + (self.pourcentage_gain/3))
         else:
-            self.dico_partage[f"prix_estimer_{self.symbol_base}"] = prix_marche * \
+            self.dico_partage[f"prix_estimer_{self.symbole_base}"] = prix_marche * \
                 (1 - (self.pourcentage_gain/3))
 
         ##################################################################################
@@ -800,12 +801,12 @@ class Kucoin:
         endpoint = "/api/v1/orders"
 
         # On récupère le montant du compte pour pouvoir placer l'ordre
-        montant = self.montant_compte(self.dico_symbol_simple[symbol])
+        montant = self.montant_compte(self.dico_symbole_simple[symbole])
 
         # Définition de tous les paramètres nécessaires
         param = {"clientOid": id_position,
                  "side": "sell",
-                 "symbol": symbol,
+                 "symbol": symbole,
                  "price": str(nv_prix),
                  "size": str(montant)}
 
@@ -828,32 +829,32 @@ class Kucoin:
             del self.dico_partage[self.vente_manuelle]
 
     # Fonction qui tourne en continue
-    def stoploss_manuel(self, symbol: str, prix_stop: float, event: Event) -> Thread:
+    def stoploss_manuel(self, symbole: str, prix_stop: float, event: Event) -> Thread:
         """
         Fait office de stoploss mais de façon manuel
         Basé sur le prix du marché normal, pas celui des jetons à effet de levier
 
         Ex params : 
-        symbol : BTC3S-USDT
+        symbole : BTC3S-USDT
         prix_stop : 23450.2463
         start (optionnel) : True pour démarrer ou laisser à None
         """
 
-        def stoploss_thread(symbol: str, prix_stop: float, event: Event) -> None:
+        def stoploss_thread(symbole: str, prix_stop: float, event: Event) -> None:
             try:
-                # Dictionnaire qui donne les bonnes valeurs et symbol au stoploss
-                dico_type_marché = {self.symbol_up: True,
-                                    self.symbol_down: False}
+                # Dictionnaire qui donne les bonnes valeurs et symbole au stoploss
+                dico_type_marché = {self.symbole_up: True,
+                                    self.symbole_down: False}
 
-                dico_minimum = {self.symbol_up: self.minimum_crypto_up,
-                                self.symbol_down: self.minimum_crypto_down}
+                dico_minimum = {self.symbole_up: self.minimum_crypto_up,
+                                self.symbole_down: self.minimum_crypto_down}
 
                 # On attribut les bonnes valeurs aux variables
-                type_marche = dico_type_marché[symbol]
+                type_marche = dico_type_marché[symbole]
 
-                minimum = dico_minimum[symbol]
+                minimum = dico_minimum[symbole]
 
-                symbol_simple = self.dico_symbol_simple[symbol]
+                symbole_simple = self.dico_symbole_simple[symbole]
 
                 while True:
                     # Stop le thread sur demande
@@ -861,21 +862,21 @@ class Kucoin:
                         break
 
                     # On vérifie s'il y a toujours une crypto, s'il elle a été vendu on peut arrêter la fonction
-                    crypto = self.montant_compte(symbol_simple, "stoploss")
+                    crypto = self.montant_compte(symbole_simple, "stoploss")
 
                     if crypto < minimum:
                         break
 
                     # On récupère le prix du marché
-                    prix = self.prix_temps_reel_kucoin(self.symbol, "stoploss")
+                    prix = self.prix_temps_reel_kucoin(self.symbole, "stoploss")
 
                     # Si la crypto dépasse le stoploss fixé, alors on vend
                     if self.comparaisons(prix, prix_stop, type_marche) == False:
                         # Message sur le discords
                         self.msg_discord.message_canal("prise_position",
-                                                       "Vente des cryptos via le stoploss", "Exécution du stoploss")
+                                                       f"Vente de {symbole} via le stoploss", "Exécution du stoploss")
 
-                        self.achat_vente(crypto, symbol, False)
+                        self.achat_vente(crypto, symbole, False)
 
                         break
 
@@ -889,10 +890,10 @@ class Kucoin:
                     erreur, "Erreur survenu dans la fonction stoploss_manuel, aucune interruption du programme, fonction relancée")
 
                 # Et enfin on relance la fonction
-                stoploss_thread(symbol, prix_stop, event)
+                stoploss_thread(symbole, prix_stop, event)
 
         th = Thread(target=stoploss_thread, args=[
-            symbol, prix_stop, event])
+            symbole, prix_stop, event])
 
         th.start()
 
@@ -906,9 +907,11 @@ class Kucoin:
         try:
             # Stock l'id de l'ordre
             id_ordrelimite = ""
+            symbole = ""
+
             while True:
-                sl_3L = self.présence_position(self.symbol_up)
-                sl_3S = self.présence_position(self.symbol_down)
+                sl_3L = self.présence_position(self.symbole_up)
+                sl_3S = self.présence_position(self.symbole_down)
 
                 # S'il y a aucun stoploss, par sécurité on vide le fichier
                 if sl_3L == None and sl_3S == None:
@@ -923,8 +926,11 @@ class Kucoin:
                             montant = self.montant_compte(
                                 self.devise, None, True)
 
-                            self.msg_discord.message_canal("prise_position",
-                                                           f"Exécution de l'ordre limite, il reste {montant} USDT !", "Exécution de l'ordre limite")
+                            msg = f"Exécution de l'ordre limite, il reste {montant} USDT !\n" + \
+                                f"Crypto : {symbole}"
+
+                            self.msg_discord.message_canal(
+                                "prise_position", msg, "Exécution de l'ordre limite")
 
                         # Soit c'est une vente manuelle
                         else:
@@ -934,11 +940,13 @@ class Kucoin:
                 elif sl_3L != None:
                     self.écriture_fichier_ordre_limit(sl_3L['id'])
                     id_ordrelimite = sl_3L['id']
+                    symbole = self.symbole_up
 
                 # De même pour ici
                 elif sl_3S != None:
                     self.écriture_fichier_ordre_limit(sl_3S['id'])
                     id_ordrelimite = sl_3S['id']
+                    symbole = self.symbole_down
 
                 sleep(20)
 
