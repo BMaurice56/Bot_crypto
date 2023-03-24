@@ -4,11 +4,12 @@ from sklearn.model_selection import train_test_split
 from keras_tuner import RandomSearch
 from keras.layers import Dense
 from database import *
+from typing import Any
 
 
 class IA:
     """
-    Classe qui contient l'entrainement ainsi la prédiction des modèles d'ia
+    Classe qui contient l'entrainement ainsi la prédiction des modèles d'intelligences artificielles
     """
 
     def __init__(self, symbol: str) -> None:
@@ -21,48 +22,51 @@ class IA:
         self.symbol = symbol
         self.input = 65
 
+        # Chargement des modèles d'intelligences artificielles pour les prédictions
+        self.model, self.model_up, self.model_down = self.loading_model()
+
     def training(self, l1: float, l2: float) -> None:
         """
         Entraine les neurones et les sauvegardes
 
-        Ex params:
+        Ex params :
         l1 (première ligne de neurones) : 50
         l2 (deuxième ligne) : 10
         """
         # Création du modèle
-        modele = Sequential()
+        model = Sequential()
 
         # Récupération et séparation des données
-        X, y = select_donnée_bdd("numpy")
+        x, y = select_data_bdd("numpy")
 
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=42)
+        x_train, x_test, y_train, y_test = train_test_split(
+            x, y, test_size=0.2, random_state=42)
 
         # Ajout des couches
-        modele.add(Dense(l1, input_dim=self.input, activation='relu'))
-        modele.add(Dense(l2, activation='relu'))
-        modele.add(Dense(1, activation='relu'))
+        model.add(Dense(l1, input_dim=self.input, activation='relu'))
+        model.add(Dense(l2, activation='relu'))
+        model.add(Dense(1, activation='relu'))
 
-        modele.compile(loss='mean_squared_logarithmic_error',
-                       optimizer='adam')
+        model.compile(loss='mean_squared_logarithmic_error',
+                      optimizer='adam')
 
-        modele.fit(X_train, y_train, epochs=50, batch_size=6)
+        model.fit(x_train, y_train, epochs=50, batch_size=6)
 
         # Sauvegarde du modèle
-        self.save_modele(modele)
+        self.save_model(model)
 
         # Test du modèle
-        self.test_modele(X_test, y_test, modele)
+        self.test_model(x_test, y_test, model)
 
     def training_2(self) -> None:
         """
-        recherche la meilleur combinaison de neurone et sauvegarde le modèle
+        Recherche la meilleure combinaison de neurone et sauvegarde le modèle
         """
         # Récupération et séparation des données
-        X, y = select_donnée_bdd("numpy")
+        x, y = select_data_bdd("numpy")
 
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=42)
+        x_train, x_test, y_train, y_test = train_test_split(
+            x, y, test_size=0.2, random_state=42)
 
         def build_model(hp):
             model = Sequential()
@@ -86,82 +90,95 @@ class IA:
 
         tuner.search_space_summary()
 
-        tuner.search(X_train, y_train,
+        tuner.search(x_train, y_train,
                      epochs=50,
-                     validation_data=(X_test, y_test))
+                     validation_data=(x_test, y_test))
 
         best_model = tuner.get_best_models(num_models=1)[0]
 
         # Sauvegarde du modèle
-        self.save_modele(best_model)
+        self.save_model(best_model)
 
         # Test du modèle
-        self.test_modele(X_test, y_test, best_model)
+        self.test_model(x_test, y_test, best_model)
 
         # Suppression du dossier de test des neurones
         os.system("rm -r my_dir")
 
-    def save_modele(self, modele) -> None:
+    @staticmethod
+    def save_model(model) -> None:
         """
         Sauvegarde le modèle
         """
-        modele_json = modele.to_json()
+        model_json = model.to_json()
 
         # Sauvegarde du modèle
-        with open("modele.json", "w") as json_file:
-            json_file.write(modele_json)
+        with open("model.json", "w") as json_file:
+            json_file.write(model_json)
 
         # Sauvegarde des poids
-        modele.save_weights("modele.h5")
+        model.save_weights("model.h5")
 
         print("Modèle sauvegarder !")
 
-    def test_modele(self, X_test, y_test, modele) -> None:
+    @staticmethod
+    def test_model(x_test, y_test, model) -> None:
         """
         Test le modèle passé en argument
         """
         # prédire les valeurs pour les données de test
-        y_pred = modele.predict(X_test)
+        y_prediction = model.predict(x_test)
 
         # calcule des indices de fiabilités du modèle
-        mse = mean_squared_error(y_test, y_pred)
-        mae = mean_absolute_error(y_test, y_pred)
-        r2 = r2_score(y_test, y_pred)
+        mse = mean_squared_error(y_test, y_prediction)
+        mae = mean_absolute_error(y_test, y_prediction)
+        r2 = r2_score(y_test, y_prediction)
 
         # affiche les indices et l'évaluation du modèle sur les données de test
         print(f"Mean Squared Error (MSE): {mse}")
         print(f"Mean Absolute Error (MAE): {mae}")
         print(f'Coefficient R² : {r2}')
-        print(modele.evaluate(X_test, y_test))
+        print(model.evaluate(x_test, y_test))
 
-    def prédiction_keras(self, donnée_serveur_data: pandas.DataFrame, donnée_serveur_rsi: pandas.DataFrame, Modèle) -> float:
+    def prediction_keras(self, data_server_40: pandas.DataFrame, data_server_15: pandas.DataFrame,
+                         model: bool or None) -> float:
         """
-        Fait les prédiction et renvoie le prix potentiel de la crypto
+        Fait les prédictions et renvoie le prix potentiel de la crypto
+
+        Ex params :
+        data_server_40 : Dataframe des données de 40 de longueurs
+        data_server_15 : Dataframe des données de 15 de longueurs
+        model : True, False, None -> sélection du modèle voulu
         """
 
         ls = calcul_indice_40_donnees(
-            donnée_serveur_data) + calcul_indice_15_donnees(donnée_serveur_rsi)
+            data_server_40) + calcul_indice_15_donnees(data_server_15)
 
-        donnée_prédiction = one_liste(ls)
+        data_prediction = one_liste(ls)
 
-        np_liste = numpy.array([donnée_prédiction])
+        np_liste = numpy.array([data_prediction])
 
-        predic = float(Modèle.predict(np_liste)[0][0])
+        if model is True:
+            prediction = float(self.model.predict(np_liste)[0][0])
+        elif model is False:
+            prediction = float(self.model_up.predict(np_liste)[0][0])
+        else:
+            prediction = float(self.model_down.predict(np_liste)[0][0])
 
-        return predic
+        return prediction
 
-    def chargement_modele(self) -> None:
+    def loading_model(self) -> Union[Any, Any, Any]:
         """
         Charge et renvoie les trois modèles
         """
-        # Emplacement des réseaux de neuronnes
-        emplacement = f"Modele_1h/{self.symbol}/"
+        # Emplacement des réseaux de neurones
+        emplacement = f"Model_1h/{self.symbol}/"
         emplacement_up = emplacement[:-1] + "UP/"
         emplacement_down = emplacement[:-1] + "DOWN/"
 
         # Fichiers
-        fichier_json = "modele.json"
-        fichier_h5 = "modele.h5"
+        fichier_json = "model.json"
+        fichier_h5 = "model.h5"
 
         # Chargement de la configuration du réseau
         with open(emplacement + fichier_json, "r") as f:
@@ -188,79 +205,87 @@ class IA:
 
         return loaded_model, loaded_model_up, loaded_model_down
 
-    def etat_bot(self, lecture_ecriture: str, to_write: Optional[str] = None) -> str or None:
+    def state_bot(self, read_write: str, to_write: Optional[str] = None) -> str or None:
         """
-        Ecrit ou lit dans un fichier l'état du bot (prédiction, heure)
-        Pour que quand le bot démarre, sait s'il doit attendre l'heure et si on sors d'une divergence
+        Écrit ou lit dans un fichier l'état du bot (prédiction, heure)
+        Pour que quand le bot démarre, sait s'il doit attendre l'heure et si on sort d'une divergence
 
         Ex params :
-        lecture_ecriture : lecture ou écriture
+        read_write : lecture ou écriture
         to_write (optionnel) : élément à écrire dans le fichier
         """
-        fichier = f"etat_bot_{self.symbol}.txt"
+        fichier = f"state_bot_{self.symbol}.txt"
 
-        if lecture_ecriture == "lecture":
+        if read_write == "lecture":
             # On utilise try dans le cas où le fichier n'existe pas
             try:
                 with open(fichier, "r") as f:
                     elt = f.read()
 
                 return elt
-            except:
+            except FileNotFoundError:
                 return ""
 
-        elif lecture_ecriture == "écriture":
+        elif read_write == "écriture":
             with open(fichier, "w") as f:
                 f.write(to_write)
 
-    def écriture_prediction(self, prix: float, prix_up: float, prix_down: float, prediction: float, prediction_up: float, prediction_down: float, date: datetime) -> None:
+    def write_prediction(self, prix: float, prix_up: float, prix_down: float, prediction: float,
+                         prediction_up: float, prediction_down: float, date: str) -> None:
         """
-        Ecrit dans un fichier les prédictions et les prix de la crypto ainsi que la date
+        Écrit dans un fichier les prédictions et les prix de la crypto ainsi que la date
         """
         # Liste des valeurs
         liste_valeur = [prix, prediction, prix_up,
                         prediction_up, prix_down, prediction_down, date]
 
-        # Ecriture dans le fichier
+        # Écriture dans le fichier
         with open(f"Autre_fichiers/message_bot_{self.symbol}.txt", "a") as f:
             f.write(f"{str(liste_valeur)}\n")
 
-    def validation_achat(self, prix: float, prix_up: float, prix_down: float, prediction: float, prediction_up: float, prediction_down: float) -> int or None:
+    def validation_achat(self, prix: float, prix_up: float, prix_down: float, prediction: float, prediction_up: float,
+                         prediction_down: float) -> int or None:
         """
         Valide ou non l'achat d'une crypto
-        Si pas de condition d'achat -> valeur inconnue
+        Si pas de condition d'achat → valeur inconnue
         """
         if prix < prediction and prix_up < prediction_up and prix_down > prediction_down:
             if self.symbol == "ADA":
-                if prediction - prix <= 0.0009 and prediction_up - prix_up <= 0.0032 and prix_down - prediction_down <= 0.0005:
-                    return 1
+                if prediction - prix <= 0.0009 and prediction_up - prix_up <= 0.0032:
+                    if prix_down - prediction_down <= 0.0005:
+                        return 1
 
             elif self.symbol == "BNB":
-                if prediction - prix <= 1.57 and prediction_up - prix_up <= 0.32 and prix_down - prediction_down <= 0.0064:
-                    return 1
+                if prediction - prix <= 1.57 and prediction_up - prix_up <= 0.32:
+                    if prix_down - prediction_down <= 0.0064:
+                        return 1
 
             elif self.symbol == "BTC":
                 return 1
 
             elif self.symbol == "ETH":
-                if prediction - prix <= 3 and prediction_up - prix_up <= 0.028 and prix_down - prediction_down <= 0.008:
-                    return 1
+                if prediction - prix <= 3 and prediction_up - prix_up <= 0.028:
+                    if prix_down - prediction_down <= 0.008:
+                        return 1
 
             elif self.symbol == "XRP":
-                if prediction - prix <= 0.0027 and prediction_up - prix_up <= 0.0031 and prix_down - prediction_down <= 0.00018:
-                    return 1
+                if prediction - prix <= 0.0027 and prediction_up - prix_up <= 0.0031:
+                    if prix_down - prediction_down <= 0.00018:
+                        return 1
 
         elif prix > prediction and prix_up > prediction_up and prix_down < prediction_down:
             if self.symbol == "ADA":
-                if prix - prediction <= 0.0011 and prix_up - prediction_up <= 0.0018 and prediction_down - prix_down <= 0.0003:
-                    return 0
+                if prix - prediction <= 0.0011 and prix_up - prediction_up <= 0.0018:
+                    if prediction_down - prix_down <= 0.0003:
+                        return 0
 
             elif self.symbol == "BNB":
                 return 0
 
             elif self.symbol == "BTC":
-                if prix - prediction <= 35 and prix_up - prediction_up <= 0.031 and prediction_down - prix_down <= 0.0024:
-                    return 0
+                if prix - prediction <= 35 and prix_up - prediction_up <= 0.031:
+                    if prediction_down - prix_down <= 0.0024:
+                        return 0
 
             elif self.symbol == "ETH":
                 return 0
@@ -275,11 +300,11 @@ def kill_process(p: Process) -> None:
     """
     Tue le processus passé en argument
     """
-    # Etat du processus
+    # état du processus
     statut = p.is_alive()
 
     # S'il est en vie, on le tue
-    if statut == True:
+    if statut:
         p.kill()
 
 
@@ -287,11 +312,11 @@ def kill_thread(th: Thread, event: Event) -> None:
     """
     Tue le thread passé en argument
     """
-    # Etat du thread
+    # état du thread
     statut = th.is_alive()
 
     # S'il est en vie, on l'arrête
-    if statut == True:
+    if statut:
         event.set()
 
         th.join()

@@ -1,4 +1,4 @@
-# Programme qui permet d'arreter le bot discord
+# Programme qui permet d'arrêter le bot discord
 # Utile sur le serveur vps
 from subprocess import Popen, PIPE
 import os

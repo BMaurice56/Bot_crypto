@@ -27,5 +27,5 @@ ssh.exec_command(
 # Ferme la session SFTP
 sftp.close()
 
-# Déconnection du serveur SSH
+# Déconnexion du serveur SSH
 ssh.close()

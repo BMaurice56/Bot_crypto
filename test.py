@@ -31,7 +31,6 @@ with open(f"Autre_fichiers/message_bot/message_bot_{symbol_run}.txt", "r") as f:
         cpt += 1
         ls = []
 
-
 locale.setlocale(locale.LC_ALL, 'fr_FR.UTF-8')
 
 bb = Binance()
@@ -62,7 +61,7 @@ for i in range(len(dico)):
 
         heure = int(((date - ancienne_date) / 60) / 60)
 
-        donnee_serveur = bb.donnée(
+        donnee_serveur = bb.data(
             f"{symbol_run}USDT", f"{heure + 1} hour ago utc", f"{heure} hour ago utc")["high"]
 
         if (liste[0] * (1 + (0.015 / 3))) >= float(donnee_serveur):
@@ -89,21 +88,20 @@ for i in range(len(dico)):
 
         heure = int(((date - ancienne_date) / 60) / 60)
 
-        donnee_serveur = bb.donnée(
+        donnee_serveur = bb.data(
             f"{symbol_run}USDT", f"{heure + 1} hour ago utc", f"{heure} hour ago utc")["low"]
 
         if (liste[0] * (1 - (0.015 / 3))) <= float(donnee_serveur):
             a = ""
             toto_down += 1
-            #print("toto ", liste[0] - liste[1], liste[2] - liste[3], liste[5] - liste[4])
-            #liste_.append(liste[0] - liste[1])
-            #liste_up.append(liste[2] - liste[3])
-            #liste_down.append(liste[5] - liste[4])
+            # print("toto ", liste[0] - liste[1], liste[2] - liste[3], liste[5] - liste[4])
+            # liste_.append(liste[0] - liste[1])
+            # liste_up.append(liste[2] - liste[3])
+            # liste_down.append(liste[5] - liste[4])
 
         else:
             a = ""
             pas_toto_down += 1
-
 
 print("toto_up = ", toto_up)
 print("pas toto up = ", pas_toto_up)
@@ -111,7 +109,7 @@ print("pas toto up = ", pas_toto_up)
 print("toto_down = ", toto_down)
 print("pas toto down = ", pas_toto_down)
 
-if liste_ != []:
+if liste_:
     print("liste_ ", max(liste_))
     print("liste_up ", max(liste_up))
     print("liste_down ", max(liste_down))

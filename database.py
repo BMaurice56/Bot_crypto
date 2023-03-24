@@ -8,13 +8,14 @@ def get_db(f):
     """
     Créer la connexion avec la base de donnée
     """
+
     @wraps(f)
     def connexion(*args, **kwargs):
         # création de la base DB
-        connexion = sqlite3.connect("data_base.db")
+        con = sqlite3.connect("data_base.db")
         # création du curseur
-        curseur = connexion.cursor()
-        return f(curseur=curseur, connexion=connexion, *args, **kwargs)
+        cur = con.cursor()
+        return f(curseur=cur, connexion=con, *args, **kwargs)
 
     return connexion
 
@@ -55,14 +56,14 @@ def bdd_rsi_vwap_cmf(curseur, connexion):
 
 
 @get_db
-def insert_data_historique_bdd(symbol: str, nombre_données: int, curseur, connexion) -> None:
+def insert_data_historique_bdd(symbol: str, number_data: int, curseur, connexion) -> None:
     """
-    Permet de charger les x dernières minutes/heures (avec un espace de x min/heure pour chaque jeux de données)
+    Permet de charger les x dernières minutes/heures (avec un espace de x min/heure pour chaque jeu de données)
     Dans la base de donnée
 
     Ex params :
     symbol : 'BTCUSDT'
-    nombres_données : 1000
+    number_data : 1000
     """
     # On enlève tout dans la bdd
     bdd_data()
@@ -73,26 +74,28 @@ def insert_data_historique_bdd(symbol: str, nombre_données: int, curseur, conne
 
     binance = Binance()
 
-    données_serveur = binance.donnée(
-        symbol, f"{nombre_données} hour ago UTC", "0 hour ago UTC")
+    data_server = binance.data(
+        symbol, f"{number_data} hour ago UTC", "0 hour ago UTC")
 
     liste_data = []
     liste_rsi = []
 
-    for i in range(0, len(données_serveur)-40):
-        data = données_serveur[i:i+40]
+    for i in range(0, len(data_server) - 40):
+        data = data_server[i:i + 40]
 
         # Calcul les indices techniques + ajout du prix
         ls = calcul_indice_40_donnees(data) + [float(data.close.values[-1])]
 
+        ls = list(ls)
+
         # Transformation en string des sous-listes
-        for i in range(len(ls)):
-            ls[i] = str(ls[i])
+        for j in range(len(ls)):
+            ls[j] = str(ls[j])
 
         liste_data.append(ls)
 
-    for j in range(25, len(données_serveur)-15):
-        data = données_serveur[j:j+15]
+    for h in range(25, len(data_server) - 15):
+        data = data_server[h:h + 15]
 
         # Calcul les indices techniques + ajout du prix
         ls = calcul_indice_15_donnees(data) + [float(data.close.values[-1])]
@@ -117,17 +120,21 @@ def insert_data_historique_bdd(symbol: str, nombre_données: int, curseur, conne
 
 
 @get_db
-def select_donnée_bdd(df_numpy: str, curseur, connexion) -> Union[pandas.DataFrame, pandas.DataFrame] or Union[numpy.array, numpy.array]:
+def select_data_bdd(df_numpy: str, curseur, connexion) -> Union[pandas.DataFrame, pandas.DataFrame] or \
+                                                          Union[numpy.array, numpy.array]:
     """
     Récupère toutes les données de la bdd
     Renvoie toutes les données et les prix sous forme de dataframe
+
     Première dataframe : toutes les données
+
     Deuxième dataframe : les prix
 
     Ex param :
     df_numpy : dataframe ou numpy
     """
-    donnée_bdd = curseur.execute("""
+
+    data_bdd = curseur.execute("""
     SELECT data.sma, data.ema, data.macd, 
     rsi_vwap_cmf.rsi, rsi_vwap_cmf.cmf,
     rsi_vwap_cmf.roc, rsi_vwap_cmf.obv
@@ -139,22 +146,24 @@ def select_donnée_bdd(df_numpy: str, curseur, connexion) -> Union[pandas.DataFr
     SELECT prix_fermeture FROM data
     """).fetchall()
 
+    connexion.commit()
+
     prix = [x[0] for x in prix]
 
     # On vient retransformer les données dans leur état d'origine
     # Et on remet le tout dans une dataframe
-    donnée = []
-    for row in donnée_bdd:
-        donnée.append(one_liste(row, True))
+    data = []
+    for row in data_bdd:
+        data.append(one_liste(row, True))
 
     if df_numpy == "dataframe":
-        dp = pandas.DataFrame(donnée)
+        dp = pandas.DataFrame(data)
         prix_df = pandas.DataFrame(prix)
 
         return [dp, prix_df]
 
     elif df_numpy == "numpy":
-        np = numpy.array(donnée)
+        np = numpy.array(data)
         prix_np = numpy.array(prix)
 
         return [np, prix_np]
