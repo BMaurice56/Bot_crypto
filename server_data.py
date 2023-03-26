@@ -369,7 +369,7 @@ class Kucoin:
         fichier_en_cours = ""
         try:
             # Les noms des trois fichiers log de requêtes
-            nom = [f"log_requete_{self.symbol_base}.txt", f"log_stoploss_manuel_{self.symbol_base}.txt",
+            nom = [f"log_request_{self.symbol_base}.txt", f"log_stop_loss_manuel_{self.symbol_base}.txt",
                    f"log_update_id_position_{self.symbol_base}.txt"]
 
             while True:
@@ -423,14 +423,15 @@ class Kucoin:
 
                 # Puis, on vient vider les fichiers (ou les créer)
                 os.system(
-                    f'echo > {self.path_log}/log_requete_{self.symbol_base}.txt')
+                    f'echo > {self.path_log}/log_request_{self.symbol_base}.txt')
                 os.system(
-                    f'echo > {self.path_log}/log_stoploss_manuel_{self.symbol_base}.txt')
+                    f'echo > {self.path_log}/log_stop_loss_manuel_{self.symbol_base}.txt')
                 os.system(
                     f'echo > {self.path_log}/log_update_id_position_{self.symbol_base}.txt')
 
                 # Et faire dormir le programme
                 sleep(60 * 60 * 3)
+
         except Exception as error:
             msg = "Erreur survenu dans la fonction analyse_log, fonction laissée arrêter, " + \
                   f"bot toujours en cours d'exécution\nfichier qui pose problème : {fichier_en_cours}"
