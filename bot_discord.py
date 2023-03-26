@@ -28,7 +28,7 @@ class Bot_Discord(commands.Bot):
         self.loop = asyncio.get_event_loop_policy().get_event_loop()
 
         # Liste des cryptos supportées
-        with open("Autre_fichiers/crypto_supporter.txt", "r") as f:
+        with open("Other_files/supported_crypto.txt", "r") as f:
             self.crypto_supporter = f.read().split(";")
 
         def lancement_bot(symbol):
@@ -40,7 +40,7 @@ class Bot_Discord(commands.Bot):
                 self.msg_discord.message_canal(
                     "général", f"Bot {symbol} est lancé !")
                 sys.argv = ['', symbol]
-                runpy.run_path("app.py")
+                runpy.run_path("bot.py")
             except Exception as error:
                 self.msg_discord.message_erreur(
                     error, f"Erreur survenue au niveau du bot {symbol}, arrêt du programme")
@@ -280,9 +280,7 @@ class Bot_Discord(commands.Bot):
             Permet de ne pas bloquer le bot discord et donc d'exécuter d'autres commandes à côté
             Comme l'arrêt du bot ou le relancer, le prix à l'instant T, etc...
             """
-            question = "Sur quelles crypto trader ? "
-            for crypto in self.crypto_supporter:
-                question += f"{crypto} ? "
+            question = "Sur quelles crypto trader ? " + "".join(f"{symbol} ? " for symbol in self.crypto_supporter)
 
             await ctx.send(question)
 
@@ -335,12 +333,12 @@ class Bot_Discord(commands.Bot):
             """
             Stop le bot (tue son processus)
             """
-            question = "Quel bot arrêté ?"
-            bot_started = "Bot lancé : "
+            if not self.list_symbol_bot_started:
+                await ctx.send("Aucun bot lancé !")
+                return
 
-            # On récupère tous les bots déjà lancés
-            for symbol in self.list_symbol_bot_started:
-                bot_started += f"{symbol} "
+            question = "Quel bot arrêté ?"
+            bot_started = "Bot lancé : " + "".join(f"{symbol} " for symbol in self.list_symbol_bot_started)
 
             await ctx.send(question)
             await ctx.send(bot_started)
@@ -356,7 +354,7 @@ class Bot_Discord(commands.Bot):
             crypto = msg.content
 
             if crypto == "all":
-                copy_symbol = [x for x in self.list_symbol_bot_started]
+                copy_symbol = self.list_symbol_bot_started[:]
 
                 for symbol in copy_symbol:
                     stop_manual_bot(symbol)
@@ -400,9 +398,7 @@ class Bot_Discord(commands.Bot):
             Permet de vendre les cryptomonnaies du bot à distance
             Sans devoir accéder à la platform
             """
-            question = "Quelle crypto ? "
-            for crypto in self.crypto_supporter:
-                question += f"{crypto} ? "
+            question = "Quelle crypto ? " + "".join(f"{crypto} ? " for crypto in self.crypto_supporter)
 
             await ctx.send(question)
 
@@ -470,34 +466,12 @@ class Bot_Discord(commands.Bot):
             if cryptos_position is not None:
                 await ctx.send("Impossible de redémarrer, des positions sont en cours")
 
-                crypto = ""
-                for elt in cryptos_position:
-                    crypto += f"{elt}, "
+                crypto = "".join(f"{elt}, " for elt in cryptos_position)
 
                 await ctx.send(f"Cryptos ayant une position : {crypto[:-2]}")
 
             else:
                 Popen("nohup python3.10 restart.py >/dev/null 2>&1", shell=True)
-
-        @self.command(name="message")
-        async def message(ctx):
-            """
-            Permet d'enregistrer l'état du bot, des prédictions ainsi que le prix des cryptos
-            """
-
-            messages = await ctx.channel.history().flatten()
-
-            ls = []
-
-            for each_message in messages:
-                toto = each_message.embeds
-                if len(toto) > 0:
-                    toto2 = str(toto[0].fields[0])[36:-14]
-                    ls.append(toto2)
-
-            with open("message_discord.txt", "w") as file:
-                for elt in ls:
-                    file.write(elt)
 
         @self.command(name="estimation")
         async def estimation(ctx):

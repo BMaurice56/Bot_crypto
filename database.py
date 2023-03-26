@@ -1,5 +1,5 @@
-from indices_techniques import *
-from donnees_serveur import *
+from technical_indicators import *
+from server_data import *
 from functools import wraps
 import sqlite3
 

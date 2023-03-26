@@ -240,7 +240,7 @@ class IA:
                         prediction_up, prix_down, prediction_down, date]
 
         # Écriture dans le fichier
-        with open(f"Autre_fichiers/message_bot_{self.symbol}.txt", "a") as f:
+        with open(f"Autre_fichiers/prediction_bot_{self.symbol}.txt", "a") as f:
             f.write(f"{str(liste_valeur)}\n")
 
     def validation_achat(self, prix: float, prix_up: float, prix_down: float, prediction: float, prediction_up: float,

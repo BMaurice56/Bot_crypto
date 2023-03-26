@@ -209,11 +209,11 @@ class Kucoin:
             self.minimum_crypto_down = self.dictionnaire_minimum_down[self.symbol_base]
 
         # On récupère le priceIncrement de chaque crypto
-        with open("Autre_fichiers/priceIncrement.txt", "r") as f:
+        with open("Other_files/priceIncrement.txt", "r") as f:
             self.dico_priceIncrement = json.loads(f.read())
 
         # Crypto supportées et leurs nombres
-        with open("Autre_fichiers/crypto_supporter.txt", "r") as f:
+        with open("Other_files/supported_crypto.txt", "r") as f:
             self.crypto_supported = f.read().split(";")
             self.nb_crypto_supported = len(self.crypto_supported)
 
@@ -227,7 +227,7 @@ class Kucoin:
         self.dico_partage[f"{self.symbol_base}_started"] = True
 
         # Dossier fichiers logs
-        self.dir_log = "fichier_log"
+        self.dir_log = "log_files"
 
         # Chemin des fichiers logs
         self.path_log = f"/home/Bot_crypto/{self.dir_log}"
@@ -331,7 +331,7 @@ class Kucoin:
         Ex param :
         str_to_write (optionnel) : id de l'ordre
         """
-        with open(f"ordre_limit_{self.symbol_base}.txt", "w") as f:
+        with open(f"order_limit_{self.symbol_base}.txt", "w") as f:
             if str_to_write is not None:
                 f.write(str_to_write)
 
@@ -350,13 +350,13 @@ class Kucoin:
         pwd = ""
 
         if emplacement == "requete":
-            pwd = f"{self.dir_log}/log_requete_{self.symbol_base}.txt"
+            pwd = f"{self.dir_log}/log_request_{self.symbol_base}.txt"
 
         elif emplacement == "presence_position":
             pwd = f"{self.dir_log}/log_update_id_position_{self.symbol_base}.txt"
 
         elif emplacement == "stoploss":
-            pwd = f"{self.dir_log}/log_stoploss_manuel_{self.symbol_base}.txt"
+            pwd = f"{self.dir_log}/log_stop_loss_manuel_{self.symbol_base}.txt"
 
         with open(pwd, "a") as f:
             f.write(f"{date};{request}\n")

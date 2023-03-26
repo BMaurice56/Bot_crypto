@@ -7,7 +7,7 @@ symbol_run = "XRP"
 
 dico = {}
 
-with open(f"Autre_fichiers/message_bot/message_bot_{symbol_run}.txt", "r") as f:
+with open(f"Other_files/message_bot/message_bot_{symbol_run}.txt", "r") as f:
     content_file = f.read().split(
         f"Bot {symbol_run} toujours en cour d'exécution le : ")[1:]
     cpt = 0

@@ -64,7 +64,7 @@ class Message_discord:
         # Récupération de l'erreur
         error = "".join(traceback.format_exception(type(error), error, error.__traceback__))
 
-        with open("fichier_log/log_erreur.txt", "a") as f:
+        with open("log_files/log_erreur.txt", "a") as f:
             f.write(f"{location_error} ; {error} \n")
 
         # On envoie l'emplacement de l'erreur, où elle s'est produite
