@@ -10,5 +10,5 @@ requests==2.28.2
 shared_memory_dict==0.7.2
 tenacity==8.2.2
 tensorflow==2.12.0
-TA-lib==0.4.25
 scikit-learn==1.2.2
+TA-lib==0.4.25
