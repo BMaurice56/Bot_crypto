@@ -46,7 +46,7 @@ class Bot_Discord(commands.Bot):
                 self.msg_discord.message_canal("général",
                                                "Le bot s'est arrêté !")
 
-        async def process_startup(symbol):
+        def process_startup(symbol):
             """
             Starts the bots process
             """
@@ -134,7 +134,7 @@ class Bot_Discord(commands.Bot):
                 for symbol in self.crypto_supporter:
                     if symbol not in self.list_symbol_bot_started:
                         # Lancement du processus puis attente de deux secondes
-                        await process_startup(symbol)
+                        process_startup(symbol)
 
                         # Dès que le bot est démarré, on attend (gestion multibot) et on passe au suivant
                         while True:
@@ -149,7 +149,7 @@ class Bot_Discord(commands.Bot):
                 # Si elle est supporter et pas lancé, alors on lance le bot
                 if crypto in self.crypto_supporter:
                     if crypto not in self.list_symbol_bot_started:
-                        await process_startup(crypto)
+                        process_startup(crypto)
 
                         # Dès que le bot est démarré, on peut supprimer la variable
                         while True:
@@ -377,7 +377,6 @@ class Bot_Discord(commands.Bot):
         Supprime automatiquement de la liste les processus arrêtés
         """
         for process in self.list_bot_started:
-            print(process.exitcode)
             if process.exitcode is not None:
                 symbol = process.name
 

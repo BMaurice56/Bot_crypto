@@ -115,7 +115,7 @@ while True:
                     f"prix crypto up : {prix_up}, prix de la prédiction : {prediction_up}\n" + \
                     f"prix crypto down : {prix_down}, prix de la prédiction : {prediction_down}"
 
-    msg_discord.message_canal("état_bot_autre", state_message, 'état du bot !')
+    msg_discord.message_canal("état_bot", state_message, 'état du bot !')
 
     ia.write_prediction(prix, prix_up, prix_down,
                         prediction, prediction_up, prediction_down, date)
