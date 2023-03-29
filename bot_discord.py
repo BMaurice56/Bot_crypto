@@ -1,9 +1,8 @@
-import logging
-
 from main import Kucoin, Message_discord, os, Process, kill_process, datetime, ZoneInfo
 from discord.ext import commands, tasks
-from discord import Intents
 from subprocess import Popen
+from discord import Intents
+import logging
 import asyncio
 import runpy
 import sys
