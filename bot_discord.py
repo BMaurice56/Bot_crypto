@@ -489,7 +489,7 @@ if __name__ == "__main__":
     os.system("clear")
     bot = Bot_Discord()
     try:
-        handler = logging.FileHandler(filename="Other_files/discord_log.log", encoding='utf-8', mode='w')
+        handler = logging.FileHandler(filename="log_files/discord_log.log", encoding='utf-8', mode='w')
 
         bot.run("OTcyNDY0NDAwNzY4MzM1ODkz.YnZcDA.LYfcnXeeBB2aEO0-ZX7bNvM1T-8", log_handler=handler)
     except Exception as e:
