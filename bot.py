@@ -110,6 +110,13 @@ while True:
     prediction_down = ia.prediction_keras(
         data_down, rsi_vwap_cmf_down, None)
 
+    state_message = f"Bot {symbol} toujours en cour d'exécution le : {date}\n" + \
+                    f"prix de la crypto : {prix}, prix de la prédiction : {prediction}\n" + \
+                    f"prix crypto up : {prix_up}, prix de la prédiction : {prediction_up}\n" + \
+                    f"prix crypto down : {prix_down}, prix de la prédiction : {prediction_down}"
+
+    msg_discord.message_canal("état_bot_autre", state_message, 'état du bot !')
+
     ia.write_prediction(prix, prix_up, prix_down,
                         prediction, prediction_up, prediction_down, date)
 
@@ -146,16 +153,10 @@ while True:
                 symbol_stop_loss, prix_stop_loss, event)
 
             buy_sell = True
-
-    # Si plus de crypto ou achat, alors on remet à zéro les variables
-    if buy_sell or crypto_up < kucoin.minimum_crypto_up and crypto_down < kucoin.minimum_crypto_down:
-        time_last_position = 0
-        gain_limit_order = kucoin.pourcentage_gain
-
-    # Si le prix est supérieur à la prédiction (ou inversement)
-    # Et qu'on n'a pas acheté et qu'on a des cryptos
-    # Alors on vend
-    if time_last_position >= 2:
+    else:
+        # Si le prix est supérieur à la prédiction (ou inversement)
+        # Et qu'on n'a pas acheté et qu'on a des cryptos
+        # Alors on vend
         if prix > prediction or prix_up > prediction_up or prix_down < prediction_down:
             if crypto_up > kucoin.minimum_crypto_up:
                 kill_thread(thread, event)
@@ -169,6 +170,11 @@ while True:
 
                 kucoin.achat_vente(crypto_down, kucoin.symbol_down, False)
                 buy_sell = True
+
+    # Si plus de crypto ou achat, alors on remet à zéro les variables
+    if buy_sell or crypto_up < kucoin.minimum_crypto_up and crypto_down < kucoin.minimum_crypto_down:
+        time_last_position = 0
+        gain_limit_order = kucoin.pourcentage_gain
 
     # Si cela fait trop longtemps que l'ordre a été placé sans être vendu, on le descend
     if time_last_position >= 4:
