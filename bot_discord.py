@@ -377,6 +377,7 @@ class Bot_Discord(commands.Bot):
         Supprime automatiquement de la liste les processus arrêtés
         """
         for process in self.list_bot_started:
+            print(process.exitcode)
             if process.exitcode is not None:
                 symbol = process.name
 
