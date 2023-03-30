@@ -230,19 +230,6 @@ class IA:
             with open(fichier, "w") as f:
                 f.write(to_write)
 
-    def write_prediction(self, prix: float, prix_up: float, prix_down: float, prediction: float,
-                         prediction_up: float, prediction_down: float, date: str) -> None:
-        """
-        Écrit dans un fichier les prédictions et les prix de la crypto ainsi que la date
-        """
-        # Liste des valeurs
-        liste_valeur = [prix, prediction, prix_up,
-                        prediction_up, prix_down, prediction_down, date]
-
-        # Écriture dans le fichier
-        with open(f"Other_files/prediction_bot_{self.symbol}.txt", "a") as f:
-            f.write(f"{str(liste_valeur)}\n")
-
     def validation_achat(self, prix: float, prix_up: float, prix_down: float, prediction: float, prediction_up: float,
                          prediction_down: float) -> int or None:
         """
@@ -261,7 +248,8 @@ class IA:
                         return 1
 
             elif self.symbol == "BTC":
-                return 1
+                if prediction_up - prix_up >= 0.04 and prix_down - prediction_down >= 0.002:
+                    return 1
 
             elif self.symbol == "ETH":
                 if prediction - prix <= 3 and prediction_up - prix_up <= 0.028:
@@ -283,9 +271,8 @@ class IA:
                 return 0
 
             elif self.symbol == "BTC":
-                if prix - prediction <= 35 and prix_up - prediction_up <= 0.031:
-                    if prediction_down - prix_down <= 0.0024:
-                        return 0
+                if prix_up - prediction_up >= 0.04 and prediction_down - prix_down >= 0.002:
+                    return 0
 
             elif self.symbol == "ETH":
                 return 0

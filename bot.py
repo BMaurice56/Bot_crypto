@@ -117,9 +117,6 @@ while True:
 
     msg_discord.message_canal("état_bot", state_message, 'état du bot !')
 
-    ia.write_prediction(prix, prix_up, prix_down,
-                        prediction, prediction_up, prediction_down, date)
-
     # On augmente de 1 le temps qu'on a de position
     # Remis à zéro après si achat ou aucune crypto
     time_last_position += 1
