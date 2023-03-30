@@ -509,6 +509,7 @@ class Kucoin:
         if argent:
             argent = float(argent[0]['balance'])
 
+            """
             # renvoi l'usdt disponible pour chaque bot
             if symbol == self.devise and total is None:
                 # Si présence du total d'usdt dans le dictionnaire
@@ -534,7 +535,7 @@ class Kucoin:
                 # Alors le bot ne prend que sa part
                 if argent > argent_bot:
                     argent = argent_bot
-
+            """
             money = self.arrondi(argent * 0.999, '0.0001')
 
             return money
