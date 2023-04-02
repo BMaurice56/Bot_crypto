@@ -150,6 +150,7 @@ while True:
                 symbol_stop_loss, prix_stop_loss, event)
 
             buy_sell = True
+    """
     else:
         # Si le prix est supérieur à la prédiction (ou inversement)
         # Et qu'on n'a pas acheté et qu'on a des cryptos
@@ -167,7 +168,7 @@ while True:
 
                 kucoin.achat_vente(crypto_down, kucoin.symbol_down, False)
                 buy_sell = True
-
+    """
     # Si plus de crypto ou achat, alors on remet à zéro les variables
     if buy_sell or crypto_up < kucoin.minimum_crypto_up and crypto_down < kucoin.minimum_crypto_down:
         time_last_position = 0

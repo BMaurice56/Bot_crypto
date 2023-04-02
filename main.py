@@ -248,8 +248,7 @@ class IA:
                         return 1
 
             elif self.symbol == "BTC":
-                if prediction_up - prix_up >= 0.04 and prix_down - prediction_down >= 0.002:
-                    return 1
+                return 1
 
             elif self.symbol == "ETH":
                 if prediction - prix <= 3 and prediction_up - prix_up <= 0.028:
@@ -271,8 +270,7 @@ class IA:
                 return 0
 
             elif self.symbol == "BTC":
-                if prix_up - prediction_up >= 0.04 and prediction_down - prix_down >= 0.002:
-                    return 0
+                return 0
 
             elif self.symbol == "ETH":
                 return 0
