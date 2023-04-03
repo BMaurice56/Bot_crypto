@@ -510,7 +510,6 @@ class Kucoin:
         if argent:
             argent = float(argent[0]['balance'])
 
-            """
             # renvoi l'usdt disponible pour chaque bot
             if symbol == self.devise and total is None:
                 # Si présence du total d'usdt dans le dictionnaire
@@ -521,7 +520,7 @@ class Kucoin:
                         self.dico_partage["amount_usdt"] = argent
                     else:
                         # S'il n'y a pas de position et que le montant est plus faible (perte)
-                        # Alors on met à jour
+                        # Alors, on met à jour
                         position_all = self.presence_position_all()
                         if position_all is None:
                             self.dico_partage["amount_usdt"] = argent
@@ -536,8 +535,13 @@ class Kucoin:
                 # Alors le bot ne prend que sa part
                 if argent > argent_bot:
                     argent = argent_bot
-            """
-            money = self.arrondi(argent * 0.999, '0.0001')
+
+            zero_after_coma = '0.0001'
+
+            if f"{symbol}-{self.devise}" in self.dico_priceIncrement:
+                zero_after_coma = self.dico_priceIncrement[f"{symbol}-{self.devise}"]
+
+            money = self.arrondi(argent * 0.999, zero_after_coma)
 
             return money
         else:
