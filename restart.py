@@ -16,5 +16,5 @@ for elt in processus:
 # On met à jour les fichiers
 os.system("git pull")
 
-# Et enfin on redémarre le bot
+# Et enfin, on redémarre le bot
 Popen("nohup python3.10 bot_discord.py >/dev/null 2>&1", shell=True)

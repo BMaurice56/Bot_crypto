@@ -22,7 +22,7 @@ class Bot_Discord(commands.Bot):
         # Message discord
         self.msg_discord = Message_discord()
 
-        # Stocke tous les bots lancés
+        # Stocke tous les bots lancer
         self.list_bot_started = []
         self.list_symbol_bot_started = []
 
@@ -53,7 +53,7 @@ class Bot_Discord(commands.Bot):
             p = Process(target=bot_startup,
                         name=symbol, args=[symbol])
 
-            # Puis, on ajoute le processus du bot dans les listes pour garder une trace de tous les bots lancés
+            # Puis, on ajoute le processus du bot dans les listes pour garder une trace de tous les bots lancer
             self.list_bot_started.append(p)
             self.list_symbol_bot_started.append(symbol)
 
@@ -146,7 +146,7 @@ class Bot_Discord(commands.Bot):
                                 break
 
             else:
-                # Si elle est supporter et pas lancé, alors on lance le bot
+                # Si elle est supportée et pas lancé, alors on lance le bot
                 if crypto in self.crypto_supporter:
                     if crypto not in self.list_symbol_bot_started:
                         process_startup(crypto)
@@ -252,17 +252,17 @@ class Bot_Discord(commands.Bot):
                 crypto_up = self.kucoin.montant_compte(f"{crypto_symbol}3L")
                 crypto_down = self.kucoin.montant_compte(f"{crypto_symbol}3S")
 
-                kucoin = Kucoin(crypto_symbol, False)
+                kucoin_vente = Kucoin(crypto_symbol, False)
 
                 # Et on vend la ou les cryptos en supprimant les ordres placés
-                if crypto_up > self.kucoin.minimum_crypto_up:
-                    kucoin.achat_vente(
+                if crypto_up > kucoin_vente.minimum_crypto_up:
+                    kucoin_vente.achat_vente(
                         crypto_up, f"{crypto_symbol}3L-USDT", False)
 
                     await ctx.send(f"{crypto_up} crypto up vendu !")
 
-                if crypto_down > self.kucoin.minimum_crypto_down:
-                    kucoin.achat_vente(
+                if crypto_down > kucoin_vente.minimum_crypto_down:
+                    kucoin_vente.achat_vente(
                         crypto_down, f"{crypto_symbol}3S-USDT", False)
 
                     await ctx.send(f"{crypto_down} crypto down vendu !")
@@ -309,11 +309,11 @@ class Bot_Discord(commands.Bot):
         @self.command(name="estimation")
         async def estimation(ctx):
             """
-            Renvoi le prix estimer de vente de la crypto
+            Renvoi le prix estimé de vente de la crypto
             """
             prix_estimer = None
 
-            # On parcourt le dictionnaire à la recherche de prix estimer
+            # On parcourt le dictionnaire à la recherche de prix estimé
             for cle, valeur in self.kucoin.dico_partage.items():
                 if "prix_estimer_" in cle:
                     crypto = cle.split("_")[-1]
@@ -432,7 +432,7 @@ class Bot_Discord(commands.Bot):
 
                     vide = False
 
-                # On fait la moyenne de temps des bots lancé
+                # On fait la moyenne de temps des bots lancer
                 # Message de statut des bots au niveau de leur fonctionnement à eux
                 for symbole in self.list_symbol_bot_started:
                     with open(f"state_bot_{symbole}.txt", "r") as file:

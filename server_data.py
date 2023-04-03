@@ -315,12 +315,13 @@ class Kucoin:
         """
         # On utilise try dans le cas où le fichier n'existe pas
         try:
-            with open(f"ordre_limit_{self.symbol_base}.txt", "r") as f:
+            with open(f"order_limit_{self.symbol_base}.txt", "r") as f:
                 elt = f.read()
 
-            if elt == "":
-                return None
-            return elt
+                if elt == "":
+                    return None
+
+                return elt
         except FileNotFoundError:
             return None
 
@@ -762,7 +763,7 @@ class Kucoin:
                 str(((1 + gain) * ancien_prix) / (1 + self.previous_gain)), zero_apres_virgule)
 
             # Si le nouveau prix est inférieur au prix de la crypto
-            # Alors on vend directement au lieu de placer un nouvel ordre
+            # Alors, on vend directement au lieu de placer un nouvel ordre
             if nv_prix <= prix:
                 # On récupère le montant du compte pour pouvoir vendre
                 montant = self.montant_compte(self.dico_symbol_simple[symbol])
@@ -792,7 +793,7 @@ class Kucoin:
         # Calcul prix de vente estimer ##################################################
         prix_marche = self.prix_temps_reel_kucoin(self.symbol)
 
-        # On stocke dans le dictionnaire partagé le prix estimer de vente sur le marché de base
+        # On stocke dans le dictionnaire partagé le prix estimé de vente sur le marché de base
         if "3L" in symbol:
             self.dico_partage[f"prix_estimer_{self.symbol_base}"] = prix_marche * \
                                                                     (1 + (self.pourcentage_gain / 3))
@@ -870,7 +871,7 @@ class Kucoin:
                     if event_flag.is_set():
                         break
 
-                    # On vérifie s'il y a toujours une crypto, si elle a été vendue on peut arrêter la fonction
+                    # On vérifie s'il y a toujours une crypto, si elle a été vendue, on peut arrêter la fonction
                     crypto = self.montant_compte(symbol_simple, "stoploss")
 
                     if crypto < minimum:
@@ -911,7 +912,7 @@ class Kucoin:
     def update_id_ordre_limite(self) -> None:
         """
         Maintien à jour l'id de l'ordre limite dans le fichier
-        Si l'ordre a été exécuté alors on enlève l'id du fichier
+        Si l'ordre a été exécuté alors, on enlève l'id du fichier
         """
         try:
             # Stock l'id de l'ordre

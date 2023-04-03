@@ -32,12 +32,12 @@ thread = Thread()
 state = ia.state_bot("lecture")
 
 # S'il y a bien un état inscrit dans le fichier (fichier non vide)
-# alors on peut vérifier si le bot ne s'est pas arrêté avant l'heure
+# alors, on peut vérifier si le bot ne s'est pas arrêté avant l'heure
 if len(state) > 0:
 
     state = state.split(";")
 
-    # Conversion de l'ancienne date sauvegarder et de la date actuelle en seconde
+    # Conversion de l'ancienne date sauvegardée et de la date actuelle en seconde
     ancienne_date = datetime.strptime(state[0], "%A %d %B %Y %H:%M:%S")
 
     ancienne_date = int(ancienne_date.strftime("%s"))
