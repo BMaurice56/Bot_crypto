@@ -481,7 +481,7 @@ class Bot_Discord(commands.Bot):
         self.msg_discord.message_canal("général", "Bot Discord démarré !")
 
         asyncio.create_task(self.suppression_auto_message())
-        # asyncio.create_task(self.message_bot_started())
+        asyncio.create_task(self.message_bot_started())
         self.stop_auto_bot.start()
 
 
