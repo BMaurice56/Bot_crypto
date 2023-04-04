@@ -326,6 +326,17 @@ class Bot_Discord(commands.Bot):
             if prix_estimer is None:
                 await ctx.send("Il n'y a pas de position prise à l'heure actuel ou de prix enregistrer")
 
+        @self.command(name="analyse")
+        async def analyse(ctx):
+            """
+            Analyse every logs
+            """
+            for symbol in self.crypto_supporter:
+                kk = Kucoin(symbol, False)
+                kk.analyse_fichier(False)
+
+            await ctx.send("Tous les logs ont été analysés !")
+
     def stop_manual_bot(self, symbol):
         """
         Stops the bot associated with the symbol

@@ -362,7 +362,7 @@ class Kucoin:
         with open(pwd, "a") as f:
             f.write(f"{date};{request}\n")
 
-    def analyse_fichier(self) -> None:
+    def analyse_fichier(self, stop: Optional[bool] = None) -> None:
         """
         Analyse les fichiers log
         Écrit toutes les erreurs dans un fichier
@@ -430,8 +430,11 @@ class Kucoin:
                 os.system(
                     f'echo > {self.path_log}/log_update_id_position_{self.symbol_base}.txt')
 
-                # Et faire dormir le programme
-                sleep(60 * 60 * 3)
+                if stop is None:
+                    # Et faire dormir le programme
+                    sleep(60 * 60 * 3)
+                else:
+                    break
 
         except Exception as error:
             msg = "Erreur survenu dans la fonction analyse_log, fonction laissée arrêter, " + \
