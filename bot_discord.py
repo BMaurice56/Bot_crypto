@@ -1,4 +1,4 @@
-from main import Kucoin, Message_discord, os, Process, kill_process, datetime, ZoneInfo
+from main import Kucoin, Message_discord, os, Process, kill_process, datetime, ZoneInfo, sleep, Thread
 from discord.ext import commands, tasks
 from subprocess import Popen
 from discord import Intents
@@ -386,19 +386,21 @@ class Bot_Discord(commands.Bot):
                 await msg.delete()
                 await asyncio.sleep(0.5)
 
-    @tasks.loop(seconds=2)
-    async def stop_auto_bot(self):
+    def stop_auto_bot(self):
         """
         Supprime automatiquement de la liste les processus arrêtés
         """
-        for process in self.list_bot_started:
-            if process.exitcode is not None:
-                symbol = process.name
+        while True:
+            for process in self.list_bot_started:
+                if process.exitcode is not None:
+                    symbol = process.name
 
-                kill_process(process)
+                    kill_process(process)
 
-                self.list_bot_started.remove(process)
-                self.list_symbol_bot_started.remove(symbol)
+                    self.list_bot_started.remove(process)
+                    self.list_symbol_bot_started.remove(symbol)
+
+            sleep(3)
 
     async def suppression_auto_message(self):
         """
@@ -430,7 +432,7 @@ class Bot_Discord(commands.Bot):
         start_delete_message_state_bot.start()
         start_delete_message_prise_position.start()
 
-    async def message_bot_started(self):
+    def message_bot_started(self):
         """
         Envoi sur le canal d'état les bots démarrés
         """
@@ -441,7 +443,7 @@ class Bot_Discord(commands.Bot):
             if self.list_symbol_bot_started:
                 # Si on vient de lancer un bot, on envoie un message
                 if vide:
-                    await asyncio.sleep(90)
+                    sleep(90)
 
                     self.message_state_bot_discord()
 
@@ -475,7 +477,7 @@ class Bot_Discord(commands.Bot):
                 # Moyenne des temps - la date actuelle + 10 secondes safe
                 waiting_time = temps_max - date + 10
 
-                await asyncio.sleep(waiting_time)
+                sleep(waiting_time)
 
                 # Nouvelle vérification si arrêt des bots entre temps
                 if self.list_symbol_bot_started:
@@ -483,11 +485,11 @@ class Bot_Discord(commands.Bot):
 
                     # Puis, on attend que tous les bots passent leur passage de prédiction
                     # Pour de nouveau voir le temps d'attente avant le prochain message
-                    await asyncio.sleep(10)
+                    sleep(10)
 
             else:
                 vide = True
-                await asyncio.sleep(30)
+                sleep(30)
 
     async def on_ready(self):
         """
@@ -496,8 +498,8 @@ class Bot_Discord(commands.Bot):
         self.msg_discord.message_canal("général", "Bot Discord démarré !")
 
         asyncio.create_task(self.suppression_auto_message())
-        asyncio.create_task(self.message_bot_started())
-        self.stop_auto_bot.start()
+        Thread(target=self.message_bot_started).start()
+        Thread(target=self.stop_auto_bot).start()
 
 
 if __name__ == "__main__":
