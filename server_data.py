@@ -212,6 +212,9 @@ class Kucoin:
         with open("Other_files/priceIncrement.txt", "r") as f:
             self.dico_priceIncrement = json.loads(f.read())
 
+        # Around price
+        self.zero_after_coma = '0.0001'
+
         # Crypto supportées et leurs nombres
         with open("Other_files/supported_crypto.txt", "r") as f:
             self.crypto_supported = f.read().split(";")
@@ -411,9 +414,6 @@ class Kucoin:
                                     elif requete_trie[k]['data'] is None:
                                         result.append(requete_trie[k])
 
-                                    elif len(requete_trie[k]['data']) == 0:
-                                        result.append(requete_trie[k])
-
                                 if len(result) > 0:
                                     date = datetime.now(tz=ZoneInfo("Europe/Paris")
                                                         ).strftime("%A %d %B %Y %H:%M:%S")
@@ -539,12 +539,7 @@ class Kucoin:
                 if argent > argent_bot:
                     argent = argent_bot
 
-            zero_after_coma = '0.0001'
-
-            if f"{symbol}-{self.devise}" in self.dico_priceIncrement:
-                zero_after_coma = self.dico_priceIncrement[f"{symbol}-{self.devise}"]
-
-            money = self.arrondi(argent * 0.999, zero_after_coma)
+            money = self.arrondi(argent, self.zero_after_coma)
 
             return money
         else:
@@ -772,6 +767,10 @@ class Kucoin:
             # Si le nouveau prix est inférieur au prix de la crypto
             # Alors, on vend directement au lieu de placer un nouvel ordre
             if nv_prix <= prix:
+                self.msg_discord.message_canal("prise_position",
+                                               "Le nouveau prix étant inférieur, une vente directe est effectué",
+                                               "Vente directe via baisse du stop loss")
+
                 # On récupère le montant du compte pour pouvoir vendre
                 montant = self.montant_compte(self.dico_symbol_simple[symbol])
 
@@ -835,8 +834,7 @@ class Kucoin:
         ##################################################################################
 
         if content["code"] != "200000":
-            error = Exception("Code de la requête différent de 200000")
-            self.msg_discord.message_erreur(error, "Échec du placement de l'ordre limite")
+            raise Exception(f"Code de la requête différent de 200000\nmessage : {content['msg']}")
 
         # Puis, on vient écrire l'id de l'ordre dans un fichier pour faciliter la suppression de celui-ci
         self.write_file_limit_order(content["data"]["orderId"])
