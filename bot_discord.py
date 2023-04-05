@@ -19,6 +19,8 @@ class Bot_Discord(commands.Bot):
         # Objet Kucoin pour interagir avec le serveur
         self.kucoin = Kucoin("Discord", False)
 
+        self.kucoin.dico_partage["nb_started_bot"] = 0
+
         # Message discord
         self.msg_discord = Message_discord()
 
@@ -59,6 +61,8 @@ class Bot_Discord(commands.Bot):
 
             # Trie la liste de symbol dans l'ordre croissant
             self.list_symbol_bot_started.sort()
+
+            self.kucoin.dico_partage["nb_started_bot"] += 1
 
             p.start()
 
@@ -141,7 +145,7 @@ class Bot_Discord(commands.Bot):
                             if f"{symbol}_started" in self.kucoin.dico_partage:
                                 del self.kucoin.dico_partage[f"{symbol}_started"]
 
-                                await asyncio.sleep(10)
+                                await asyncio.sleep(3)
 
                                 break
 

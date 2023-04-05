@@ -532,7 +532,7 @@ class Kucoin:
                     self.dico_partage["amount_usdt"] = argent
 
                 # Max d'usdt pour chaque bot
-                argent_bot = self.dico_partage["amount_usdt"] / self.nb_crypto_supported
+                argent_bot = self.dico_partage["amount_usdt"] / self.dico_partage["nb_started_bot"]
 
                 # S'il y a plus d'usdt que prévu pour chaque bot
                 # Alors le bot ne prend que sa part
