@@ -230,53 +230,18 @@ class IA:
             with open(fichier, "w") as f:
                 f.write(to_write)
 
-    def validation_achat(self, prix: float, prix_up: float, prix_down: float, prediction: float, prediction_up: float,
+    @staticmethod
+    def validation_achat(prix: float, prix_up: float, prix_down: float, prediction: float, prediction_up: float,
                          prediction_down: float) -> int or None:
         """
         Valide ou non l'achat d'une crypto
         Si pas de condition d'achat → valeur inconnue
         """
         if prix < prediction and prix_up < prediction_up and prix_down > prediction_down:
-            if self.symbol == "ADA":
-                if prediction - prix <= 0.0009 and prediction_up - prix_up <= 0.0032:
-                    if prix_down - prediction_down <= 0.0005:
-                        return 1
-
-            elif self.symbol == "BNB":
-                if prediction - prix <= 1.57 and prediction_up - prix_up <= 0.32:
-                    if prix_down - prediction_down <= 0.0064:
-                        return 1
-
-            elif self.symbol == "BTC":
-                return 1
-
-            elif self.symbol == "ETH":
-                if prediction - prix <= 3 and prediction_up - prix_up <= 0.028:
-                    if prix_down - prediction_down <= 0.008:
-                        return 1
-
-            elif self.symbol == "XRP":
-                if prediction - prix <= 0.0027 and prediction_up - prix_up <= 0.0031:
-                    if prix_down - prediction_down <= 0.00018:
-                        return 1
+            return 1
 
         elif prix > prediction and prix_up > prediction_up and prix_down < prediction_down:
-            if self.symbol == "ADA":
-                if prix - prediction <= 0.0011 and prix_up - prediction_up <= 0.0018:
-                    if prediction_down - prix_down <= 0.0003:
-                        return 0
-
-            elif self.symbol == "BNB":
-                return 0
-
-            elif self.symbol == "BTC":
-                return 0
-
-            elif self.symbol == "ETH":
-                return 0
-
-            elif self.symbol == "XRP":
-                return 0
+            return 0
 
         return None
 
