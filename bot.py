@@ -118,7 +118,7 @@ while True:
                     f"prix crypto up : {prix_up}, prix de la prédiction : {prediction_up}\n" + \
                     f"prix crypto down : {prix_down}, prix de la prédiction : {prediction_down}"
 
-    # msg_discord.message_canal("état_bot", state_message, 'état du bot !')
+    msg_discord.message_canal("état_bot", state_message, 'état du bot !')
 
     # On augmente de 1 le temps qu'on a de position
     # Remis à zéro après si achat ou aucune crypto

@@ -393,34 +393,45 @@ class Kucoin:
                                 requete = [elt.split(";")[1]
                                            for elt in contenue]
 
+                                list_date = [elt.split(";")[0]
+                                             for elt in contenue]
+
                                 requete_trie = []
                                 result = []
 
-                                # Puis, on retransforme la requête en un objet python sans les espaces de début et fin
-                                # Si problème de longueur, on la stocke dans la liste de problème
+                                date_trie = []
+                                result_date = []
+
+                                # Si problème de longueur, on ne garde pas la requête
                                 for j in range(len(requete)):
-                                    if len(requete[j]) < 10:
-                                        result.append(requete[j])
-                                    else:
+                                    if len(requete[j]) > 10:
                                         requete_trie.append(
                                             json.loads(requete[j]))
+                                        date_trie.append(list_date[j])
 
                                 # Enfin, on parcourt toutes les requêtes → vérifie s'il y en a une qui n'a pas abouti
                                 # Ou qu'il y a un quelconque problème
                                 for k in range(len(requete_trie)):
                                     if requete_trie[k]['code'] != '200000':
                                         result.append(requete_trie[k])
+                                        result_date.append(date_trie[k])
 
                                     elif requete_trie[k]['data'] is None:
                                         result.append(requete_trie[k])
+                                        result_date.append(date_trie[k])
 
                                 if len(result) > 0:
                                     date = datetime.now(tz=ZoneInfo("Europe/Paris")
                                                         ).strftime("%A %d %B %Y %H:%M:%S")
 
+                                    final_result = []
+
+                                    for i in range(len(result)):
+                                        final_result.append(({result_date[i]}, {result[i]}))
+
                                     with open(f"{self.dir_log}/log_recap.txt", "a") as file:
                                         file.write(
-                                            f"Bot : {self.symbol_base}, erreur du {date} : {result} \n")
+                                            f"Bot : {self.symbol_base}, analyse du {date} : {final_result} \n")
 
                 # Puis, on vient vider les fichiers (ou les créer)
                 os.system(
@@ -482,8 +493,13 @@ class Kucoin:
         # On écrit la requête sur le fichier log correspondant
         self.write_request(content, log)
 
+        result = json.loads(content)
+
+        if result["code"] != '200000':
+            raise Exception(f"Code de la requête différent de 200000\nmessage : {result['msg']}")
+
         # Puis, on retourne les données
-        return json.loads(content)
+        return result
 
     def montant_compte(self, symbol: str, type_requete: Optional[str] = None, total: Optional[bool] = None) -> float:
         """
@@ -832,9 +848,6 @@ class Kucoin:
         content = self.requete('POST', endpoint, "requete", param)
 
         ##################################################################################
-
-        if content["code"] != "200000":
-            raise Exception(f"Code de la requête différent de 200000\nmessage : {content['msg']}")
 
         # Puis, on vient écrire l'id de l'ordre dans un fichier pour faciliter la suppression de celui-ci
         self.write_file_limit_order(content["data"]["orderId"])
