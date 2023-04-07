@@ -491,7 +491,8 @@ class Kucoin:
         content = requete.content.decode("utf-8")
 
         # On écrit la requête sur le fichier log correspondant
-        self.write_request(content, log)
+        if self.symbol_base != "Discord":
+            self.write_request(content, log)
 
         result = json.loads(content)
 

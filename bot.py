@@ -66,7 +66,6 @@ if len(state) > 0:
 
         # S'il y a des cryptos en cours, alors on relance le stop loss
         if crypto_up > kucoin.minimum_crypto_up or crypto_down > kucoin.minimum_crypto_down:
-            msg_discord.message_canal("général", "stoploss démarré")
             thread = kucoin.stoploss_manuel(
                 symbol_stop_loss, prix_stop_loss, event)
 
