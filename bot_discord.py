@@ -62,7 +62,10 @@ class Bot_Discord(commands.Bot):
             # Trie la liste de symbol dans l'ordre croissant
             self.list_symbol_bot_started.sort()
 
-            self.kucoin.dico_partage["nb_started_bot"] += 1
+            if "nb_started_bot" in self.kucoin.dico_partage:
+                self.kucoin.dico_partage["nb_started_bot"] += 1
+            else:
+                self.kucoin.dico_partage["nb_started_bot"] = 1
 
             p.start()
 
@@ -120,6 +123,7 @@ class Bot_Discord(commands.Bot):
             Permet de ne pas bloquer le bot discord et donc d'exécuter d'autres commandes à côté
             Comme l'arrêt du bot ou le relancer, le prix à l'instant T, etc...
             """
+            """
             question = "Sur quelles crypto trader ? " + "".join(f"{symbol} ? " for symbol in self.crypto_supporter)
 
             await ctx.send(question)
@@ -133,6 +137,8 @@ class Bot_Discord(commands.Bot):
 
             # On récupère la crypto
             crypto = msg.content
+            """
+            crypto = "BTC"
 
             if crypto == "all":
                 for symbol in self.crypto_supporter:

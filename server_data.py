@@ -455,7 +455,7 @@ class Kucoin:
             self.msg_discord.message_erreur(error, msg)
 
     @retry(retry=retry_if_exception_type(
-        (requests.exceptions.SSLError, requests.exceptions.ConnectionError, json.decoder.JSONDecodeError)),
+        (requests.exceptions.SSLError, requests.exceptions.ConnectionError, json.decoder.JSONDecodeError, Exception)),
         stop=stop_after_attempt(3))
     def requete(self, get_post_del: str, endpoint: str, log: str, param: Optional[str] = None) -> dict:
         """
@@ -529,7 +529,7 @@ class Kucoin:
         # → aucun problème avec le nb de chiffres après la virgule et les frais de la platform
         if argent:
             argent = float(argent[0]['balance'])
-
+            """
             # renvoi l'usdt disponible pour chaque bot
             if symbol == self.devise and total is None:
                 # Si présence du total d'usdt dans le dictionnaire
@@ -555,7 +555,7 @@ class Kucoin:
                 # Alors le bot ne prend que sa part
                 if argent > argent_bot:
                     argent = argent_bot
-
+            """
             money = self.arrondi(argent, self.zero_after_coma)
 
             return money
