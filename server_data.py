@@ -556,6 +556,9 @@ class Kucoin:
                 if argent > argent_bot:
                     argent = argent_bot
             """
+            if symbol == self.devise:
+                argent *= 0.999
+
             money = self.arrondi(argent, self.zero_after_coma)
 
             return money
