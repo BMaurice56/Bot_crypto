@@ -16,7 +16,7 @@ sleep(10)
 # dictionnaire qui stocke les deux symboles pour passer de l'un à l'autre facilement
 dico_symbol = {1: kucoin.symbol_up, 0: kucoin.symbol_down}
 dico_minimum = {1: kucoin.minimum_crypto_up, 0: kucoin.minimum_crypto_down}
-dico_pourcentage_stop_loss = {1: 0.98, 0: 1.02}  # Prix stop-loss up et down
+dico_pourcentage_stop_loss = {1: 0.975, 0: 1.025}  # Prix stop-loss up et down
 
 # Message discord
 msg_discord = Message_discord()

@@ -524,9 +524,6 @@ class Kucoin:
         # On ne garde que les données
         argent = result["data"]
 
-        # S'il le compte possède le symbol voulu, on renvoie le nombre
-        # Avec seulement 99,9% de sa quantité initiale, car pour l'achat des cryptos
-        # → aucun problème avec le nb de chiffres après la virgule et les frais de la platform
         if argent:
             argent = float(argent[0]['balance'])
             """
@@ -562,8 +559,8 @@ class Kucoin:
             money = self.arrondi(argent, self.zero_after_coma)
 
             return money
-        else:
-            return 0
+
+        return 0
 
     def prix_temps_reel_kucoin(self, symbol: str, type_requete: Optional[str] = None) -> float:
         """
