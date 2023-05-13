@@ -181,13 +181,18 @@ while True:
     if time_last_position >= 4:
         gain_limit_order -= 0.0025
 
-        # On a arrondi à la troisième décimale pour éviter toute une suite de zéro
+        # On a arrondi à la quatrième décimale pour éviter toute une suite de zéro
         gain_limit_order = round(gain_limit_order, 4)
 
-        # Si on descend à zéro, alors on ne replace plus l'ordre
+        # Si on descend à zéro, alors on ne replace plus l'ordre et on vend
         if gain_limit_order > 0.0:
             kucoin.ordre_vente_seuil(
                 symbol_stop_loss, gain_limit_order)
+        else:
+            if crypto_up >= dico_minimum[1]:
+                kucoin.achat_vente(crypto_up, symbol_stop_loss, False)
+            else:
+                kucoin.achat_vente(crypto_down, symbol_stop_loss, False)
 
         time_last_position = 0
 
