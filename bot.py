@@ -1,7 +1,8 @@
 from main import *
 import sys
 
-symbol = sys.argv[1]
+#symbol = sys.argv[1]
+symbol = "BTC"
 dodo = 60 * 60
 
 # Création d'un objet binance et kucoin pour interagir avec leurs serveurs
