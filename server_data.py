@@ -55,11 +55,11 @@ class Binance:
         # Récupération des données de la crypto
         if end[0] == "0":
             historical_data = self.client.get_historical_klines(
-                symbol, self.client.KLINE_INTERVAL_1HOUR, start)
+                symbol, self.client.KLINE_INTERVAL_1DAY, start)
 
         else:
             historical_data = self.client.get_historical_klines(
-                symbol, self.client.KLINE_INTERVAL_1HOUR, start, end)
+                symbol, self.client.KLINE_INTERVAL_1DAY, start, end)
 
         # On enlève les données pas nécessaires
         for i in range(len(historical_data)):
@@ -101,7 +101,7 @@ class Binance:
             api = """https://api.binance.com/api/v3/klines"""
 
             param = {'symbol': sl,
-                     'interval': '1h',
+                     'interval': '1d',
                      'limit': limit}
 
             donnee = requests.get(api, params=param)

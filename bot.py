@@ -1,9 +1,9 @@
 from main import *
 import sys
 
-#symbol = sys.argv[1]
+# symbol = sys.argv[1]
 symbol = "BTC"
-dodo = 60 * 60
+dodo = 60 * 60 * 24
 
 # Création d'un objet binance et kucoin pour interagir avec leurs serveurs
 # Création d'un objet ia
@@ -71,8 +71,8 @@ if len(state) > 0:
                 symbol_stop_loss, prix_stop_loss, event)
 
     # Si le bot n'a pas attendu l'heure, alors il attend
-    if date - ancienne_date < 3600:
-        temps_dodo = 3600 - (date - ancienne_date) - 1
+    if date - ancienne_date < dodo:
+        temps_dodo = dodo - (date - ancienne_date) - 1
         sleep(temps_dodo)
 
 # Stock le temps depuis la dernière position prise
@@ -108,10 +108,10 @@ while True:
     prix_up = float(data_up['close'][39])
     prix_down = float(data_down['close'][39])
 
-    prediction = ia.prediction_keras(data, rsi_vwap_cmf, True)
-    prediction_up = ia.prediction_keras(
+    prediction = ia.prédiction_keras(data, rsi_vwap_cmf, True)
+    prediction_up = ia.prédiction_keras(
         data_up, rsi_vwap_cmf_up, False)
-    prediction_down = ia.prediction_keras(
+    prediction_down = ia.prédiction_keras(
         data_down, rsi_vwap_cmf_down, None)
 
     state_message = f"Bot {symbol} toujours en cour d'exécution le : {date}\n" + \
