@@ -41,6 +41,8 @@ class Binance:
 
         self.client = Client(self.api_key, self.api_secret)
 
+        self.interval = self.client.KLINE_INTERVAL_1DAY
+
     def data(self, symbol: str, start: str, end: str) -> pandas.DataFrame:
         """
         Prend en argument un symbol de type "BTCUSDT" ou encore "ETHUSDT" ...
@@ -55,11 +57,11 @@ class Binance:
         # Récupération des données de la crypto
         if end[0] == "0":
             historical_data = self.client.get_historical_klines(
-                symbol, self.client.KLINE_INTERVAL_1DAY, start)
+                symbol, self.interval, start)
 
         else:
             historical_data = self.client.get_historical_klines(
-                symbol, self.client.KLINE_INTERVAL_1DAY, start, end)
+                symbol, self.interval, start, end)
 
         # On enlève les données pas nécessaires
         for i in range(len(historical_data)):
@@ -73,8 +75,7 @@ class Binance:
 
         return data
 
-    @staticmethod
-    def all_data(symbol: str) -> dict:
+    def all_data(self, symbol: str) -> dict:
         """
         Prend en argument un symbol
         Renvoie un dictionnaire avec toutes les données (+ ceux avec effet de levier)
@@ -101,7 +102,7 @@ class Binance:
             api = """https://api.binance.com/api/v3/klines"""
 
             param = {'symbol': sl,
-                     'interval': '1d',
+                     'interval': self.interval,
                      'limit': limit}
 
             donnee = requests.get(api, params=param)
@@ -270,16 +271,10 @@ class Kucoin:
         """
         now = str(int(time() * 1000))
 
-        str_to_sign = ""
+        str_to_sign = now + methode + endpoint
 
-        if methode == 'GET':
-            str_to_sign = now + 'GET' + endpoint
-
-        elif methode == 'POST':
-            str_to_sign = now + 'POST' + endpoint + param
-
-        elif methode == 'DELETE':
-            str_to_sign = now + 'DELETE' + endpoint
+        if param is not None:
+            str_to_sign += param
 
         signature = base64.b64encode(
             hmac.new(self.kucoin_api_secret.encode('utf-8'), str_to_sign.encode('utf-8'), hashlib.sha256).digest())
@@ -351,16 +346,13 @@ class Kucoin:
         date = datetime.now(tz=ZoneInfo("Europe/Paris")
                             ).strftime("%A %d %B %Y %H:%M:%S")
 
-        pwd = ""
+        fichier_log = {
+            "requete": "request",
+            "presence_position": "update_id_position",
+            "stoploss": "stop_loss_manuel"
+        }
 
-        if emplacement == "requete":
-            pwd = f"{self.dir_log}/log_request_{self.symbol_base}.txt"
-
-        elif emplacement == "presence_position":
-            pwd = f"{self.dir_log}/log_update_id_position_{self.symbol_base}.txt"
-
-        elif emplacement == "stoploss":
-            pwd = f"{self.dir_log}/log_stop_loss_manuel_{self.symbol_base}.txt"
+        pwd = f"{self.dir_log}/log_{fichier_log[emplacement]}_{self.symbol_base}.txt"
 
         with open(pwd, "a") as f:
             f.write(f"{date};{request}\n")
@@ -475,7 +467,7 @@ class Kucoin:
         # Création de l'url
         url = self.api + endpoint
 
-        requete = dict()
+        requete = requests.Response
 
         # On exécute la requête selon son type
         if get_post_del == 'GET':
@@ -580,27 +572,20 @@ class Kucoin:
 
         result = self.requete('GET', endpoint, log)
 
-        # On la retransforme en dictionnaire (car reçu au format str)
-        # Et on garde que le prix voulu
-        argent = float(result["data"]["price"])
+        return float(result["data"]["price"])
 
-        return argent
-
-    def prise_position(self, info: dict) -> None:
+    def prise_position(self, montant: float, symbol: str, achat_vente: bool) -> None:
         """
         Prend une position soit d'achat, soit de vente et place un stop loss (si achat)
         Lorsque qu'on vend, on retire l'ordre
-        Renvoie l'id de la position prise
 
         Ex params :
-        info : {
-        "montant" : "20",
-        "symbol" : "BTC3S-USDT",
-        "achat_vente" : "True" (pour achat)
-        }
+        montant : "20",
+        symbol : "BTC3S-USDT",
+        achat_vente : "True" (pour achat)
         """
         # Lorsque l'on vend, on enlève l'ordre limit car soit il a été exécuté, soit il est toujours là
-        if info["achat_vente"] is False:
+        if achat_vente is False:
             # Sert à savoir si c'est une vente manuelle ou l'ordre limite qui est exécuté
             self.dico_partage[self.vente_manuelle] = True
 
@@ -617,16 +602,16 @@ class Kucoin:
         achat = "buy"
         type_achat = "funds"
 
-        if info["achat_vente"] is False:
+        if achat_vente is False:
             achat = "sell"
             type_achat = "size"
 
         # Définition de tous les paramètres nécessaires
         param = {"clientOid": id_position,
                  "side": achat,
-                 "symbol": info["symbol"],
+                 "symbol": symbol,
                  'type': "market",
-                 type_achat: str(info["montant"])}
+                 type_achat: str(montant)}
 
         param = json.dumps(param)
 
@@ -634,8 +619,8 @@ class Kucoin:
         self.requete('POST', endpoint, "requete", param)
 
         # Si on vient d'acheter, on place un ordre limite
-        if info["achat_vente"] is True:
-            self.ordre_vente_seuil(info["symbol"])
+        if achat_vente is True:
+            self.ordre_vente_seuil(symbol)
 
             # On repasse la variable a False pour l'ordre limite
             if self.vente_manuelle in self.dico_partage:
@@ -666,10 +651,10 @@ class Kucoin:
         result = position['data']['items']
 
         # S'il y a un ordre, on renvoie les informations sur celui-ci
-        if not result:
-            return None
-        else:
+        if result:
             return result[0]
+
+        return None
 
     def presence_position_all(self) -> list or None:
         """
@@ -690,10 +675,10 @@ class Kucoin:
                 if pos is not None:
                     cryptos_position.append(position_symbol)
 
-        if not cryptos_position:
-            return None
+        if cryptos_position:
+            return cryptos_position
 
-        return cryptos_position
+        return None
 
     def suppression_ordre(self) -> None:
         """
@@ -722,12 +707,9 @@ class Kucoin:
         Achat : montant : 200 (USDT), symbol : "BTC3L-USDT, achat_vente : True
         Vente : montant : 48 (BTC3L-USDT), "BTC3L-USDT", achat_vente : False
         """
-        # On crée un dictionnaire avec toutes les informations nécessaires
-        info = {"montant": montant,
-                "symbol": symbol, "achat_vente": achat_ou_vente}
 
         # On prend la position sur le serveur
-        self.prise_position(info)
+        self.prise_position(montant, symbol, achat_ou_vente)
 
         # On récupère le prix en temps réel de la crypto que l'on vient d'acheter
         prix = self.prix_temps_reel_kucoin(self.symbol)
