@@ -1,5 +1,5 @@
 from main import *
-import sys
+# import sys
 
 # symbol = sys.argv[1]
 symbol = "BTC"
@@ -108,10 +108,10 @@ while True:
     prix_up = float(data_up['close'][39])
     prix_down = float(data_down['close'][39])
 
-    prediction = ia.prédiction_keras(data, rsi_vwap_cmf, True)
-    prediction_up = ia.prédiction_keras(
+    prediction = ia.prediction_keras(data, rsi_vwap_cmf, True)
+    prediction_up = ia.prediction_keras(
         data_up, rsi_vwap_cmf_up, False)
-    prediction_down = ia.prédiction_keras(
+    prediction_down = ia.prediction_keras(
         data_down, rsi_vwap_cmf_down, None)
 
     state_message = f"Bot {symbol} toujours en cour d'exécution le : {date}\n" + \

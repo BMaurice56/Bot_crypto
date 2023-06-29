@@ -3,7 +3,7 @@ from keras.models import Sequential, model_from_json
 from sklearn.model_selection import train_test_split
 from keras_tuner import RandomSearch
 from keras.layers import Dense
-from database_old import *
+from database import *
 from typing import Any
 
 
@@ -20,7 +20,7 @@ class IA:
         symbol : "BTC"
         """
         self.symbol = symbol
-        self.input = 298
+        self.input = 298  # ou 65 pour small
 
         # Chargement des modèles d'intelligences artificielles pour les prédictions
         self.model, self.model_up, self.model_down = self.loading_model()
@@ -37,7 +37,7 @@ class IA:
         model = Sequential()
 
         # Récupération et séparation des données
-        x, y = select_donnée_bdd("numpy")
+        x, y = select_data_bdd("numpy")
 
         x_train, x_test, y_train, y_test = train_test_split(
             x, y, test_size=0.2, random_state=42)
@@ -63,7 +63,7 @@ class IA:
         Recherche la meilleure combinaison de neurone et sauvegarde le modèle
         """
         # Récupération et séparation des données
-        x, y = select_donnée_bdd("numpy")
+        x, y = select_data_bdd("numpy")
 
         x_train, x_test, y_train, y_test = train_test_split(
             x, y, test_size=0.2, random_state=42)
@@ -106,7 +106,7 @@ class IA:
         os.system("rm -r my_dir")
 
     @staticmethod
-    def save_model(model) -> None:
+    def save_model(model: Sequential) -> None:
         """
         Sauvegarde le modèle
         """
@@ -122,7 +122,7 @@ class IA:
         print("Modèle sauvegarder !")
 
     @staticmethod
-    def test_model(x_test, y_test, model) -> None:
+    def test_model(x_test: numpy.array, y_test: numpy.array, model: Sequential) -> None:
         """
         Test le modèle passé en argument
         """
@@ -140,61 +140,16 @@ class IA:
         print(f'Coefficient R² : {r2}')
         print(model.evaluate(x_test, y_test))
 
-    def prédiction_keras(self, donnée_serveur_data: pandas.DataFrame, donnée_serveur_rsi: pandas.DataFrame,
-                         model) -> float:
-        """
-        Fonction qui fait les prédiction et renvoie le prix potentiel de la crypto
-        """
-
-        ls = [SMA(donnée_serveur_data), EMA(donnée_serveur_data), ADX(donnée_serveur_data),
-              KAMA(donnée_serveur_data), T3(
-                donnée_serveur_data), TRIMA(donnée_serveur_data),
-              PPO(donnée_serveur_data), ultimate_oscilator(donnée_serveur_data),
-              MACD(donnée_serveur_data), stochRSI(donnée_serveur_data), bandes_bollinger(donnée_serveur_data)]
-
-        ls += [RSI(donnée_serveur_rsi), VWAP(donnée_serveur_rsi), chaikin_money_flow(
-            donnée_serveur_rsi), CCI(donnée_serveur_rsi), MFI(donnée_serveur_rsi), LinearRegression(
-            donnée_serveur_rsi), TSF(donnée_serveur_rsi), aroon_oscilator(donnée_serveur_rsi), williams_R(
-            donnée_serveur_rsi), ROC(donnée_serveur_rsi), OBV(donnée_serveur_rsi), MOM(donnée_serveur_rsi)]
-
-        donnée_prédiction = []
-
-        cpt = 1
-        for element in ls:
-            if cpt <= 8 or cpt >= 21:
-                for nb in element:
-                    donnée_prédiction.append(nb)
-            elif cpt <= 11:
-                for liste in element:
-                    for nb in liste:
-                        donnée_prédiction.append(nb)
-            elif cpt <= 20:
-                donnée_prédiction.append(element)
-
-            cpt += 1
-
-        np_liste = numpy.array([donnée_prédiction])
-
-        if model is True:
-            prediction = float(self.model.predict(np_liste)[0][0])
-        elif model is False:
-            prediction = float(self.model_up.predict(np_liste)[0][0])
-        else:
-            prediction = float(self.model_down.predict(np_liste)[0][0])
-
-        return prediction
-
-    """"
     def prediction_keras(self, data_server_40: pandas.DataFrame, data_server_15: pandas.DataFrame,
                          model: bool or None) -> float:
-        ""
+        """
         Fait les prédictions et renvoie le prix potentiel de la crypto
 
         Ex params :
         data_server_40 : Dataframe des données de 40 de longueurs
         data_server_15 : Dataframe des données de 15 de longueurs
         model : True, False, None -> sélection du modèle voulu
-        ""
+        """
 
         ls = calcul_indice_40_donnees(
             data_server_40) + calcul_indice_15_donnees(data_server_15)
@@ -211,7 +166,6 @@ class IA:
             prediction = float(self.model_down.predict(np_liste)[0][0])
 
         return prediction
-    """
 
     def loading_model(self) -> Union[Any, Any, Any]:
         """

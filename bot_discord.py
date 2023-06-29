@@ -24,6 +24,9 @@ class Bot_Discord(commands.Bot):
         # Message discord
         self.msg_discord = Message_discord()
 
+        # Temps de chaque tour de boucle des fonctions async
+        self.time_loop = 60 * 60 * 12
+
         # Stocke tous les bots lancer
         self.list_bot_started = []
         self.list_symbol_bot_started = []
@@ -414,7 +417,7 @@ class Bot_Discord(commands.Bot):
         """
         await self.wait_until_ready()
 
-        @tasks.loop(seconds=60 * 60)
+        @tasks.loop(seconds=self.time_loop)
         async def start_delete_message_state_bot():
             """
             Start the delete function on the state bot channel
@@ -424,7 +427,7 @@ class Bot_Discord(commands.Bot):
 
             await self.delete_message_channel(state_bot)
 
-        @tasks.loop(seconds=60 * 60)
+        @tasks.loop(seconds=self.time_loop)
         async def start_delete_message_prise_position():
             """
             Start the delete function on the taking position channel
