@@ -7,7 +7,7 @@ dodo = 60 * 60 * 24
 
 # Création d'un objet binance et kucoin pour interagir avec leurs serveurs
 # Création d'un objet ia
-binance = Binance()
+binance = Binance(symbol)
 kucoin = Kucoin(symbol)
 ia = IA(symbol)
 
@@ -94,7 +94,7 @@ while True:
     date = datetime.now(tz=ZoneInfo("Europe/Paris")
                         ).strftime("%A %d %B %Y %H:%M:%S")
 
-    datas = binance.all_data(symbol)
+    datas = binance.all_data()
 
     data = datas[0]
     data_up = datas[1]

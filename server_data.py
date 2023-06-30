@@ -31,9 +31,12 @@ class Binance:
     Classe Binance qui permet l'interaction avec les serveurs de binance
     """
 
-    def __init__(self) -> None:
+    def __init__(self, symbol) -> None:
         """
         Initialise un objet binance
+
+        Ex param :
+        symbol : "BTC"
         """
 
         self.api_key = "eUFWHXCMrNKoP4LURDCOW0faPCyzm2teZLU3eBYUM2AoNM3wvr8F4d3IjeJuDipd"
@@ -43,16 +46,20 @@ class Binance:
 
         self.interval = self.client.KLINE_INTERVAL_1DAY
 
-    def data(self, symbol: str, start: str, end: str) -> pandas.DataFrame:
+        self.symbol = symbol
+        self.devise = "USDT"
+
+    def data(self, start: str, end: str) -> pandas.DataFrame:
         """
         Prend en argument un symbol de type "BTCUSDT" ou encore "ETHUSDT" ...
         Renvoie les données sous forme d'une dataframe pandas
 
         Ex params :
-        symbol : "BTCUSDT"
-        début : "40 hour ago UTC" 
-        fin : "0 hour ago UTC" ...
+        début : "40 day ago UTC"
+        fin : "0 day ago UTC" ...
         """
+
+        symbol = self.symbol + self.devise
 
         # Récupération des données de la crypto
         if end[0] == "0":
@@ -75,7 +82,7 @@ class Binance:
 
         return data
 
-    def all_data(self, symbol: str) -> dict:
+    def all_data(self) -> dict:
         """
         Prend en argument un symbol
         Renvoie un dictionnaire avec toutes les données (+ ceux avec effet de levier)
@@ -138,9 +145,9 @@ class Binance:
 
             return dictionary
 
-        p = Process(target=request, args=(f"{symbol}USDT", 40, dico, 0,))
-        p2 = Process(target=request, args=(f"{symbol}UPUSDT", 40, dico, 1,))
-        p3 = Process(target=request, args=(f"{symbol}DOWNUSDT", 40, dico, 2,))
+        p = Process(target=request, args=(f"{self.symbol}{self.devise}", 40, dico, 0))
+        p2 = Process(target=request, args=(f"{self.symbol}UP{self.devise}", 40, dico, 1))
+        p3 = Process(target=request, args=(f"{self.symbol}DOWN{self.devise}", 40, dico, 2))
 
         p.start()
         p2.start()
@@ -178,8 +185,8 @@ class Kucoin:
         self.kucoin_api_secret = "d125b0df-e2eb-4532-8ed1-049d01dc18b8"
         self.kucoin_security_sentence = "c5%Pnp8o$FE%^CEM7jwFp9PaTtW4kq"
 
-        self.pourcentage_gain = 0.015
-        self.previous_gain = 0.015
+        self.pourcentage_gain = 0.0175
+        self.previous_gain = 0.0175
 
         # symbol des crypto
         self.symbol_base = crypto

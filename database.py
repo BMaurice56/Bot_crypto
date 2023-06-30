@@ -78,7 +78,7 @@ def insert_data_historique_bdd(symbol: str, number_data: int, curseur, connexion
     Dans la base de donnée
 
     Ex params :
-    symbol : 'BTCUSDT'
+    symbol : 'BTC'
     number_data : 1000
     """
     # On enlève tout dans la bdd
@@ -88,10 +88,9 @@ def insert_data_historique_bdd(symbol: str, number_data: int, curseur, connexion
     # On récupère toutes les données en 1 seule requête (car sinon beaucoup trop long)
     # Puis on vient itérer sur ces données
 
-    binance = Binance()
+    binance = Binance(symbol)
 
-    data_server = binance.data(
-        symbol, f"{number_data} day ago UTC", "0 day ago UTC")
+    data_server = binance.data(f"{number_data} day ago UTC", "0 day ago UTC")
 
     liste_data = []
     liste_rsi = []
