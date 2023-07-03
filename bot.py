@@ -12,7 +12,7 @@ kucoin = Kucoin(symbol)
 ia = IA(symbol)
 
 # Waiting for every bot starting to count their number
-sleep(10)
+# sleep(10)
 
 # dictionnaire qui stocke les deux symboles pour passer de l'un à l'autre facilement
 dico_symbol = {1: kucoin.symbol_up, 0: kucoin.symbol_down}
@@ -179,7 +179,7 @@ while True:
         gain_limit_order = kucoin.pourcentage_gain
 
     # Si cela fait trop longtemps que l'ordre a été placé sans être vendu, on le descend
-    if time_last_position >= 4:
+    if time_last_position >= 1:
         gain_limit_order -= 0.0025
 
         # On a arrondi à la quatrième décimale pour éviter toute une suite de zéro
