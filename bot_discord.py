@@ -90,7 +90,7 @@ class Bot_Discord(commands.Bot):
             await ctx.send(f"Le prix de BTC est de : {self.kucoin.prix_temps_reel_kucoin(f'BTC-USDT')}")
 
         @self.command(name="start")
-        async def start():
+        async def start(ctx):
             """
             Lance en processus le bot de crypto
             Permet de ne pas bloquer le bot discord et donc d'exécuter d'autres commandes à côté
@@ -169,7 +169,7 @@ class Bot_Discord(commands.Bot):
             await ctx.send(f"Le compte possède {crypto_up} BTCUP, {crypto_down} BTCDOWN")
 
         @self.command(name="restart")
-        async def restart():
+        async def restart(ctx):
             """
             Redémarre le bot discord et met à jour ses fichiers
             """
