@@ -501,7 +501,7 @@ class Kucoin:
         # Puis, on retourne les données
         return result
 
-    def montant_compte(self, symbol: str, type_requete: Optional[str] = None, total: Optional[bool] = None) -> float:
+    def montant_compte(self, symbol: str, type_requete: Optional[str] = None) -> float:
         """
         Renvoie le montant que possède le compte selon le symbol voulus
 
@@ -525,33 +525,7 @@ class Kucoin:
 
         if argent:
             argent = float(argent[0]['balance'])
-            """
-            # renvoi l'usdt disponible pour chaque bot
-            if symbol == self.devise and total is None:
-                # Si présence du total d'usdt dans le dictionnaire
-                # On met à jour le max s'il est supérieur à celui enregistrer (gain des bots)
-                if "amount_usdt" in self.dico_partage:
-                    # S'il y a plus d'argent (gain), alors on met à jour
-                    if argent >= self.dico_partage["amount_usdt"]:
-                        self.dico_partage["amount_usdt"] = argent
-                    else:
-                        # S'il n'y a pas de position et que le montant est plus faible (perte)
-                        # Alors, on met à jour
-                        position_all = self.presence_position_all()
-                        if position_all is None:
-                            self.dico_partage["amount_usdt"] = argent
 
-                else:
-                    self.dico_partage["amount_usdt"] = argent
-
-                # Max d'usdt pour chaque bot
-                argent_bot = self.dico_partage["amount_usdt"] / self.dico_partage["nb_started_bot"]
-
-                # S'il y a plus d'usdt que prévu pour chaque bot
-                # Alors le bot ne prend que sa part
-                if argent > argent_bot:
-                    argent = argent_bot
-            """
             if symbol == self.devise:
                 argent *= 0.999
 
@@ -728,7 +702,7 @@ class Kucoin:
                                            msg, 'Prise de position')
 
         else:
-            argent = self.montant_compte(self.devise, None, True)
+            argent = self.montant_compte(self.devise, None)
 
             msg = f"Vente de position au prix de {prix}$, il reste {argent} usdt\n" + \
                   f"Crypto : {symbol}"
@@ -942,7 +916,7 @@ class Kucoin:
                         # alors soit l'ordre est exécuté
                         if self.vente_manuelle not in self.dico_partage:
                             montant = self.montant_compte(
-                                self.devise, None, True)
+                                self.devise, None)
 
                             msg = f"Exécution de l'ordre limite, il reste {montant} USDT !\n" + \
                                   f"Crypto : {symbol}"
