@@ -1,7 +1,5 @@
 from main import *
-# import sys
 
-# symbol = sys.argv[1]
 symbol = "BTC"
 dodo = 60 * 60 * 24
 
@@ -11,8 +9,6 @@ binance = Binance(symbol)
 kucoin = Kucoin(symbol)
 ia = IA(symbol)
 
-# Waiting for every bot starting to count their number
-# sleep(10)
 
 # dictionnaire qui stocke les deux symboles pour passer de l'un à l'autre facilement
 dico_symbol = {1: kucoin.symbol_up, 0: kucoin.symbol_down}
