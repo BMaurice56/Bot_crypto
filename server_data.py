@@ -223,11 +223,6 @@ class Kucoin:
         # Around price
         self.zero_after_coma = '0.0001'
 
-        # Crypto supportées et leurs nombres
-        with open("Other_files/supported_crypto.txt", "r") as f:
-            self.crypto_supported = f.read().split(";")
-            self.nb_crypto_supported = len(self.crypto_supported)
-
         # Message discord
         self.msg_discord = Message_discord()
 
@@ -634,30 +629,6 @@ class Kucoin:
         # S'il y a un ordre, on renvoie les informations sur celui-ci
         if result:
             return result[0]
-
-        return None
-
-    def presence_position_all(self) -> list or None:
-        """
-        Renvoi toutes les positions de toutes les cryptomonnaies supportées
-        """
-        # Stock les cryptos ayant des positions
-        cryptos_position = []
-
-        # Parcours toutes les cryptos supportées
-        for symbol in self.crypto_supported:
-            list_symbol = [f"{symbol}3L-USDT", f"{symbol}3S-USDT"]
-
-            # Parcours les deux marchés
-            for position_symbol in list_symbol:
-                pos = self.presence_position(position_symbol)
-
-                # S'il y a bien une position, alors on stocke le symbol de la crypto
-                if pos is not None:
-                    cryptos_position.append(position_symbol)
-
-        if cryptos_position:
-            return cryptos_position
 
         return None
 
