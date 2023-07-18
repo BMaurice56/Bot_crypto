@@ -9,7 +9,6 @@ binance = Binance(symbol)
 kucoin = Kucoin(symbol)
 ia = IA(symbol)
 
-
 # dictionnaire qui stocke les deux symboles pour passer de l'un à l'autre facilement
 dico_symbol = {1: kucoin.symbol_up, 0: kucoin.symbol_down}
 dico_minimum = {1: kucoin.minimum_crypto_up, 0: kucoin.minimum_crypto_down}
@@ -190,6 +189,12 @@ while True:
                 kucoin.achat_vente(crypto_up, symbol_stop_loss, False)
             else:
                 kucoin.achat_vente(crypto_down, symbol_stop_loss, False)
+
+    elif time_last_position >= 2:
+        if crypto_up >= dico_minimum[1]:
+            kucoin.achat_vente(crypto_up, symbol_stop_loss, False)
+        else:
+            kucoin.achat_vente(crypto_down, symbol_stop_loss, False)
 
         time_last_position = 0
 

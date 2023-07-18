@@ -185,8 +185,8 @@ class Kucoin:
         self.kucoin_api_secret = "d125b0df-e2eb-4532-8ed1-049d01dc18b8"
         self.kucoin_security_sentence = "c5%Pnp8o$FE%^CEM7jwFp9PaTtW4kq"
 
-        self.pourcentage_gain = 0.0175
-        self.previous_gain = 0.0175
+        self.pourcentage_gain = 0.0150
+        self.previous_gain = self.pourcentage_gain
 
         # symbol des crypto
         self.symbol_base = crypto
