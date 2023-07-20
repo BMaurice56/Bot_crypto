@@ -844,7 +844,7 @@ class Kucoin:
 
                         break
 
-                    sleep(5)
+                    sleep(10)
             except Exception as error:
                 msg = "Erreur survenu dans la fonction stop loss_manuel, " + \
                       "aucune interruption du programme, fonction relancée"
@@ -911,7 +911,7 @@ class Kucoin:
                     id_limit_order = sl_3s['id']
                     symbol = self.symbol_down
 
-                sleep(20)
+                sleep(60)
 
         except Exception as error:
             msg = "Erreur survenu dans la fonction update_id_ordre_limite, " + \
