@@ -5,4 +5,4 @@ Projet de bot de trading sous intelligence artificielle !
 - Les ia sont sur le modèle Relu, c'est-à-dire Rectified Linear unit soit des fonctions d'activations linéaires rectifiées
 
 
-Les différentes clefs et api présent au sein de ce code ont été __underscores__désactivées__underscores__ et __underscores__supprimées__underscores__.
+Les différentes clefs et api présent au sein de ce code ont été __désactivées__ et __supprimées__.
