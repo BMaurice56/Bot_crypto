@@ -1,3 +1,5 @@
+# Bot de Trading sous IA
+
 Projet de bot de trading sous intelligence artificielle !
 
 - Les ia sont basées sur le modèle de deepLearning, elles ont été entrainées sur les indices techniques du marché calculés à partir des données historiques du marché.
