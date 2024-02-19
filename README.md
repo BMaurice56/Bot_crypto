@@ -8,5 +8,6 @@ Projet de bot de trading sous intelligence artificielle !
 - Les modèles d'intelligences artificielles créés permettent ensuite d'estimer un prix futur de la cryptomonnaie sur laquelle elles ont été entrainées selon l'état du marché.
 - Les ia sont sur le modèle Relu, c'est-à-dire Rectified Linear unit soit des fonctions d'activations linéaires rectifiées
 
+Ce projet a été basé sur les différentes librairies d'ia disponible pour python (Keras, Tensorflow, Scikit-learn).
 
 Les différentes clefs et api présent au sein de ce code ont été __désactivées__ et __supprimées__.
