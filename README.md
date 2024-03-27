@@ -11,3 +11,8 @@ Projet de bot de trading sous intelligence artificielle !
 Ce projet a été basé sur les différentes librairies d'ia disponible pour python (Keras, Tensorflow, Scikit-learn).
 
 Les différentes clefs et api présent au sein de ce code ont été __désactivées__ et __supprimées__.
+
+### DISCLAIMER :
+Ce projet n'a pas abouti à cause de la non fiabilité des modèles d'ia entrainée et de la volatilité des marchers.
+
+Si jamais vous reprenez ce projet, je ne suis pas responsable de quelconque gain ou perte financière.
