@@ -267,7 +267,7 @@ if __name__ == "__main__":
     try:
         handler = logging.FileHandler(filename="log_files/discord_log.log", encoding='utf-8', mode='w')
 
-        bot.run("OTcyNDY0NDAwNzY4MzM1ODkz.YnZcDA.LYfcnXeeBB2aEO0-ZX7bNvM1T-8", log_handler=handler)
+        bot.run("Token discord à ajouter", log_handler=handler)
     except Exception as e:
         # Stop all started bots
 

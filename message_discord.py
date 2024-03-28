@@ -13,12 +13,9 @@ class Message_discord:
         Initialise un objet message pour l'envoi de ceux-ci
         """
         # Adresse du webhook discord
-        self.adr_webhook_general = "https://discordapp.com/api/webhooks/969652904959045674" + \
-                                   "/KdVNf9INCcZ3O4V1NnzCsJfhwiAgy4cy1GMjaPZI7spmAAeIkS7sQSYGuKMT5YyAyLza"
-        self.adr_webhook_state_bot = "https://discord.com/api/webhooks/972545553210695731/" + \
-                                     "zLBkaDU4SPyyLoVXz5E-tv-4PkhfrZH6gipWwSI-1cAqwxFlrbYjKsxxRc2i9zioINIh"
-        self.adr_webhook_prise_position = "https://discord.com/api/webhooks/973269614874214410/" + \
-                                          "UPyGLXDE2MbjvtmehG8cAAxx3zXtU3Kt-mN4TolLo1golSuHUp9AiCal0jrvIu3C6E6_"
+        self.adr_webhook_general = "Adresse webhook 1"
+        self.adr_webhook_state_bot = "Adresse webhook 2"
+        self.adr_webhook_prise_position = "Adresse webhook 3"
 
         self.nom = "Jimmy"
 

@@ -7,7 +7,7 @@ ssh = paramiko.SSHClient()
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
 # Connection au serveur SSH
-ssh.connect('212.227.209.205', username='root', password='4H%h#U7tV_')
+ssh.connect('adresse ip', username='root', password='mdp')
 
 # Démarre la session SFTP
 sftp = ssh.open_sftp()

@@ -39,8 +39,8 @@ class Binance:
         symbol : "BTC"
         """
 
-        self.api_key = "eUFWHXCMrNKoP4LURDCOW0faPCyzm2teZLU3eBYUM2AoNM3wvr8F4d3IjeJuDipd"
-        self.api_secret = "AZM89mot3fJNk2ODEGomItIkWyP6pTazXj6W2SHfSRoRL3CTyIUQvcmXTIi6edRy"
+        self.api_key = "clef"
+        self.api_secret = "clef secrète"
 
         self.client = Client(self.api_key, self.api_secret)
 
@@ -181,9 +181,9 @@ class Kucoin:
 
         self.api = "https://api.kucoin.com"
 
-        self.kucoin_api_key = "63cffd08f8686d000140987a"
-        self.kucoin_api_secret = "d125b0df-e2eb-4532-8ed1-049d01dc18b8"
-        self.kucoin_security_sentence = "c5%Pnp8o$FE%^CEM7jwFp9PaTtW4kq"
+        self.kucoin_api_key = "clef"
+        self.kucoin_api_secret = "clef secrète"
+        self.kucoin_security_sentence = "phrase de sécurité"
 
         self.pourcentage_gain = 0.0150
         self.previous_gain = self.pourcentage_gain
