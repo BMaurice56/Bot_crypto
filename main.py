@@ -37,7 +37,7 @@ class IA:
         model = Sequential()
 
         # Récupération et séparation des données
-        x, y = select_data_bdd("numpy")
+        x, y = select_data_bdd()
 
         x_train, x_test, y_train, y_test = train_test_split(
             x, y, test_size=0.2, random_state=42)
@@ -63,17 +63,17 @@ class IA:
         Recherche la meilleure combinaison de neurone et sauvegarde le modèle
         """
         # Récupération et séparation des données
-        x, y = select_data_bdd("numpy")
+        x, y = select_data_bdd()
 
         x_train, x_test, y_train, y_test = train_test_split(
             x, y, test_size=0.2, random_state=42)
 
         def build_model(hp):
             model = Sequential()
-            model.add(Dense(units=hp.Int('units', min_value=5,
-                                         max_value=256, step=8), activation='relu', input_dim=self.input))
+            model.add(Dense(units=hp.Int('units', min_value=4,
+                                         max_value=40, step=4), activation='relu', input_dim=self.input))
             model.add(Dense(units=hp.Int('units', min_value=2,
-                                         max_value=256, step=8), activation='relu'))
+                                         max_value=40, step=4), activation='relu'))
             model.add(Dense(units=1, activation='relu'))
             model.compile(optimizer='adam',
                           loss='mean_squared_logarithmic_error')
@@ -117,7 +117,7 @@ class IA:
             json_file.write(model_json)
 
         # Sauvegarde des poids
-        model.save_weights("model.h5")
+        model.save_weights("model.weights.h5")
 
         print("Modèle sauvegarder !")
 
