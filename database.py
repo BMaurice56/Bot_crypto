@@ -92,8 +92,15 @@ def insert_data_historique_bdd(symbol: str, number_data: int, curseur, connexion
 
     data_server = binance.data(f"{number_data} day ago UTC", "0 day ago UTC")
 
+    print("Données reçus")
+    print(f"Taille des données : {len(data_server)}")
+
     liste_data = []
     liste_rsi = []
+
+    middle = (len(data_server) - 40) // 2
+    middle_first = middle // 2
+    middle_third = middle + middle_first
 
     for i in range(0, len(data_server) - 40):
         data = data_server[i:i + 40]
@@ -107,6 +114,28 @@ def insert_data_historique_bdd(symbol: str, number_data: int, curseur, connexion
 
         liste_data.append(ls)
 
+        if i == middle or i == middle_first or i == middle_third:
+            curseur.executemany("""
+                           insert into data (sma, ema, adx, kama, t3, trima, ppo, u_oscilator,
+                           macd, stochrsi, bande_bollinger, prix_fermeture) 
+                           values (?,?,?,?,?,?,?,?,?,?,?,?)
+                           """, liste_data)
+
+            liste_data.clear()
+
+    curseur.executemany("""
+                insert into data (sma, ema, adx, kama, t3, trima, ppo, u_oscilator,
+                macd, stochrsi, bande_bollinger, prix_fermeture) 
+                values (?,?,?,?,?,?,?,?,?,?,?,?)
+                """, liste_data)
+
+    liste_data.clear()
+    print("Calcul data effectué et insérer")
+
+    middle = (len(data_server) - 15) // 2
+    middle_first = middle // 2
+    middle_third = middle + middle_first
+
     for h in range(25, len(data_server) - 15):
         data = data_server[h:h + 15]
 
@@ -118,11 +147,15 @@ def insert_data_historique_bdd(symbol: str, number_data: int, curseur, connexion
 
         liste_rsi.append(ls)
 
-    curseur.executemany("""
-            insert into data (sma, ema, adx, kama, t3, trima, ppo, u_oscilator,
-            macd, stochrsi, bande_bollinger, prix_fermeture) 
-            values (?,?,?,?,?,?,?,?,?,?,?,?)
-            """, liste_data)
+        if h == middle or h == middle_first or h == middle_third:
+            curseur.executemany("""
+                        insert into rsi_vwap_cmf 
+                        (rsi, vwap, cmf, cci, mfi, linearregression,
+                        tsf, a_oscilator, w_r, roc, obv, mom, prix_fermeture) 
+                        values (?,?,?,?,?,?,?,?,?,?,?,?,?)
+                        """, liste_rsi)
+
+            liste_rsi.clear()
 
     curseur.executemany("""
             insert into rsi_vwap_cmf 
@@ -131,12 +164,16 @@ def insert_data_historique_bdd(symbol: str, number_data: int, curseur, connexion
             values (?,?,?,?,?,?,?,?,?,?,?,?,?)
             """, liste_rsi)
 
+    liste_rsi.clear()
+    print("Calcul rsi effectué et insérer")
+
     connexion.commit()
+
+    print("Commit effectué")
 
 
 @get_db
-def select_data_bdd(df_numpy: str, curseur, connexion) -> Union[pandas.DataFrame, pandas.DataFrame] or \
-                                                          Union[numpy.array, numpy.array]:
+def select_data_bdd(curseur, connexion) -> (numpy.array, numpy.array):
     """
     Récupère toutes les données de la bdd
     Renvoie toutes les données et les prix sous forme de dataframe
@@ -148,6 +185,13 @@ def select_data_bdd(df_numpy: str, curseur, connexion) -> Union[pandas.DataFrame
     Ex param :
     df_numpy : dataframe ou numpy
     """
+
+    def my_process(data_bdd_process: list, dictionary: dict, order: int):
+        data_process = []
+        for row_process in data_bdd_process:
+            data_process.append(one_liste(row_process, True))
+
+        dictionary[order] = numpy.array(data_process)
 
     data_bdd = curseur.execute("""
     SELECT data.sma, data.ema, data.adx, data.kama, data.t3, data.trima, data.ppo, data.u_oscilator,
@@ -166,25 +210,47 @@ def select_data_bdd(df_numpy: str, curseur, connexion) -> Union[pandas.DataFrame
 
     connexion.commit()
 
+    print("Lecture base de donnée faite")
+
     prix = [x[0] for x in prix]
 
     # On vient retransformer les données dans leur état d'origine
     # Et on remet le tout dans une dataframe
-    data = []
-    for row in data_bdd:
-        data.append(one_liste(row, True))
+    taille_donnee = len(data_bdd)
+    bloc_donne = taille_donnee // 4
 
-    if df_numpy == "dataframe":
-        dp = pandas.DataFrame(data)
-        prix_df = pandas.DataFrame(prix)
+    manager = Manager()
+    dico = manager.dict()
 
-        return [dp, prix_df]
+    p1 = Process(target=my_process, args=(data_bdd[0:bloc_donne], dico, 0))
+    p2 = Process(target=my_process, args=(data_bdd[bloc_donne:bloc_donne * 2], dico, 1))
+    p3 = Process(target=my_process, args=(data_bdd[bloc_donne * 2:bloc_donne * 3], dico, 2))
+    p4 = Process(target=my_process, args=(data_bdd[bloc_donne * 3:taille_donnee], dico, 3))
 
-    elif df_numpy == "numpy":
-        np = numpy.array(data)
-        prix_np = numpy.array(prix)
+    p1.start()
+    p2.start()
+    p3.start()
+    p4.start()
 
-        return [np, prix_np]
+    p1.join()
+    p2.join()
+    p3.join()
+    p4.join()
+
+    print("Transformation donnée état d'origine faite")
+
+    np = dico[0]
+    del dico[0]
+
+    for i in range(1, 4):
+        np = numpy.concatenate((np, dico[i]))
+        del dico[i]
+
+    prix_np = numpy.array(prix)
+
+    prix.clear()
+
+    return np, prix_np
 
 
 if __name__ == "__main__":
