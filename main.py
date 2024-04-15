@@ -12,7 +12,7 @@ class IA:
     Classe qui contient l'entrainement ainsi la prédiction des modèles d'intelligences artificielles
     """
 
-    def __init__(self, symbol: str) -> None:
+    def __init__(self, symbol: str, training: bool = False) -> None:
         """
         Initialise un objet IA permet d'interagir avec ou de les créer
 
@@ -23,7 +23,8 @@ class IA:
         self.input = 298  # ou 65 pour small
 
         # Chargement des modèles d'intelligences artificielles pour les prédictions
-        self.model, self.model_up, self.model_down = self.loading_model()
+        if not training:
+            self.model, self.model_up, self.model_down = self.loading_model()
 
     def training(self, l1: float, l2: float) -> None:
         """
@@ -148,7 +149,7 @@ class IA:
         Ex params :
         data_server_40 : Dataframe des données de 40 de longueurs
         data_server_15 : Dataframe des données de 15 de longueurs
-        model : True, False, None -> sélection du modèle voulu
+        model : True, False, None → sélection du modèle voulu
         """
 
         ls = calcul_indice_40_donnees(
@@ -178,7 +179,7 @@ class IA:
 
         # Fichiers
         fichier_json = "model.json"
-        fichier_h5 = "model.h5"
+        fichier_h5 = "model.weights.h5"
 
         # Chargement de la configuration du réseau
         with open(emplacement + fichier_json, "r") as f:
