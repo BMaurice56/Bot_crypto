@@ -2,17 +2,24 @@
 
 Document rédigé le 19 octobre 2026 à partir d'une lecture complète du dépôt (483 commits, mai 2022 à avril 2024, 2 659 lignes Python).
 
+**Objectif de la refonte** : reprendre les idées du projet (indicateurs techniques, modèle prédictif, pilotage et notifications Discord, bot autonome sur VPS), le moderniser, le fiabiliser, le mettre à jour et le réécrire.
+
+**Périmètre technique** : table rase. On ne conserve du dépôt actuel que les idées et les enseignements ; aucun fichier n'est repris tel quel. Stack neuve (section 5), Python 3.15, Docker, outillage moderne.
+
+**Contrainte structurante** : pouvoir changer de plateforme sans difficulté, aussi bien pour l'exécution des ordres que pour la récupération des données. Le tri opéré par MiCA en 2025-2026 (section 2.2) montre qu'un exchange peut disparaître du jour au lendemain pour un résident français. Le code métier ne doit donc jamais dépendre d'une plateforme précise (section 4.1).
+
 Table des matières :
 
 1. [Ce que fait le projet actuel](#1-ce-que-fait-le-projet-actuel)
 2. [Pourquoi il ne peut pas redémarrer tel quel](#2-pourquoi-il-ne-peut-pas-redémarrer-tel-quel)
 3. [État du code](#3-état-du-code)
 4. [Architecture cible](#4-architecture-cible)
-5. [Intégration d'un LLM : analyse des prédictions et des news](#5-intégration-dun-llm--analyse-des-prédictions-et-des-news)
-6. [Nouvelles capacités](#6-nouvelles-capacités)
-7. [Plan par phases](#7-plan-par-phases)
-8. [Décisions à prendre](#8-décisions-à-prendre)
-9. [Sources](#9-sources)
+5. [Stack technique : table rase](#5-stack-technique--table-rase)
+6. [Intégration d'un LLM : analyse des prédictions et des news](#6-intégration-dun-llm--analyse-des-prédictions-et-des-news)
+7. [Nouvelles capacités](#7-nouvelles-capacités)
+8. [Plan par phases](#8-plan-par-phases)
+9. [Décisions à prendre](#9-décisions-à-prendre)
+10. [Sources](#10-sources)
 
 ---
 
@@ -64,21 +71,37 @@ Les deux fondations externes ont disparu, pas seulement la plateforme d'exécuti
 
 KuCoin figurait sur la liste noire de l'AMF depuis le 15 avril 2024. Le 28 juillet 2025, l'exchange a annoncé la fin de ses services pour les résidents français : blocage des dépôts et inscriptions le 4 août 2025, liquidation des comptes le 25 août 2025. KuCoin n'a pas obtenu d'agrément MiCA. Depuis le 1er juillet 2026, une plateforme sans agrément MiCA ne peut plus servir les résidents français.
 
-### 2.2 Binance a délisté les jetons à levier BTCUP et BTCDOWN
+Pourquoi la liste noire : l'AMF n'a publié aucun motif. Le fondement juridique est l'absence d'enregistrement PSAN (Prestataire de Services sur Actifs Numériques). Le déclencheur probable est l'inculpation de KuCoin et de deux de ses fondateurs par la justice américaine le 26 mars 2024 pour activité de transfert d'argent sans licence et défaut de contrôles anti-blanchiment.
+
+### 2.2 MiCA a fait le tri, Binance comprise
+
+La période transitoire française s'est achevée le 1er juillet 2026. Seuls les prestataires agréés CASP (Crypto-Asset Service Provider) peuvent désormais servir des résidents français ; les autres ont été radiés automatiquement le 2 juillet 2026. Une centaine de PSAN ont laissé place à 31 prestataires agréés.
+
+| Plateforme | Statut pour un résident français (octobre 2026) |
+|---|---|
+| Binance | Sortie. Pas d'agrément avant l'échéance, demande en Grèce retirée face à un refus annoncé, services en Europe réduits aux retraits depuis septembre 2026. Discussions avec l'AMF pour un dossier en France, rien d'accordé |
+| KuCoin | Sortie en août 2025 |
+| Bitget, MEXC | Pas d'agrément selon la presse spécialisée |
+| Coinbase, Kraken, Bitstamp, OKX EU, Bitpanda, Coinhouse | Agréées |
+| Perpétuels sous agrément | Coinbase, OKX EU, Kraken, Bitstamp, Backpack EU, Nexo |
+
+Leçon pour le projet : un exchange, même le premier mondial, peut devenir inaccessible en quelques mois. L'architecture doit permettre d'en changer par configuration, pour l'exécution comme pour les données.
+
+### 2.3 Binance a délisté les jetons à levier BTCUP et BTCDOWN
 
 Binance a arrêté le trading de ses jetons à levier appariés USDT (BTCUP, BTCDOWN, ETHUP, ETHDOWN, BNBUP, BNBDOWN) puis les a délistés. Ces deux séries étaient les entrées de deux des trois modèles et des deux tiers de la règle de décision. **Le signal d'achat ne peut donc plus être calculé.**
 
-### 2.3 Les jetons 3L/3S n'existent pas chez les exchanges agréés MiCA
+### 2.4 Les jetons 3L/3S n'existent pas chez les exchanges agréés MiCA
 
 L'équivalent fonctionnel (exposition long ou short avec levier) est le futures perpétuel ou le margin. Pour la France, les plateformes agréées MiCA qui proposent des perpétuels sont Coinbase, OKX EU, Kraken, Bitstamp, Backpack EU et Nexo (29 plateformes agréées au total au 16 octobre 2026).
 
-### 2.4 Le code ne démarre pas en local
+### 2.5 Le code ne démarre pas en local
 
 | Problème | Détail |
 |---|---|
 | Fichiers de poids | `main.py` charge `model.weights.h5` mais le dépôt contient `model.h5` |
 | Version Keras | Modèles sauvés avec Keras 2.12 (`batch_input_shape` dans le JSON), requirements.txt vise TensorFlow 2.16 / Keras 3.2 |
-| Python | Python 3.14 par défaut sur la machine, TensorFlow ne le supporte pas. Python 3.12 est disponible dans `~/.local/bin` |
+| Python | TensorFlow 2.16 ne supporte ni Python 3.14 ni 3.15 ; faire tourner l'ancien code exigerait un Python 3.12 ou antérieur |
 | TA-Lib | Nécessite la bibliothèque C système |
 | Locale | `locale.setlocale(fr_FR.UTF-8)` plante si la locale n'est pas installée |
 | Chemin | `/home/Bot_crypto/log_files` codé en dur dans `server_data.py` |
@@ -136,11 +159,45 @@ Le code est lisible, commenté en français, et le découpage en fichiers est co
 
 Réécriture structurée plutôt que rafistolage. On conserve les idées (indicateurs, Discord, modèle prédictif) sur des bases saines.
 
-### 4.1 Plateforme : ccxt + exchange agréé MiCA
+### 4.1 Indépendance vis-à-vis des plateformes : données et exécution découplées
 
-La bibliothèque **ccxt** unifie plus de 100 exchanges derrière une seule API (données OHLCV, soldes, ordres, positions). Changer d'exchange devient un paramètre de configuration. Plus jamais de dépendance à un seul fournisseur.
+Deux interfaces distinctes, parce que les deux besoins peuvent être servis par des plateformes différentes et changer indépendamment :
 
-Recommandation : **Kraken** en premier choix (agréé MiCA, API spot et futures robuste, paires EUR, historique long, bonne stabilité). Alternatives : Coinbase Advanced, OKX EU, Bitstamp.
+```python
+class MarketDataProvider(Protocol):
+    async def fetch_ohlcv(self, symbol: str, timeframe: str, since: datetime, until: datetime) -> pd.DataFrame
+    async def fetch_ticker(self, symbol: str) -> Ticker
+    def list_symbols(self) -> list[str]
+
+class Broker(Protocol):
+    async def balances(self) -> dict[str, Decimal]
+    async def positions(self) -> list[Position]
+    async def place_order(self, order: OrderRequest) -> Order     # market, limit, stop, take-profit
+    async def cancel_order(self, order_id: str) -> None
+    async def open_orders(self, symbol: str | None = None) -> list[Order]
+    def market_rules(self, symbol: str) -> MarketRules             # tick size, lot size, minimum notionnel
+```
+
+Règles :
+
+- **Le code métier (features, stratégie, risque, backtest) n'importe jamais ccxt ni un SDK d'exchange.** Il ne connaît que ces deux interfaces et des types internes (`Candle`, `Order`, `Position`).
+- **Symboles unifiés** au format `BASE/QUOTE` (`BTC/USDC`). La conversion vers le format propre à chaque plateforme (`XBTEUR` chez Kraken, `BTC-EUR` chez Coinbase) est confinée dans l'adaptateur.
+- **Règles de marché lues dynamiquement** (tick size, lot size, minimum) au démarrage, plus jamais un `priceIncrement.txt` statique.
+- **Sélection par configuration** : `DATA_PROVIDER=ccxt:kraken`, `BROKER=ccxt:kraken` ou `BROKER=paper`. Changer de plateforme revient à changer ces deux valeurs.
+- **Suite de tests de conformité commune** : tout adaptateur doit passer les mêmes tests (pagination OHLCV, bougies sans trou, arrondis d'ordre, erreurs réseau). On valide un nouvel adaptateur en quelques heures au lieu de le découvrir en production.
+- **Jeu de données local indépendant** : tout ce qui est téléchargé est archivé en Parquet avec la source et la date de récupération. Le backtest et l'entraînement tournent sur l'archive, jamais en direct. Si une plateforme disparaît, l'historique reste.
+
+Implémentations prévues :
+
+| Adaptateur | Rôle | Remarque |
+|---|---|---|
+| `ccxt` (données et exécution) | Implémentation par défaut des deux interfaces | Plus de 100 exchanges, un seul adaptateur générique paramétré par le nom de l'exchange. Couvre Kraken, Coinbase, Bitstamp, OKX |
+| `paper` (exécution) | Broker simulé alimenté par le MarketDataProvider | Même code que le live, frais et slippage configurables |
+| `parquet` (données) | Lecture de l'archive locale | Backtest, entraînement, mode hors ligne |
+| `csv` (données) | Import d'archives tierces (CryptoDataDownload, dumps publics) | Pour reconstituer l'historique profond si l'exchange cible en manque |
+| Fallback de données | Second MarketDataProvider utilisé si le premier échoue ou s'arrête | Par exemple `ccxt:kraken` en principal, `ccxt:coinbase` en secours |
+
+Recommandation initiale : **Kraken** pour les deux rôles, via ccxt. Agréé MiCA, API spot et futures robuste, paires USDC et EUR, historique long. Coinbase Advanced, OKX EU et Bitstamp sont les alternatives directement supportées par le même adaptateur. Prendre les données chez l'exchange d'exécution évite les écarts de prix entre source et marché réel ; un second exchange sert de secours.
 
 ### 4.2 Remplacement des jetons à levier
 
@@ -160,30 +217,38 @@ bot_crypto/
 ├── config/
 │   └── settings.py         # pydantic-settings
 ├── data/
-│   ├── exchange.py         # adaptateur ccxt (fetch_ohlcv, pagination, retry)
-│   ├── store.py            # cache Parquet local, multi-paires, multi-timeframes
-│   └── news.py             # ingestion RSS / API news (voir section 5)
+│   ├── provider.py         # interface MarketDataProvider + types Candle, Ticker
+│   ├── providers/
+│   │   ├── ccxt.py         # adaptateur générique ccxt (fetch_ohlcv, pagination, retry)
+│   │   ├── parquet.py      # lecture de l'archive locale
+│   │   ├── csv.py          # import d'archives tierces
+│   │   └── fallback.py     # enchaîne un provider principal et un secours
+│   ├── store.py            # archive Parquet locale, multi-paires, multi-timeframes
+│   └── news.py             # ingestion RSS / API news (voir section 6)
 ├── features/
 │   └── indicators.py       # indicateurs vectorisés (pandas-ta ou TA-Lib), normalisés, longueur fixe
 ├── strategy/
 │   ├── base.py             # interface Strategy.signal(df) -> Signal
 │   ├── rules.py            # stratégie de référence par règles (étalon)
 │   ├── ml.py               # modèle LightGBM / Keras
-│   └── llm.py              # couche LLM (section 5)
+│   └── llm.py              # couche LLM (section 6)
 ├── risk/
 │   └── manager.py          # taille de position, SL/TP natifs, perte max jour, kill switch
 ├── backtest/
 │   ├── engine.py           # frais, slippage, walk-forward
 │   └── metrics.py          # Sharpe, Sortino, max drawdown, win rate, profit factor
 ├── execution/
-│   ├── broker.py           # interface Broker (place, cancel, positions)
-│   ├── paper.py            # paper trading
-│   └── live.py             # ccxt live
+│   ├── broker.py           # interface Broker + types Order, Position, MarketRules
+│   └── brokers/
+│       ├── ccxt.py         # adaptateur générique ccxt (live)
+│       └── paper.py        # broker simulé, mêmes règles de marché que le live
 ├── notify/
 │   ├── discord.py
 │   └── telegram.py
 ├── cli.py                  # typer : fetch, train, backtest, paper, live, news
 └── tests/
+    ├── conformance/        # mêmes tests pour tout adaptateur données ou broker
+    └── unit/
 ```
 
 Principes :
@@ -194,7 +259,7 @@ Principes :
 - **État en SQLite via SQLAlchemy** (positions, ordres, signaux, décisions LLM) pour l'audit et la reprise.
 - **Mode paper trading obligatoire** avant tout passage en réel.
 - **Déploiement** : Docker Compose ou service systemd avec redémarrage automatique. Plus de `nohup` ni de `kill -9`.
-- **Python 3.12** si TensorFlow est conservé, sinon 3.13+ avec LightGBM.
+- **Python 3.15**, voir section 5.
 
 ### 4.4 Partie ML revue
 
@@ -207,11 +272,79 @@ Principes :
 
 ---
 
-## 5. Intégration d'un LLM : analyse des prédictions et des news
+### 4.5 Fiscalité et choix de la devise de cotation
+
+Hors conseil fiscal ; références : article 150 VH bis du CGI et BOFiP. À faire confirmer par un professionnel pour des montants significatifs.
+
+- **Crypto contre crypto n'est pas imposable** pour un particulier, stablecoins inclus. Le fait générateur est la conversion vers une monnaie ayant cours légal ou l'achat d'un bien ou service. La plus-value se calcule alors sur l'ensemble du portefeuille, au prorata de la part cédée. Les gains accumulés en crypto/stablecoin sont donc taxés au retrait, pas à chaque trade.
+- **Conséquence pour un bot** : une paire BTC/EUR crée un fait générateur à chaque vente, donc des centaines de cessions à déclarer par an (formulaire 2086). Une paire BTC/stablecoin n'en crée qu'au retrait en euros.
+- **USDT est indisponible sur les exchanges agréés MiCA** (Tether n'a pas le statut de jeton de monnaie électronique) : retiré par Coinbase en décembre 2024, Kraken en mars 2025, Binance en mars 2025 pour l'Espace économique européen. **USDC** (Circle, licence d'établissement de monnaie électronique dans l'Union) et EURC sont les stablecoins conformes.
+- **Taux** : prélèvement forfaitaire unique de 30 % (12,8 % + 17,2 %), annoncé à 31,4 % à partir de 2026 selon plusieurs sources, à confirmer. Exonération si le total des cessions fiat de l'année est inférieur à 305 euros.
+- **Requalification en activité professionnelle** (bénéfices non commerciaux) possible si l'activité est exercée dans des conditions analogues à celles d'un professionnel. Un bot automatisé est un indice que l'administration peut retenir. Rescrit ou expert-comptable recommandé au-delà de montants modestes.
+- **Comptes à l'étranger** (Kraken en Irlande, Coinbase au Luxembourg) : formulaire 3916-bis chaque année, 750 euros d'amende par compte omis. **DAC8** : depuis le 1er janvier 2026 les exchanges transmettent automatiquement les opérations au fisc.
+- **Exigence pour le bot** : conserver un historique complet et exportable de tous les trades (date, paire, quantité, prix, frais) pour reconstituer le prix d'acquisition global. Export CSV compatible avec les outils de déclaration (Waltio, Koinly).
+
+Décision : cotation en **USDC** plutôt qu'en EUR. Le backtest mesurera la performance en euros, exposition EUR/USD incluse.
+
+## 5. Stack technique : table rase
+
+Aucune contrainte héritée : ni la version de Python, ni TensorFlow, ni les scripts VPS. On choisit l'outillage le plus simple et le plus rapide à faire tourner et à maintenir.
+
+### 5.1 Langage et outillage
+
+| Élément | Choix | Pourquoi |
+|---|---|---|
+| Python | **3.15** | Dernière version. Au 19 octobre 2026, la dernière build distribuée par uv est 3.15.0rc3 ; la version finale est imminente ou tout juste publiée. La résolution des dépendances clés (numpy, pandas 3, pyarrow, scipy, pydantic 2, SQLAlchemy 2, typer, ccxt, lightgbm, anthropic) aboutit sur 3.15. TensorFlow et PyTorch ne sont pas disponibles sur 3.15, ce qui confirme l'abandon de Keras |
+| Gestionnaire de projet | **uv** | Résolution et installation très rapides, lockfile reproductible, gestion des versions de Python intégrée, remplace pip, venv, pip-tools et pyenv |
+| Configuration projet | `pyproject.toml` unique | Dépendances, scripts, ruff, mypy, pytest au même endroit |
+| Lint et format | **ruff** | Remplace flake8, isort, black, pyupgrade en un outil |
+| Typage | **mypy** en mode strict (ou pyright) | Les interfaces de la section 4.1 n'ont de valeur que si elles sont vérifiées |
+| Tests | **pytest** + pytest-asyncio + hypothesis | Tests unitaires, tests de conformité des adaptateurs, tests par propriétés sur les indicateurs |
+| Hooks | pre-commit | ruff, mypy, détection de secrets avant chaque commit |
+| CI | GitHub Actions | lint, typage, tests, build de l'image Docker à chaque push |
+
+### 5.2 Bibliothèques
+
+| Domaine | Bibliothèque | Remarque |
+|---|---|---|
+| Exchanges | ccxt (async) | Un seul adaptateur pour tous les exchanges |
+| Données | pandas 3, numpy, pyarrow | Parquet pour l'archive. Polars en option si les volumes multi-paires multi-timeframes deviennent lourds |
+| Indicateurs | pandas-ta ou TA-Lib | TA-Lib exige la bibliothèque C, ce que Docker rend indolore. pandas-ta est pur Python et suffit pour la plupart des indicateurs |
+| ML | lightgbm, scikit-learn | Walk-forward, calibration, métriques. Keras abandonné |
+| Modèles de données et config | pydantic 2, pydantic-settings | Validation des types internes, des sorties LLM et de la configuration .env |
+| Persistance | SQLAlchemy 2 + aiosqlite | Positions, ordres, signaux, décisions LLM, news. PostgreSQL possible plus tard sans changer le code |
+| HTTP et flux | httpx, feedparser | Ingestion news, appels REST hors ccxt |
+| LLM | anthropic (SDK officiel) | Sorties structurées, cache de prompt, Batch API |
+| Notifications | discord.py ou webhooks, python-telegram-bot | Commandes et alertes |
+| CLI | typer + rich | `bot fetch`, `bot backtest`, `bot paper`, `bot live` |
+| Logs | structlog | JSON en production, lisible en développement |
+| Planification | asyncio natif | Une boucle, des tâches ; pas de cron, pas de threads |
+| Dashboard (option) | Streamlit ou FastAPI + page statique | Equity curve, positions, décisions LLM, coûts |
+
+### 5.3 Conteneurisation et déploiement
+
+- **Image Docker multi-étapes** : étape de build avec uv et compilation de TA-Lib, étape finale minimale sans outils de build, utilisateur non root, base `python:3.15-slim`.
+- **docker compose** avec trois services : `bot` (boucle de trading), `news` (ingestion et scoring, indépendant pour ne jamais bloquer le trading), `dashboard` (optionnel). Volumes persistants pour l'archive Parquet et la base SQLite. `restart: unless-stopped`, healthcheck sur chaque service.
+- **Secrets** par fichier `.env` monté, jamais dans l'image ni dans le dépôt.
+- **Un seul chemin de déploiement** : `docker compose pull && docker compose up -d`. Remplace start.py, stop.py, restart.py et recovery_error_files.py.
+- **Mêmes images en local et sur le VPS** : le paper trading en local et le live sur le serveur tournent sur le même artefact.
+- **Logs** collectés par Docker, consultables par `docker compose logs`, plus de rapatriement SFTP.
+
+### 5.4 Performance
+
+Le bot d'origine lançait des processus pour trois requêtes HTTP et parsait des listes sérialisées en texte. La nouvelle base est rapide par construction :
+
+- Indicateurs **vectorisés** sur des colonnes entières, jamais de boucle Python ligne par ligne ni de recalcul fenêtre par fenêtre. Un backtest de 10 ans en bougies journalières se calcule en moins d'une seconde ; en bougies horaires, en quelques secondes.
+- **asyncio** pour tout ce qui attend le réseau : les requêtes vers plusieurs exchanges ou plusieurs paires partent en parallèle sans processus ni threads.
+- **Parquet** en colonnes : lecture de plusieurs années d'historique en millisecondes.
+- **LightGBM** s'entraîne en secondes sur ce volume de données, contre des minutes pour les réseaux Keras d'origine, et sans GPU.
+- Le LLM est hors du chemin critique : appelé une à quelques fois par jour, en tâche séparée, avec timeout.
+
+## 6. Intégration d'un LLM : analyse des prédictions et des news
 
 Deux usages demandés : (a) analyser la sortie du modèle, (b) analyser les news en temps réel. Un troisième découle naturellement : (c) expliquer les décisions en langage clair dans Discord.
 
-### 5.1 Principe directeur : le LLM conseille, il n'exécute jamais
+### 6.1 Principe directeur : le LLM conseille, il n'exécute jamais
 
 Le LLM ne place aucun ordre. Il produit un avis structuré (JSON validé) qui entre dans le module de risque comme n'importe quelle autre feature. Le code reste maître de la décision finale. Raisons :
 
@@ -219,7 +352,7 @@ Le LLM ne place aucun ordre. Il produit un avis structuré (JSON validé) qui en
 - Il faut pouvoir backtester la contribution du LLM comme celle d'une feature : sans trace structurée, impossible de mesurer s'il aide ou nuit.
 - Si l'API est indisponible, le bot doit retomber sur un comportement par défaut (modèle seul, ou pas de trade) sans planter.
 
-### 5.2 Usage A : second avis sur la prédiction du modèle
+### 6.2 Usage A : second avis sur la prédiction du modèle
 
 À chaque signal du modèle, on envoie au LLM un contexte structuré :
 
@@ -264,7 +397,7 @@ avis: AvisLLM = response.parsed_output
 
 Le prompt système (rôle, règles, format, rappel que la sortie est un avis) est stable et mis en cache. Le contexte variable vient après.
 
-### 5.3 Usage B : analyse des news en temps réel
+### 6.3 Usage B : analyse des news en temps réel
 
 Pipeline en quatre étapes.
 
@@ -310,7 +443,7 @@ Un « score news » glissant sur 24 h et 7 jours : moyenne pondérée du sentime
 - Une alerte immédiate si une news d'impact fort arrive (hack d'exchange, décision réglementaire majeure).
 - Une commande Discord `!news` qui déclenche une recherche à la demande via l'outil **web search** côté serveur de l'API Claude (`web_search_20260209`) pour répondre à « que se passe-t-il sur BTC en ce moment ».
 
-### 5.4 Piège majeur : le biais de connaissance en backtest
+### 6.4 Piège majeur : le biais de connaissance en backtest
 
 Un LLM connaît l'histoire jusqu'à sa date de coupure. Si on lui demande en 2026 de noter une news de mars 2023, il « sait » ce que le marché a fait ensuite. Le backtest d'une feature news produite par LLM est donc contaminé sur toute la période antérieure à la coupure du modèle.
 
@@ -320,7 +453,7 @@ Parades :
 - Pour le backtest historique, demander au LLM de noter l'article sans aucune référence à l'issue et comparer avec un étiquetage hors-LLM (lexique de sentiment classique) pour détecter une précision suspecte.
 - Ne jamais utiliser le LLM pour prédire directement le prix sur des périodes historiques.
 
-### 5.5 Garde-fous techniques
+### 6.5 Garde-fous techniques
 
 - **Plafond de coût** quotidien en tokens, suivi via `response.usage`, alerte Discord à 80 %.
 - **Timeouts courts** (30 s) et repli : en cas d'erreur API, `facteur_taille_position = 1.0` (modèle seul) ou 0.0 (prudence), au choix dans la config.
@@ -329,7 +462,7 @@ Parades :
 - **Pas de secret dans le prompt** : jamais de clés, de soldes exacts non nécessaires, ni d'identifiants.
 - **Fallback serveur** activé par défaut sur Opus 5.5 (`fallbacks: "default"` avec le bêta `server-side-fallback-2026-07-01`) pour qu'un refus de sécurité ne bloque pas la boucle.
 
-### 5.6 Modèles et coût estimé
+### 6.6 Modèles et coût estimé
 
 Modèle par défaut : **Claude Opus 5.5** (`claude-opus-5-5`), 4 $ / M tokens en entrée, 20 $ / M en sortie, réflexion adaptative toujours active, effort réglable (`medium` par défaut, à monter à `high` pour l'usage A). Pour le tri à haut volume des news (usage B, étape 2), Claude Haiku 5.5 (`claude-haiku-5-5`, 0,10 $ / 0,50 $ par M tokens) est une option 40 fois moins chère. Le choix revient à l'utilisateur, à valider par une comparaison de qualité sur un échantillon.
 
@@ -344,7 +477,7 @@ Estimation pour un bot journalier BTC, avant cache :
 
 Le backfill historique de 20 000 articles en Batch API coûterait environ 50 $ sur Opus 5.5, environ 1,5 $ sur Haiku 5.5.
 
-### 5.7 Ce que le LLM ne doit pas faire
+### 6.7 Ce que le LLM ne doit pas faire
 
 - Prédire le prix lui-même. Ce n'est pas son point fort et c'est inévaluable.
 - Décider seul d'un ordre.
@@ -353,7 +486,7 @@ Le backfill historique de 20 000 articles en Batch API coûterait environ 50 $ s
 
 ---
 
-## 6. Nouvelles capacités
+## 7. Nouvelles capacités
 
 Classées par ordre de valeur pour le projet.
 
@@ -364,7 +497,7 @@ Classées par ordre de valeur pour le projet.
 | 1 | Ordres stop et take-profit natifs | Posés sur l'exchange, survivent au crash du bot |
 | 2 | Multi-paires | BTC, ETH, SOL... la stratégie prend un symbole en paramètre |
 | 2 | Multi-timeframes | 1h, 4h, 1d en features ; décision sur un timeframe, confirmation sur un autre |
-| 2 | Couche LLM | Section 5 |
+| 2 | Couche LLM | Section 6 |
 | 2 | Kill switch | Perte max journalière, perte max globale, arrêt automatique + alerte |
 | 3 | Trailing stop | Suivi du stop à distance fixe ou ATR |
 | 3 | DCA et grid | Stratégies alternatives sous la même interface Strategy |
@@ -375,40 +508,47 @@ Classées par ordre de valeur pour le projet.
 
 ---
 
-## 7. Plan par phases
+## 8. Plan par phases
 
 Chaque phase produit un résultat vérifiable avant de passer à la suivante.
 
 | Phase | Contenu | Résultat vérifiable |
 |---|---|---|
-| 1. Socle | pyproject, config .env, adaptateur ccxt, cache Parquet, indicateurs corrigés et normalisés, logging, tests unitaires | `bot fetch BTC/EUR 1d --since 2017` produit un Parquet propre, indicateurs validés par tests |
+| 1. Socle | pyproject + uv + ruff + mypy + pytest + CI, Dockerfile et compose, config .env, interfaces MarketDataProvider et Broker, adaptateurs ccxt et parquet, tests de conformité, archive Parquet, indicateurs corrigés et normalisés, logging | `bot fetch BTC/USDC 1d --since 2019` produit un Parquet propre quel que soit l'exchange configuré, indicateurs validés par tests |
 | 2. Backtest et étalon | Moteur walk-forward, métriques, stratégie de règles de référence, buy-and-hold | Rapport de backtest reproductible sur 5 ans avec frais |
 | 3. ML revu | Cible direction/rendement, LightGBM, validation walk-forward, comparaison à l'étalon | Le modèle bat ou ne bat pas l'étalon : décision documentée |
-| 4. Paper trading | Broker simulé, risk manager, Discord, état en base, reprise après redémarrage, Docker/systemd | Bot qui tourne 2 semaines sans intervention en paper |
+| 4. Paper trading | Broker simulé, risk manager, Discord, état en base, reprise après redémarrage, déploiement compose sur le VPS | Bot qui tourne 2 semaines sans intervention en paper |
 | 5. Couche LLM | Usages A, B, C, journalisation, plafond de coût, évaluation prospective en paper | Mesure de la contribution du LLM sur 4 semaines de paper |
 | 6. Live | Capital réduit, kill switch, supervision | Premier mois en réel |
 | 7. Extensions | Multi-paires, futures, dashboard, Telegram | Selon résultats |
 
 ---
 
-## 8. Décisions à prendre
+## 9. Décisions à prendre
 
 | Décision | Recommandation | Impact |
 |---|---|---|
-| Exchange cible | Kraken | Adaptateur ccxt, paires EUR ou USD, API futures |
+| Exchange cible (exécution) | Kraken | Adaptateur ccxt, paires USDC, API futures |
+| Fournisseur de données | Le même exchange via ccxt, Coinbase en secours, archive Parquet locale | Cohérence prix / exécution, résilience si une plateforme ferme |
 | Spot seul ou futures | Spot d'abord | Complexité du risk manager et du broker |
-| Devise de cotation | EUR | Fiscalité et lisibilité, liquidité un peu moindre qu'USDT |
-| Conserver TensorFlow/Keras | Non, LightGBM d'abord, Keras en option | Python 3.12 obligatoire si Keras conservé |
+| Devise de cotation | USDC | Un seul fait générateur fiscal au retrait, disponible sur les plateformes agréées ; USDT indisponible en Europe, EUR imposable à chaque vente (section 4.5) |
+| Version de Python | 3.15 | Table rase ; TensorFlow indisponible sur 3.15, donc Keras abandonné |
+| Conserver TensorFlow/Keras | Non, LightGBM et scikit-learn | Simplifie l'image Docker et l'entraînement |
 | Modèle LLM pour le tri des news | Opus 5.5 par défaut, Haiku 5.5 à évaluer | Coût ×40 entre les deux sur l'usage B |
 | Sources news payantes | Aucune au départ (RSS + CryptoPanic gratuit) | Couverture et latence |
-| Déploiement | Docker Compose sur le VPS existant | Reprend le rôle de start/stop/restart.py |
+| Déploiement | Docker Compose, mêmes images en local et sur le VPS | Reprend le rôle de start/stop/restart.py et de recovery_error_files.py |
 
 ---
 
-## 9. Sources
+## 10. Sources
 
 - KuCoin quitte la France : [Journal du Coin](https://journalducoin.com/exchanges/kucoin-arrete-ses-services-pour-les-utilisateurs-francais/), [Cryptoast](https://cryptoast.fr/plateforme-crypto-kucoin-quitte-france-explique-pourquoi/), [Cointribune](https://www.cointribune.com/kucoin-se-retire-de-france-apres-avoir-ete-blackliste-par-lamf/), [Cryptonews](https://cryptonews.com/fr/news/kucoin-quitte-france-mica/)
 - Délisting des jetons à levier Binance : [Cointelegraph](https://cointelegraph.com/news/binance-leveraged-token-services-shutdown), [CoinAcademy](https://coinacademy.fr/actu/binance-met-fin-service-tokens-effet-levier-deliste-6-paires-trading/), [FinanceFeeds](https://financefeeds.com/binance-to-cease-support-for-bnb-btc-and-eth-leveraged-tokens/)
 - Plateformes agréées MiCA pour la France : [DefiLlama MiCA France](https://defillama.com/mica/france), [Cryptoast](https://cryptoast.fr/plateforme-crypto-autorisee-france-mica/), [Selectra](https://selectra.info/finance/actualites/marche/bitcoin-plateformes-autorisees-france-mica-amf)
+- Tri MiCA et Binance : [iPhoneSoft](https://iphonesoft.fr/2026/06/24/binance-bannie-europe-1er-juillet-2026), [Cryptoast, Binance et la Grèce](https://cryptoast.fr/apres-lalerte-de-la-france-binance-cherche-a-obtenir-une-licence-mica-en-grece/), [The Big Whale](https://www.thebigwhale.io/article/mica-france-binances-last-resort-in-europe), [AMF, fin de la période transitoire](https://www.amf-france.org/fr/actualites-publications/actualites/lamf-rappelle-que-la-periode-transitoire-pour-les-psan-pour-continuer-de-fournir-des-services-sur), [Mind Fintech n°401](https://www.mind.eu.com/wp-content/uploads/sites/2/2026/08/mind-fintech-n401.pdf)
+- KuCoin et l'AMF : [Cryptoast, liste noire](https://cryptoast.fr/france-kucoin-discretement-ajoute-liste-noire-autorite-marches-financiers-amf/), [Cryptoast, poursuites américaines](https://cryptoast.fr/?p=139288)
+- Python 3.15 et compatibilité des paquets : [python.org](https://www.python.org/downloads/), [compatibilité des 1 000 paquets PyPI les plus utilisés](https://python.plainenglish.io/93-6-of-the-top-1-000-pypi-packages-are-python-3-15-ready-64-of-the-140-that-compile-are-not-3a54d8ae0534)
+- Fiscalité : [CoinAcademy, guide 2026](https://coinacademy.fr/academie/guide-fiscalite-crypto-2025-declarer-comment), [Finalib, stablecoins et fiscalité](https://finalib.fr/blog/fiscalite/stablecoins-fiscalite-france-2026-usdt-usdc), [Cryptoactu, déclaration](https://cryptoactu.com/fiscalite-cryptomonnaies-declaration-impot/)
+- USDT et MiCA : [Cryptoast](https://cryptoast.fr/binance-kraken-deliste-usdt-tether-europe-pressions-reglementaires/), [Journal du Coin](https://journalducoin.com/exchanges/tether-vs-mica-binance-met-fin-trading-stablecoin-usdt-europe/), [DL News, Kraken](https://dlnews.com/articles/markets/kraken-delists-tether-usdt-in-europe-as-mica-rules-take-hold/), [Glenbrook](https://glenbrook.com/payments_news/stablecoin-shakedown-binance-coinbase-and-kraken-restrict-usdt-in-europe-ahead-of-mica-deadline/)
 - ccxt : [PyPI](https://pypi.org/project/ccxt/), [dépôt GitHub](https://github.com/ccxt/ccxt)
 - API Claude : [documentation](https://platform.claude.com/docs), [SDK Python](https://github.com/anthropics/anthropic-sdk-python)
