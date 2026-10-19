@@ -4,7 +4,7 @@ Document rédigé le 19 octobre 2026 à partir d'une lecture complète du dépô
 
 **Objectif de la refonte** : reprendre les idées du projet (indicateurs techniques, modèle prédictif, pilotage et notifications Discord, bot autonome sur VPS), le moderniser, le fiabiliser, le mettre à jour et le réécrire.
 
-**Périmètre technique** : table rase. On ne conserve du dépôt actuel que les idées et les enseignements ; aucun fichier n'est repris tel quel. Stack neuve (section 5), Python 3.15, Docker, outillage moderne.
+**Périmètre technique** : table rase. On ne conserve du dépôt actuel que les idées et les enseignements ; aucun fichier n'est repris tel quel. Stack neuve (section 5), Python 3.14, Docker, outillage moderne.
 
 **Contrainte structurante** : pouvoir changer de plateforme sans difficulté, aussi bien pour l'exécution des ordres que pour la récupération des données. Le tri opéré par MiCA en 2025-2026 (section 2.2) montre qu'un exchange peut disparaître du jour au lendemain pour un résident français. Le code métier ne doit donc jamais dépendre d'une plateforme précise (section 4.1).
 
@@ -101,7 +101,7 @@ L'équivalent fonctionnel (exposition long ou short avec levier) est le futures 
 |---|---|
 | Fichiers de poids | `main.py` charge `model.weights.h5` mais le dépôt contient `model.h5` |
 | Version Keras | Modèles sauvés avec Keras 2.12 (`batch_input_shape` dans le JSON), requirements.txt vise TensorFlow 2.16 / Keras 3.2 |
-| Python | TensorFlow 2.16 ne supporte ni Python 3.14 ni 3.15 ; faire tourner l'ancien code exigerait un Python 3.12 ou antérieur |
+| Python | TensorFlow 2.16 ne supporte pas Python 3.14 ; faire tourner l'ancien code exigerait un Python 3.12 ou antérieur |
 | TA-Lib | Nécessite la bibliothèque C système |
 | Locale | `locale.setlocale(fr_FR.UTF-8)` plante si la locale n'est pas installée |
 | Chemin | `/home/Bot_crypto/log_files` codé en dur dans `server_data.py` |
@@ -259,7 +259,7 @@ Principes :
 - **État en SQLite via SQLAlchemy** (positions, ordres, signaux, décisions LLM) pour l'audit et la reprise.
 - **Mode paper trading obligatoire** avant tout passage en réel.
 - **Déploiement** : Docker Compose ou service systemd avec redémarrage automatique. Plus de `nohup` ni de `kill -9`.
-- **Python 3.15**, voir section 5.
+- **Python 3.14**, voir section 5.
 
 ### 4.4 Partie ML revue
 
@@ -294,7 +294,7 @@ Aucune contrainte héritée : ni la version de Python, ni TensorFlow, ni les scr
 
 | Élément | Choix | Pourquoi |
 |---|---|---|
-| Python | **3.15** | Dernière version. Au 19 octobre 2026, la dernière build distribuée par uv est 3.15.0rc3 ; la version finale est imminente ou tout juste publiée. La résolution des dépendances clés (numpy, pandas 3, pyarrow, scipy, pydantic 2, SQLAlchemy 2, typer, ccxt, lightgbm, anthropic) aboutit sur 3.15. TensorFlow et PyTorch ne sont pas disponibles sur 3.15, ce qui confirme l'abandon de Keras |
+| Python | **3.14** | Version stable depuis un an, écosystème complet (numpy, pandas 3, pyarrow, scipy, pydantic 2, SQLAlchemy 2, typer, ccxt, lightgbm, anthropic). Python 3.15 vient de sortir et expose au risque de paquets sans wheel pendant quelques mois pour un gain négligeable ; passage à 3.15 envisageable plus tard en changeant une ligne du pyproject et du Dockerfile. TensorFlow n'est pas disponible sur 3.14, ce qui confirme l'abandon de Keras |
 | Gestionnaire de projet | **uv** | Résolution et installation très rapides, lockfile reproductible, gestion des versions de Python intégrée, remplace pip, venv, pip-tools et pyenv |
 | Configuration projet | `pyproject.toml` unique | Dépendances, scripts, ruff, mypy, pytest au même endroit |
 | Lint et format | **ruff** | Remplace flake8, isort, black, pyupgrade en un outil |
@@ -323,7 +323,7 @@ Aucune contrainte héritée : ni la version de Python, ni TensorFlow, ni les scr
 
 ### 5.3 Conteneurisation et déploiement
 
-- **Image Docker multi-étapes** : étape de build avec uv et compilation de TA-Lib, étape finale minimale sans outils de build, utilisateur non root, base `python:3.15-slim`.
+- **Image Docker multi-étapes** : étape de build avec uv et compilation de TA-Lib, étape finale minimale sans outils de build, utilisateur non root, base `python:3.14-slim`.
 - **docker compose** avec trois services : `bot` (boucle de trading), `news` (ingestion et scoring, indépendant pour ne jamais bloquer le trading), `dashboard` (optionnel). Volumes persistants pour l'archive Parquet et la base SQLite. `restart: unless-stopped`, healthcheck sur chaque service.
 - **Secrets** par fichier `.env` monté, jamais dans l'image ni dans le dépôt.
 - **Un seul chemin de déploiement** : `docker compose pull && docker compose up -d`. Remplace start.py, stop.py, restart.py et recovery_error_files.py.
@@ -510,19 +510,29 @@ Classées par ordre de valeur pour le projet.
 
 ## 8. Plan par phases
 
-Chaque phase produit un résultat vérifiable avant de passer à la suivante.
+Principe : **mesurer avant de construire**. Le premier projet a échoué parce que le signal n'existait pas, pas à cause de l'outillage. On obtient donc des données propres et un backtest honnête avant d'investir dans l'infrastructure d'exploitation. Chaque phase produit un résultat vérifiable avant de passer à la suivante.
 
 | Phase | Contenu | Résultat vérifiable |
 |---|---|---|
-| 1. Socle | pyproject + uv + ruff + mypy + pytest + CI, Dockerfile et compose, config .env, interfaces MarketDataProvider et Broker, adaptateurs ccxt et parquet, tests de conformité, archive Parquet, indicateurs corrigés et normalisés, logging | `bot fetch BTC/USDC 1d --since 2019` produit un Parquet propre quel que soit l'exchange configuré, indicateurs validés par tests |
-| 2. Backtest et étalon | Moteur walk-forward, métriques, stratégie de règles de référence, buy-and-hold | Rapport de backtest reproductible sur 5 ans avec frais |
-| 3. ML revu | Cible direction/rendement, LightGBM, validation walk-forward, comparaison à l'étalon | Le modèle bat ou ne bat pas l'étalon : décision documentée |
-| 4. Paper trading | Broker simulé, risk manager, Discord, état en base, reprise après redémarrage, déploiement compose sur le VPS | Bot qui tourne 2 semaines sans intervention en paper |
-| 5. Couche LLM | Usages A, B, C, journalisation, plafond de coût, évaluation prospective en paper | Mesure de la contribution du LLM sur 4 semaines de paper |
+| 1. Données et outillage minimal | pyproject + uv + ruff + mypy + pytest, config .env, interfaces MarketDataProvider et Broker, adaptateurs ccxt et parquet, tests de conformité, archive Parquet, indicateurs vectorisés et normalisés. Pas de Docker, pas de Discord, pas de LLM à ce stade | `bot fetch BTC/USDC 1d --since 2019` produit un Parquet propre quel que soit l'exchange configuré ; indicateurs validés par tests, y compris par propriétés |
+| 2. Backtest et étalons | Moteur walk-forward avec frais et slippage, métriques (Sharpe, Sortino, drawdown max, profit factor, taux de réussite), buy-and-hold, puis stratégies simples documentées : suivi de tendance, momentum, croisements de moyennes avec filtre de volatilité | Rapport de backtest reproductible sur 5 ans minimum. On sait ce qu'une stratégie simple rapporte net de frais sur ce marché |
+| 3. ML | Cible direction ou rendement, LightGBM, validation walk-forward, comparaison aux étalons de la phase 2 | Verdict documenté : le modèle bat ou ne bat pas le meilleur étalon net de frais. **Point de décision** (voir critère d'arrêt) |
+| 4. Infrastructure d'exploitation | Docker et compose, broker paper, risk manager, ordres stop natifs, Discord, état en base, reprise après redémarrage, export fiscal des trades | Bot en paper trading 2 semaines sans intervention, avec la ou les stratégies retenues |
+| 5. Couche LLM (option) | Usages opérationnels d'abord : résumé des news, explication des décisions, blocage avant événement macro. Second avis sur la prédiction seulement si mesurable en prospectif | Mesure de la contribution sur 4 semaines de paper. On garde ce qui aide, on retire le reste |
 | 6. Live | Capital réduit, kill switch, supervision | Premier mois en réel |
 | 7. Extensions | Multi-paires, futures, dashboard, Telegram | Selon résultats |
 
----
+### Critère d'arrêt
+
+Décidé avant de commencer, pour ne pas le décider sous l'émotion d'un backtest décevant :
+
+> Si, à l'issue de la phase 3, aucune stratégie (règles ou ML) ne bat le buy-and-hold net de frais sur au moins 5 ans en walk-forward, avec un drawdown maximum inférieur à celui du buy-and-hold, alors le projet devient un framework de trading et un outil de suivi de marché (données, backtest, news, notifications), et n'engage pas de capital. Les phases 4 à 7 sont alors réduites à ce périmètre.
+
+Ce critère est révisable, mais par écrit et avant la phase 3, jamais après.
+
+### Ce qu'on attend réellement du LLM
+
+Sa valeur la plus probable est opérationnelle, pas prédictive : résumer, expliquer chaque décision en clair, signaler un événement de risque, bloquer un trade avant une annonce macro. L'idée qu'il améliore la prédiction est une hypothèse à tester avec scepticisme, difficile à mesurer en backtest à cause du biais de connaissance (section 6.4). Il reste une option, pas une promesse.
 
 ## 9. Décisions à prendre
 
@@ -532,7 +542,7 @@ Chaque phase produit un résultat vérifiable avant de passer à la suivante.
 | Fournisseur de données | Le même exchange via ccxt, Coinbase en secours, archive Parquet locale | Cohérence prix / exécution, résilience si une plateforme ferme |
 | Spot seul ou futures | Spot d'abord | Complexité du risk manager et du broker |
 | Devise de cotation | USDC | Un seul fait générateur fiscal au retrait, disponible sur les plateformes agréées ; USDT indisponible en Europe, EUR imposable à chaque vente (section 4.5) |
-| Version de Python | 3.15 | Table rase ; TensorFlow indisponible sur 3.15, donc Keras abandonné |
+| Version de Python | 3.14 | Stable et complet ; 3.15 trop récent pour les wheels. TensorFlow indisponible, donc Keras abandonné |
 | Conserver TensorFlow/Keras | Non, LightGBM et scikit-learn | Simplifie l'image Docker et l'entraînement |
 | Modèle LLM pour le tri des news | Opus 5.5 par défaut, Haiku 5.5 à évaluer | Coût ×40 entre les deux sur l'usage B |
 | Sources news payantes | Aucune au départ (RSS + CryptoPanic gratuit) | Couverture et latence |
@@ -547,7 +557,7 @@ Chaque phase produit un résultat vérifiable avant de passer à la suivante.
 - Plateformes agréées MiCA pour la France : [DefiLlama MiCA France](https://defillama.com/mica/france), [Cryptoast](https://cryptoast.fr/plateforme-crypto-autorisee-france-mica/), [Selectra](https://selectra.info/finance/actualites/marche/bitcoin-plateformes-autorisees-france-mica-amf)
 - Tri MiCA et Binance : [iPhoneSoft](https://iphonesoft.fr/2026/06/24/binance-bannie-europe-1er-juillet-2026), [Cryptoast, Binance et la Grèce](https://cryptoast.fr/apres-lalerte-de-la-france-binance-cherche-a-obtenir-une-licence-mica-en-grece/), [The Big Whale](https://www.thebigwhale.io/article/mica-france-binances-last-resort-in-europe), [AMF, fin de la période transitoire](https://www.amf-france.org/fr/actualites-publications/actualites/lamf-rappelle-que-la-periode-transitoire-pour-les-psan-pour-continuer-de-fournir-des-services-sur), [Mind Fintech n°401](https://www.mind.eu.com/wp-content/uploads/sites/2/2026/08/mind-fintech-n401.pdf)
 - KuCoin et l'AMF : [Cryptoast, liste noire](https://cryptoast.fr/france-kucoin-discretement-ajoute-liste-noire-autorite-marches-financiers-amf/), [Cryptoast, poursuites américaines](https://cryptoast.fr/?p=139288)
-- Python 3.15 et compatibilité des paquets : [python.org](https://www.python.org/downloads/), [compatibilité des 1 000 paquets PyPI les plus utilisés](https://python.plainenglish.io/93-6-of-the-top-1-000-pypi-packages-are-python-3-15-ready-64-of-the-140-that-compile-are-not-3a54d8ae0534)
+- Python 3.14 et 3.15 : [python.org](https://www.python.org/downloads/), [compatibilité des 1 000 paquets PyPI les plus utilisés avec 3.15](https://python.plainenglish.io/93-6-of-the-top-1-000-pypi-packages-are-python-3-15-ready-64-of-the-140-that-compile-are-not-3a54d8ae0534)
 - Fiscalité : [CoinAcademy, guide 2026](https://coinacademy.fr/academie/guide-fiscalite-crypto-2025-declarer-comment), [Finalib, stablecoins et fiscalité](https://finalib.fr/blog/fiscalite/stablecoins-fiscalite-france-2026-usdt-usdc), [Cryptoactu, déclaration](https://cryptoactu.com/fiscalite-cryptomonnaies-declaration-impot/)
 - USDT et MiCA : [Cryptoast](https://cryptoast.fr/binance-kraken-deliste-usdt-tether-europe-pressions-reglementaires/), [Journal du Coin](https://journalducoin.com/exchanges/tether-vs-mica-binance-met-fin-trading-stablecoin-usdt-europe/), [DL News, Kraken](https://dlnews.com/articles/markets/kraken-delists-tether-usdt-in-europe-as-mica-rules-take-hold/), [Glenbrook](https://glenbrook.com/payments_news/stablecoin-shakedown-binance-coinbase-and-kraken-restrict-usdt-in-europe-ahead-of-mica-deadline/)
 - ccxt : [PyPI](https://pypi.org/project/ccxt/), [dépôt GitHub](https://github.com/ccxt/ccxt)
